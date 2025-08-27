@@ -303,7 +303,7 @@ public class ProjectService extends BaseService<Project, Long, ProjectRepository
         String avgComplexity = "INTERMEDIATE"; // default
 
         if (!complexityDistribution.isEmpty()) {
-            Object[] mostFrequent = complexityDistribution.getFirst();
+            Object[] mostFrequent = complexityDistribution.get(0);
             ComplexityLevel complexityEnum = (ComplexityLevel) mostFrequent[0];
             avgComplexity = complexityEnum.name();
 
