@@ -20,15 +20,17 @@
 	<packaging>jar</packaging>
 
 	<properties>
-		<java.version>21</java.version>
+		<!-- CHANGED: Java 21 -> Java 17 pentru Railway compatibility -->
+		<java.version>17</java.version>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+
 		<lombok.version>1.18.34</lombok.version>
 		<mapstruct.version>1.6.2</mapstruct.version>
 		<hibernate.version>6.6.1.Final</hibernate.version>
 		<flyway.version>10.19.0</flyway.version>
 		<springdoc.version>2.7.0</springdoc.version>
 		<testcontainers.version>1.20.4</testcontainers.version>
-		<maven.compiler.source>21</maven.compiler.source>
-		<maven.compiler.target>21</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
@@ -77,7 +79,7 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
-<!--		Dot env-->
+		<!--		Dot env-->
 		<dependency>
 			<groupId>me.paulschwarz</groupId>
 			<artifactId>spring-dotenv</artifactId>
@@ -250,32 +252,30 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
-					<!-- 🔥 ADĂUGAT: Fork pentru hot reload -->
 
 					<addResources>true</addResources>
-					<!-- 🔥 ADĂUGAT: JVM args pentru DevTools -->
 					<jvmArguments>
 						-Dspring.application.admin.enabled=true
 					</jvmArguments>
 				</configuration>
 			</plugin>
 
-			<!-- Compiler Plugin - CONFIGURAȚIE SPECIALĂ PENTRU JAVA 21 -->
+			<!-- Compiler Plugin - UPDATED pentru JAVA 17 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.13.0</version>
 				<configuration>
-					<release>21</release>
+					<!-- CHANGED: 21 -> 17 -->
+					<release>17</release>
 					<encoding>UTF-8</encoding>
 
-					<!-- 🔥 OPTIMIZĂRI pentru hot reload -->
-					<forceJavacCompilerUse>true</forceJavacCompilerUse>
+					<!-- FIXED: deprecated parameter -->
+					<forceLegacyJavacApi>true</forceLegacyJavacApi>
 					<useIncrementalCompilation>true</useIncrementalCompilation>
 					<showWarnings>true</showWarnings>
 					<showDeprecation>true</showDeprecation>
 
-					<!-- 🔥 PROCESOARE DE ADNOTĂRI optimizate -->
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
@@ -292,7 +292,6 @@
 							<artifactId>lombok-mapstruct-binding</artifactId>
 							<version>0.2.0</version>
 						</path>
-						<!-- 🔥 ADĂUGAT: Spring Boot Configuration Processor -->
 						<path>
 							<groupId>org.springframework.boot</groupId>
 							<artifactId>spring-boot-configuration-processor</artifactId>
@@ -301,9 +300,6 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
-
-
-
 
 			<!-- Surefire Plugin (pentru unit tests) -->
 			<plugin>
