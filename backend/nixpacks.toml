@@ -1,15 +1,12 @@
-[providers]
-java = "21"
+# Railway Nixpacks configuration pentru Java 21
+providers = ["java"]
+
+[variables]
+JAVA_VERSION = "21"
+MAVEN_OPTS = "-Xmx1024m"
 
 [phases.build]
 cmds = ["./mvnw clean package -DskipTests -Pprod"]
 
-[phases.install]
-cmds = ["mkdir -p target"]
-
 [start]
 cmd = "java -Dserver.port=$PORT -jar target/portfolio-0.0.1-SNAPSHOT.jar"
-
-[variables]
-MAVEN_OPTS = "-Xmx1024m"
-JAVA_TOOL_OPTIONS = "-XX:MaxRAMPercentage=75.0"
