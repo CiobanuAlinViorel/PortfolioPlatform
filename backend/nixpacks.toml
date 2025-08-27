@@ -1,12 +1,11 @@
-# Railway Nixpacks configuration pentru Java 21
-providers = ["java"]
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "java -Dserver.port=$PORT -jar target/portfolio-0.0.1-SNAPSHOT.jar"
 
 [variables]
-JAVA_VERSION = "21"
+NIXPACKS_JDK_VERSION = "21"
+SPRING_PROFILES_ACTIVE = "prod"
 MAVEN_OPTS = "-Xmx1024m"
-
-[phases.build]
-cmds = ["./mvnw clean package -DskipTests -Pprod"]
-
-[start]
-cmd = "java -Dserver.port=$PORT -jar target/portfolio-0.0.1-SNAPSHOT.jar"
+NIXPACKS_BUILD_CMD = "mvn clean package -DskipTests -Pprod"
