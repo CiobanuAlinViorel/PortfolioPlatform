@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,7 +31,6 @@ public class EducationService extends BaseService<Education, Long, EducationRepo
     private final AchievementRepository achievementRepository;
     private final CourseRepository courseRepository;
     private final CourseProjectRepository courseProjectRepository;
-    private final EntityTechnologyRepository entityTechnologyRepository;
     private final ProjectRepository projectRepository;
     private final SkillRepository skillRepository;
 
@@ -40,7 +40,6 @@ public class EducationService extends BaseService<Education, Long, EducationRepo
                             AchievementRepository achievementRepository,
                             CourseRepository courseRepository,
                             CourseProjectRepository courseProjectRepository,
-                            EntityTechnologyRepository entityTechnologyRepository,
                             SkillRepository skillRepository,
                             ProjectRepository projectRepository) {
         super(educationRepository);
@@ -48,15 +47,11 @@ public class EducationService extends BaseService<Education, Long, EducationRepo
         this.achievementRepository = achievementRepository;
         this.courseRepository = courseRepository;
         this.courseProjectRepository = courseProjectRepository;
-        this.entityTechnologyRepository = entityTechnologyRepository;
+
         this.projectRepository = projectRepository;
         this.skillRepository = skillRepository;
     }
 
-    @Override
-    protected String getEntityTypeName() {
-        return EntityType.EDUCATION.name();
-    }
 
     @Override
     protected EducationDto toDto(Education education) {
@@ -103,11 +98,8 @@ public class EducationService extends BaseService<Education, Long, EducationRepo
         ServiceUtils.validatePersonalId(personalId);
         ServiceUtils.validateEntityId(educationId);
 
-        List<Achievement> achievements = achievementRepository
-                .findByPersonalIdAndEntityTypeAndEntityId(personalId, EntityType.EDUCATION, educationId);
-        List<AchievementDto> result = achievements.stream()
-                .map(this::toAchievementDto)
-                .toList();
+        List<Achievement> achievements = null;
+        List<AchievementDto> result = null;
 
         ServiceUtils.logMethodExit("findEducationAchievements", result.size());
         return result;
@@ -206,11 +198,7 @@ public class EducationService extends BaseService<Education, Long, EducationRepo
         Course course = courseProject.getCourse();
 
         // Obține tehnologiile pentru proiect
-        List<String> technologies = entityTechnologyRepository
-                .findByEntityTypeAndEntityIdWithTechnology(EntityType.PROJECT, project.getId())
-                .stream()
-                .map(et -> et.getTechnology().getName())
-                .collect(Collectors.toList());
+        List<String> technologies = null;
 
         // Obține metadata pentru culori și icon
         Optional<EntityMetadata> metadata = entityMetadataRepository
@@ -223,7 +211,7 @@ public class EducationService extends BaseService<Education, Long, EducationRepo
                 .description(project.getDescription())
                 .technologies(technologies)
                 .duration(project.getDevelopmentTime())
-                .type(project.getCategory() != null ? project.getCategory() : "Academic")
+                .type( "Academic")
                 .githubLink(project.getGithubUrl())
                 .icon(getProjectIcon(project, metadata))
                 .primaryColor(metadata.map(EntityMetadata::getPrimaryColor).orElse("#3B82F6"))
@@ -241,8 +229,8 @@ public class EducationService extends BaseService<Education, Long, EducationRepo
         }
 
         // 2. Icon bazat pe categoria proiectului
-        if (project.getCategory() != null) {
-            return getIconByCategory(project.getCategory());
+        if (project.getProjectCategory().getName() != null) {
+            return "something";
         }
 
         // 3. Icon bazat pe titlul proiectului
@@ -430,7 +418,7 @@ public class EducationService extends BaseService<Education, Long, EducationRepo
      * Get top N categories of projects as focus areas
      */
     private List<String> getTopProjectCategories(Long personalId) {
-        List<Object[]> categoryDistribution = projectRepository.findProjectCategoryDistribution(personalId);
+        List<Object[]> categoryDistribution = new ArrayList<>();
 
         return categoryDistribution.stream()
                 .limit(4)

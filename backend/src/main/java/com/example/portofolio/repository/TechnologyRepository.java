@@ -20,10 +20,10 @@ public interface TechnologyRepository extends JpaRepository<Technology, Long> {
     @Query("SELECT COUNT(t) FROM Technology t WHERE t.trending = true")
     Long countTrendingTechnologies();
 
-    @Query("SELECT t.category.name, COUNT(t) FROM Technology t " +
-            "GROUP BY t.category.name " +
-            "ORDER BY COUNT(t) DESC")
-    List<Object[]> countTechnologiesByCategory();
+//    @Query("SELECT t.category.name, COUNT(t) FROM Technology t " +
+//            "GROUP BY t.category.name " +
+//            "ORDER BY COUNT(t) DESC")
+//    List<Object[]> countTechnologiesByCategory();
 
     @Query("SELECT AVG(t.popularityScore) FROM Technology t")
     Double findAveragePopularityScore();
@@ -34,12 +34,12 @@ public interface TechnologyRepository extends JpaRepository<Technology, Long> {
             "OR LOWER(t.description) LIKE LOWER(CONCAT('%', :search, '%'))")
     List<Technology> findByNameOrDescriptionContaining(@Param("search") String search);
 
-    @Query("SELECT t FROM Technology t " +
-            "WHERE t.category.id = :categoryId " +
-            "AND (LOWER(t.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(t.description) LIKE LOWER(CONCAT('%', :search, '%')))")
-    List<Technology> findByCategoryIdAndSearchTerm(@Param("categoryId") Long categoryId,
-                                                   @Param("search") String search);
+//    @Query("SELECT t FROM Technology t " +
+//            "WHERE t.category.id = :categoryId " +
+//            "AND (LOWER(t.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+//            "OR LOWER(t.description) LIKE LOWER(CONCAT('%', :search, '%')))")
+//    List<Technology> findByCategoryIdAndSearchTerm(@Param("categoryId") Long categoryId,
+//                                                   @Param("search") String search);
 
     // Recently released
     @Query("SELECT t FROM Technology t " +

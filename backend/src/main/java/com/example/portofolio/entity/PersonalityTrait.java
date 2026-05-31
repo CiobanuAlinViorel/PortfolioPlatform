@@ -15,9 +15,9 @@ import java.util.Set;
 @Table(name = "personality_trait", indexes = {
         @Index(name = "idx_personality_personal_strength", columnList = "personal_id, strength_level")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access =  AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class PersonalityTrait extends BaseEntity {
@@ -44,5 +44,15 @@ public class PersonalityTrait extends BaseEntity {
     // Relationships
     @OneToMany(mappedBy = "trait", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<PersonalityExample> examples = new HashSet<>();
+
+    // COLLECTIONS METHODS
+    public void addPersonalityExample(PersonalityExample personalityExample) {
+        this.examples.add(personalityExample);
+    }
+
+    public void removePersonalityExample(PersonalityExample personalityExample) {
+        this.examples.remove(personalityExample);
+    }
 }

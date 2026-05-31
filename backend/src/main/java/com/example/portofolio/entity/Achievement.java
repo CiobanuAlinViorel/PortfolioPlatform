@@ -1,8 +1,8 @@
 package com.example.portofolio.entity;
 
 import com.example.portofolio.entity.base.BaseEntity;
+import com.example.portofolio.entity.enums.AchievementContext;
 import com.example.portofolio.entity.enums.AchievementType;
-import com.example.portofolio.entity.enums.EntityType;
 import com.example.portofolio.entity.enums.RecognitionLevel;
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,12 +15,11 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "achievement", indexes = {
         @Index(name = "idx_achievement_personal_type", columnList = "personal_id, achievement_type"),
-        @Index(name = "idx_achievement_date_level", columnList = "achievement_date, recognition_level"),
-        @Index(name = "idx_achievement_entity", columnList = "entity_type, entity_id")
+        @Index(name = "idx_achievement_date_level", columnList = "achievement_date, recognition_level")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class Achievement extends BaseEntity {
@@ -29,9 +28,6 @@ public class Achievement extends BaseEntity {
     @JoinColumn(name = "personal_id", nullable = false)
     private Personal personal;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "education_id")
-    private Education education;
 
     @Column(nullable = false, length = 200)
     private String title;
@@ -47,20 +43,22 @@ public class Achievement extends BaseEntity {
     private LocalDate achievementDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "entity_type", length = 20)
-    private EntityType entityType;
-
-    @Column(name = "entity_id")
-    private Long entityId;
-
-    @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(name = "recognition_level", length = 20)
     private RecognitionLevel recognitionLevel = RecognitionLevel.LOCAL;
 
-    @Column(name = "award_body", length = 200)
-    private String awardBody;
+    @Enumerated(EnumType.STRING)
+    private AchievementContext achievementContext;
 
-    @Column(name = "certificate_url", length = 500)
-    private String certificateUrl;
+    @Column(name="recognized_by", length = 50)
+    private String recognizedBy;
+
+    @Column(name="proof_url")
+    private String proofUrl;
+
+    @Column(name="is_featured")
+    private Boolean isFeatured;
+
+    @Column(name="sort_order")
+    private Integer sortOrder;
 }

@@ -14,9 +14,10 @@ import java.util.Set;
 @Table(name = "personal", indexes = {
         @Index(name = "idx_personal_name", columnList = "first_name, last_name")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
@@ -37,18 +38,47 @@ public class Personal extends BaseEntity {
     private String description;
 
     // Relationships
+    @Setter(AccessLevel.NONE)
     @OneToMany(mappedBy = "personal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Skill> skills = new HashSet<>();
 
+    @Setter(AccessLevel.NONE)
     @OneToMany(mappedBy = "personal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Project> projects = new HashSet<>();
 
+    @Setter(AccessLevel.NONE)
     @OneToMany(mappedBy = "personal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Certificate> certificates = new HashSet<>();
 
-    @OneToOne(mappedBy = "personal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "personal")
     private ContactInfo contactInfo;
+
+    // FUNCTIONS TO POPULATE THE COLLECTIONS
+
+    public void addSkill(Skill skill){
+        skills.add(skill);
+    }
+
+    public void removeSkill(Skill skill){
+        skills.remove(skill);
+    }
+
+    public void addProject(Project project){
+        projects.add(project);
+    }
+
+    public void removeProject(Project project){
+        projects.remove(project);
+    }
+
+    public void addCertificate(Certificate certificate){
+        certificates.add(certificate);
+    }
+
+    public void removeCertificate(Certificate certificate){
+        certificates.remove(certificate);
+    }
 }

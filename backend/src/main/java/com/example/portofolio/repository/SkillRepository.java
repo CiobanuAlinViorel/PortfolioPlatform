@@ -24,11 +24,6 @@ public interface SkillRepository extends JpaRepository<Skill, Long> {
             "WHERE s.personal.id = :personalId")
     List<Skill> findByPersonalIdWithCategoryAndTags(@Param("personalId") Long personalId);
 
-    // Featured/Trending skills
-    @Query("SELECT s FROM Skill s " +
-            "JOIN EntityMetadata em ON em.entityType = 'SKILL' AND em.entityId = s.id " +
-            "WHERE s.personal.id = :personalId AND em.featured = true")
-    List<Skill> findFeaturedByPersonalId(@Param("personalId") Long personalId);
 
     // Statistics
     @Query("SELECT COUNT(s) FROM Skill s WHERE s.personal.id = :personalId")
@@ -44,21 +39,6 @@ public interface SkillRepository extends JpaRepository<Skill, Long> {
             "OR LOWER(s.description) LIKE LOWER(CONCAT('%', :search, '%')))")
     List<Skill> findByPersonalIdAndNameOrDescriptionContaining(@Param("personalId") Long personalId,
                                                                @Param("search") String search);
-
-
-    @Query("SELECT s FROM Skill s JOIN EntityMetadata em ON em.entityType = 'SKILL' AND em.entityId = s.id " +
-            "WHERE s.personal.id = :personalId AND em.featured = true ORDER BY s.level DESC")
-    List<Skill> findFeaturedByPersonalId(@Param("personalId") Long personalId, Pageable pageable);
-
-    /**
-     * Return top skills ordered after level  (descendant) and limited for N skills
-     * Use LEFT JOIN for including metadata (color)
-     */
-    @Query("SELECT s, em FROM Skill s " +
-            "LEFT JOIN EntityMetadata em ON em.entityType = 'SKILL' AND em.entityId = s.id " +
-            "WHERE s.personal.id = :personalId AND s.level IS NOT NULL " +
-            "ORDER BY s.level DESC, s.name ASC")
-    List<Object[]> findTopSkillsByLevel(@Param("personalId") Long personalId, Pageable pageable);
 
     /**
      * Find the skills by category name

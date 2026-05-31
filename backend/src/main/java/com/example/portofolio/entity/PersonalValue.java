@@ -13,9 +13,9 @@ import lombok.*;
         @Index(name = "idx_personal_value_importance", columnList = "personal_id, importance_level"),
         @Index(name = "idx_personal_value_order", columnList = "personal_id, sort_order")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class PersonalValue extends BaseEntity {

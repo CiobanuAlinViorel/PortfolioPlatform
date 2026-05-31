@@ -17,20 +17,15 @@ public interface CertificateRepository extends JpaRepository<Certificate, Long> 
     List<Certificate> findByPersonalId(Long personalId);
 
     // Optimized queries
-    @Query("SELECT c FROM Certificate c " +
-            "LEFT JOIN FETCH c.category " +
-            "WHERE c.personal.id = :personalId")
-    List<Certificate> findByPersonalIdWithCategory(@Param("personalId") Long personalId);
+//    @Query("SELECT c FROM Certificate c " +
+//            "LEFT JOIN FETCH c.category " +
+//            "WHERE c.personal.id = :personalId")
+//    List<Certificate> findByPersonalIdWithCategory(@Param("personalId") Long personalId);
 
     // Verification status
     List<Certificate> findByPersonalIdAndVerifiedTrue(Long personalId);
 
-    // Featured certificates
-    @Query("SELECT c FROM Certificate c " +
-            "JOIN EntityMetadata em ON em.entityType = 'CERTIFICATE' AND em.entityId = c.id " +
-            "WHERE c.personal.id = :personalId AND em.featured = true " +
-            "ORDER BY c.issueDate DESC")
-    List<Certificate> findFeaturedByPersonalId(@Param("personalId") Long personalId);
+
 
     // Expiry management
     @Query("SELECT c FROM Certificate c " +

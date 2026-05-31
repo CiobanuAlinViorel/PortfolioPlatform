@@ -19,9 +19,9 @@ import java.util.Set;
         @Index(name = "idx_education_institution_field", columnList = "institution, field_of_study"),
         @Index(name = "idx_education_dates", columnList = "start_date, end_date")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access =  AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class Education extends BaseEntity {
@@ -65,14 +65,30 @@ public class Education extends BaseEntity {
     // Relationships
     @OneToMany(mappedBy = "education", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<Course> courses = new HashSet<>();
 
     @OneToMany(mappedBy = "education", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
-    private Set<Achievement> achievements = new HashSet<>();
+    @Setter(AccessLevel.NONE)
+    private Set<EducationAchievement> achievements = new HashSet<>();
 
-    // Helper method for metadata
-    public String getEntityType() {
-        return "education";
+
+    // COLLECTIONS METHODS
+
+    public void addCourse(Course course) {
+        courses.add(course);
+    }
+
+    public void removeCourse(Course course) {
+        courses.remove(course);
+    }
+
+    public void addAchievement(EducationAchievement achievement) {
+        achievements.add(achievement);
+    }
+
+    public void removeAchievement(EducationAchievement achievement) {
+        achievements.remove(achievement);
     }
 }

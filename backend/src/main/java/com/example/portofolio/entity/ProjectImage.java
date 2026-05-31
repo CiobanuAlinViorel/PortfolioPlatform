@@ -12,9 +12,9 @@ import lombok.*;
         @Index(name = "idx_project_image_order", columnList = "project_id, sort_order"),
         @Index(name = "idx_project_image_primary", columnList = "project_id, is_primary")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class ProjectImage extends BaseEntity {

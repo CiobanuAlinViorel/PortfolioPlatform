@@ -29,12 +29,6 @@ public interface EducationRepository extends JpaRepository<Education, Long> {
     @Query("SELECT e FROM Education e WHERE e.personal.id = :personalId AND e.status = :status")
     Education findCurrentByPersonalId(@Param("personalId") Long personalId);
 
-    // Featured education
-    @Query("SELECT e FROM Education e " +
-            "JOIN EntityMetadata em ON em.entityType = 'EDUCATION' AND em.entityId = e.id " +
-            "WHERE e.personal.id = :personalId AND em.featured = true " +
-            "ORDER BY e.level DESC, e.startDate DESC")
-    List<Education> findFeaturedByPersonalId(@Param("personalId") Long personalId);
 
     // Statistics
     @Query("SELECT COUNT(e) FROM Education e WHERE e.personal.id = :personalId")

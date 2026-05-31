@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,20 +27,13 @@ import java.util.Optional;
 public class ProjectService extends BaseService<Project, Long, ProjectRepository> {
 
     private final EntityMetadataRepository entityMetadataRepository;
-    private final EntityTechnologyRepository entityTechnologyRepository;
 
     @Autowired
     public ProjectService(ProjectRepository projectRepository,
-                          EntityMetadataRepository entityMetadataRepository,
-                          EntityTechnologyRepository entityTechnologyRepository) {
+                          EntityMetadataRepository entityMetadataRepository) {
         super(projectRepository);
         this.entityMetadataRepository = entityMetadataRepository;
-        this.entityTechnologyRepository = entityTechnologyRepository;
-    }
 
-    @Override
-    protected String getEntityTypeName() {
-        return EntityType.PROJECT.name();
     }
 
     @Override
@@ -113,10 +107,7 @@ public class ProjectService extends BaseService<Project, Long, ProjectRepository
         Optional<EntityMetadata> metadata = entityMetadataRepository
                 .findByEntityTypeAndEntityId(EntityType.PROJECT, project.getId());
 
-        List<String> technologies = ServiceUtils.safeMap(
-                entityTechnologyRepository.findByEntityTypeAndEntityIdWithTechnology(EntityType.PROJECT, project.getId()),
-                et -> et.getTechnology().getName()
-        );
+        List<String> technologies = new ArrayList<String>();
 
         return ProjectExportDto.builder()
                 .id(project.getId().toString())
@@ -124,7 +115,7 @@ public class ProjectService extends BaseService<Project, Long, ProjectRepository
                 .description(project.getDescription())
                 .longDescription(project.getDescription()) // Use same for now
                 .technologies(technologies)
-                .category(project.getCategory())
+                .category("")
                 .status(ServiceUtils.enumToLowerString(project.getStatus()))
                 .featured(ServiceUtils.isFeatured(metadata))
                 .images(getProjectImages(project))
@@ -146,10 +137,7 @@ public class ProjectService extends BaseService<Project, Long, ProjectRepository
         Optional<EntityMetadata> metadata = entityMetadataRepository
                 .findByEntityTypeAndEntityId(EntityType.PROJECT, project.getId());
 
-        List<String> technologies = ServiceUtils.safeMap(
-                entityTechnologyRepository.findByEntityTypeAndEntityIdWithTechnology(EntityType.PROJECT, project.getId()),
-                et -> et.getTechnology().getName()
-        );
+        List<String> technologies = new ArrayList<>();
 
         return FeaturedProjectDto.builder()
                 .id(project.getId().toString())
@@ -161,7 +149,7 @@ public class ProjectService extends BaseService<Project, Long, ProjectRepository
                 .githubUrl(project.getGithubUrl())
                 .liveUrl(project.getDemoUrl())
                 .featured(ServiceUtils.isFeatured(metadata))
-                .category(project.getCategory())
+                .category("")
                 .primaryColor(ServiceUtils.getColorFromMetadata(metadata, "#3B82F6"))
                 .secondaryColor(ServiceUtils.getColorFromMetadata(metadata, "#93C5FD"))
                 .build();
@@ -246,7 +234,7 @@ public class ProjectService extends BaseService<Project, Long, ProjectRepository
         ServiceUtils.validatePersonalId(personalId);
 
 
-        List<Object[]> distribution = repository.findProjectCategoryDistribution(personalId);
+        List<Object[]> distribution = new ArrayList<>();
         Long totalProjects = repository.getTotalProjectCount(personalId);
 
         log.debug("Found {} categories with {} total projects for personalId: {}",

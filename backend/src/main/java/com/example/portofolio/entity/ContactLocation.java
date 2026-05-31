@@ -11,9 +11,9 @@ import java.math.BigDecimal;
  */
 @Entity
 @Table(name = "contact_location")
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class ContactLocation extends BaseEntity {

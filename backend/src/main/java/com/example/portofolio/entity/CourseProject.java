@@ -13,9 +13,9 @@ import lombok.*;
 @Table(name = "course_project", indexes = {
         @Index(name = "idx_course_project_unique", columnList = "course_id, project_id", unique = true)
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class CourseProject extends BaseEntity {
@@ -24,7 +24,7 @@ public class CourseProject extends BaseEntity {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 

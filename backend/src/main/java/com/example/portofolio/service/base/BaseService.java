@@ -93,13 +93,7 @@ public abstract class BaseService<T, ID, R extends JpaRepository<T, ID>> {
 
     // ===== TEMPLATE METHODS =====
 
-    /**
-     * Get entity type name for metadata queries - implement in subclasses if needed
-     */
-    protected String getEntityTypeName() {
-        return "UNKNOWN";
-    }
-
+    
     /**
      * Transform entity to DTO - must be implemented by subclasses
      */

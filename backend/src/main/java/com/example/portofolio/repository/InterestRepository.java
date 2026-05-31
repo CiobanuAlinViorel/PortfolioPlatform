@@ -13,13 +13,7 @@ public interface InterestRepository extends JpaRepository<Interest, Long> {
 
     // Basic queries
     List<Interest> findByPersonalId(Long personalId);
-
-    // Featured interests
-    @Query("SELECT i FROM Interest i " +
-            "JOIN EntityMetadata em ON em.entityType = 'INTEREST' AND em.entityId = i.id " +
-            "WHERE i.personal.id = :personalId AND em.featured = true " +
-            "ORDER BY i.intensity DESC")
-    List<Interest> findFeaturedByPersonalId(@Param("personalId") Long personalId);
+    
 
     // Statistics
     @Query("SELECT COUNT(i) FROM Interest i WHERE i.personal.id = :personalId")

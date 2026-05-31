@@ -12,9 +12,9 @@ import lombok.*;
 @Table(name = "project_challenge", indexes = {
         @Index(name = "idx_project_challenge_difficulty", columnList = "project_id, difficulty")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class ProjectChallenge extends BaseEntity {

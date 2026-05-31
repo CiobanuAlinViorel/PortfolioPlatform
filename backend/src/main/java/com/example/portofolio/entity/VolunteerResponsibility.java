@@ -12,9 +12,9 @@ import lombok.*;
 @Table(name = "volunteer_responsibility", indexes = {
         @Index(name = "idx_volunteer_responsibility_order", columnList = "volunteer_experience_id, sort_order")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class VolunteerResponsibility extends BaseEntity {

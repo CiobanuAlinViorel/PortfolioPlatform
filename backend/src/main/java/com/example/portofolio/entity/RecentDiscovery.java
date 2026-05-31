@@ -16,9 +16,9 @@ import java.time.LocalDate;
         @Index(name = "idx_discovery_interest_date", columnList = "interest_id, discovery_date"),
         @Index(name = "idx_discovery_impact_date", columnList = "impact_level, discovery_date")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class RecentDiscovery extends BaseEntity {

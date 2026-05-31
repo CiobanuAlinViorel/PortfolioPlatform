@@ -9,9 +9,9 @@ import lombok.*;
  */
 @Entity
 @Table(name = "contact_info")
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class ContactInfo extends BaseEntity {
@@ -31,10 +31,8 @@ public class ContactInfo extends BaseEntity {
 
     @Column(length = 100)
     private String linkedin;
+    
 
-    @Column(length = 200)
-    private String website;
-
-    @OneToOne(mappedBy = "contactInfo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "contactInfo", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private ContactLocation contactLocation;
 }

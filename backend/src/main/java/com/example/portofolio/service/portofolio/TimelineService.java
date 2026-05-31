@@ -78,7 +78,7 @@ public class TimelineService {
                 .description(achievement.getDescription())
                 .type("achievement")
                 .current(false)
-                .link(achievement.getCertificateUrl())
+                .link(achievement.getProofUrl())
                 .icon(metadata != null && metadata.getIcon() != null ?
                         metadata.getIcon().getName() : "Award")
                 .primaryColor(metadata != null ? metadata.getPrimaryColor() : "#3B82F6")

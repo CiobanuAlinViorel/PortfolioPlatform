@@ -18,9 +18,9 @@ import java.util.Set;
         @Index(name = "idx_technology_category_popularity", columnList = "category_id, popularity_score"),
         @Index(name = "idx_technology_trending", columnList = "is_trending, popularity_score")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class Technology extends BaseEntity {
@@ -29,8 +29,8 @@ public class Technology extends BaseEntity {
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private TechnologyCategory category;
+    @JoinColumn(name = "category_id")
+    private TechnologyCategory technologyCategory;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -59,9 +59,15 @@ public class Technology extends BaseEntity {
     // Relationships
     @OneToMany(mappedBy = "technology", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<TechnologyFeature> features = new HashSet<>();
 
-    @OneToMany(mappedBy = "technology", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<EntityTechnology> entityTechnologies = new HashSet<>();
+    // COLLECTION METHODS
+    public void addFeature(TechnologyFeature feature) {
+        this.features.add(feature);
+    }
+
+    public void removeFeature(TechnologyFeature feature) {
+        this.features.remove(feature);
+    }
 }

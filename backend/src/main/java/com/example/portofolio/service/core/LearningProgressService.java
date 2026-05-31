@@ -34,25 +34,18 @@ public class LearningProgressService extends BaseService<LearningProgress, Long,
     private final EntityMetadataRepository entityMetadataRepository;
     private final SkillRepository skillRepository;
     private final ProjectRepository projectRepository;
-    private final EntityTechnologyRepository entityTechnologyRepository;
+
 
     @Autowired
     public LearningProgressService(LearningProgressRepository learningProgressRepository,
                                    EntityMetadataRepository entityMetadataRepository,
                                    SkillRepository skillRepository,
-                                   ProjectRepository projectRepository,
-                                   EntityTechnologyRepository entityTechnologyRepository) {
+                                   ProjectRepository projectRepository) {
         super(learningProgressRepository);
         this.entityMetadataRepository = entityMetadataRepository;
         this.skillRepository = skillRepository;
-        this.entityTechnologyRepository = entityTechnologyRepository;
         this.projectRepository = projectRepository;
 
-    }
-
-    @Override
-    protected String getEntityTypeName() {
-        return EntityType.LEARNING_PROGRESS.name();
     }
 
     @Override
@@ -90,11 +83,7 @@ public class LearningProgressService extends BaseService<LearningProgress, Long,
         List<LearningMilestoneDto> projectMilestones = completedProjects.stream()
                 .map(project -> {
 
-                    List<String> technologies = entityTechnologyRepository
-                            .findByEntityTypeAndEntityIdWithTechnology(EntityType.PROJECT, project.getId())
-                            .stream()
-                            .map(et -> et.getTechnology().getName())
-                            .toList();
+                    List<String> technologies = null;
 
                     return LearningMilestoneDto.builder()
                             .id(project.getId().toString())
@@ -119,16 +108,12 @@ public class LearningProgressService extends BaseService<LearningProgress, Long,
         List<LearningMilestoneDto> skillMilestones = expertSkills.stream()
                 .map(skill -> {
 
-                    List<String> technologies = entityTechnologyRepository
-                            .findByEntityTypeAndEntityIdWithTechnology(EntityType.SKILL, skill.getId())
-                            .stream()
-                            .map(et -> et.getTechnology().getName())
-                            .toList();
+                    List<String> technologies = new ArrayList<>();
 
 
-                    if (technologies.isEmpty()) {
+
                         technologies = List.of(skill.getName());
-                    }
+                    
 
                     String year = skill.getUpdatedAt() != null ?
                             String.valueOf(skill.getUpdatedAt().getYear()) :
@@ -152,16 +137,10 @@ public class LearningProgressService extends BaseService<LearningProgress, Long,
         List<LearningMilestoneDto> learningMilestones = completedLearning.stream()
                 .map(learning -> {
 
-                    List<String> technologies = entityTechnologyRepository
-                            .findByEntityTypeAndEntityIdWithTechnology(EntityType.SKILL, learning.getSkill().getId())
-                            .stream()
-                            .map(et -> et.getTechnology().getName())
-                            .toList();
+                    List<String> technologies = new ArrayList<>();
 
 
-                    if (technologies.isEmpty()) {
-                        technologies = List.of(learning.getSkill().getName());
-                    }
+                    technologies = List.of(learning.getSkill().getName());
 
                     String year = learning.getCompletionDate() != null ?
                             String.valueOf(learning.getCompletionDate().getYear()) :

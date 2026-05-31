@@ -14,13 +14,6 @@ public interface FutureGoalRepository extends JpaRepository<FutureGoal, Long> {
     // Basic queries
     List<FutureGoal> findByPersonalId(Long personalId);
 
-    // Featured goals
-    @Query("SELECT fg FROM FutureGoal fg " +
-            "JOIN EntityMetadata em ON em.entityType = 'FUTURE_GOAL' AND em.entityId = fg.id " +
-            "WHERE fg.personal.id = :personalId AND em.featured = true " +
-            "ORDER BY fg.priority DESC, fg.targetDate ASC")
-    List<FutureGoal> findFeaturedByPersonalId(@Param("personalId") Long personalId);
-
     // Statistics
     @Query("SELECT COUNT(fg) FROM FutureGoal fg WHERE fg.personal.id = :personalId")
     Long countByPersonalId(@Param("personalId") Long personalId);

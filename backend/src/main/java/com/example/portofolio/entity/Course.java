@@ -16,9 +16,9 @@ import java.util.Set;
         @Index(name = "idx_course_education_relevant", columnList = "education_id, is_relevant"),
         @Index(name = "idx_course_timeline", columnList = "year, semester")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class Course extends BaseEntity {
@@ -51,5 +51,15 @@ public class Course extends BaseEntity {
     // Relationships
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<CourseProject> courseProjects = new HashSet<>();
+
+    // COLLECTION METHODS
+    public void addCourseProject(CourseProject courseProject) {
+        this.courseProjects.add(courseProject);
+    }
+
+    public void removeCourseProject(CourseProject courseProject) {
+        this.courseProjects.remove(courseProject);
+    }
 }

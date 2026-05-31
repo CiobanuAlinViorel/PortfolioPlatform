@@ -12,9 +12,9 @@ import lombok.*;
 @Table(name = "icon", indexes = {
         @Index(name = "idx_icon_type_category", columnList = "type, category")
 })
-@Data
+@Setter @Getter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class Icon extends BaseEntity {
@@ -26,9 +26,7 @@ public class Icon extends BaseEntity {
     @Column(nullable = false, length = 20)
     private IconType type;
 
-    @Column(length = 50)
-    private String category;
-
-    @Column(name = "svg_content", columnDefinition = "TEXT")
-    private String svgContent;
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private IconCategory iconCategory;
 }

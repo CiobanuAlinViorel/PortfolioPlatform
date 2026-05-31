@@ -13,12 +13,11 @@ import lombok.*;
 @Entity
 @Table(name = "highlight", indexes = {
         @Index(name = "idx_highlight_personal_type", columnList = "personal_id, highlight_type"),
-        @Index(name = "idx_highlight_priority_type", columnList = "priority_level, highlight_type"),
-        @Index(name = "idx_highlight_entity", columnList = "entity_type, entity_id")
+        @Index(name = "idx_highlight_priority_type", columnList = "priority_level, highlight_type")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class Highlight extends BaseEntity {
@@ -36,13 +35,6 @@ public class Highlight extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "highlight_type", nullable = false, length = 20)
     private HighlightType highlightType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "entity_type", length = 20)
-    private EntityType entityType;
-
-    @Column(name = "entity_id")
-    private Long entityId;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default

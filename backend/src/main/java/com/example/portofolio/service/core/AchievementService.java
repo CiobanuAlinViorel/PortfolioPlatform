@@ -34,10 +34,7 @@ public class AchievementService extends BaseService<Achievement, Long, Achieveme
         this.entityMetadataRepository = entityMetadataRepository;
     }
 
-    @Override
-    protected String getEntityTypeName() {
-        return EntityType.ACHIEVEMENT.name();
-    }
+
 
     @Override
     protected AchievementDto toDto(Achievement achievement) {
@@ -70,12 +67,8 @@ public class AchievementService extends BaseService<Achievement, Long, Achieveme
         ServiceUtils.validatePersonalId(personalId);
         ServiceUtils.validateEntityId(entityId);
 
-        List<Achievement> achievements = repository.findByPersonalIdAndEntityTypeAndEntityId(
-                personalId, entityType, entityId);
-        List<AchievementDto> result = achievements.stream()
-                .map(this::toAchievementDto)
-                .toList();
-
+        List<Achievement> achievements = null;
+        List<AchievementDto> result = null;
         ServiceUtils.logMethodExit("findByEntityTypeAndEntityId", result.size());
         return result;
     }
@@ -134,22 +127,7 @@ public class AchievementService extends BaseService<Achievement, Long, Achieveme
     private String getIconForAchievementType(AchievementType type) {
         if (type == null) return "award";
 
-        return switch (type) {
-            case ACADEMIC -> "graduation-cap";
-            case PROFESSIONAL -> "briefcase";
-            case TECHNICAL -> "code";
-            case RESEARCH -> "beaker";
-            case LEADERSHIP -> "users";
-            case PROJECT -> "puzzle";
-            case HOBBY -> "ball";
-            case VOLUNTEER -> "heart";
-            case COMPETITION -> "trophy";
-            case CERTIFICATION -> "certificate";
-            case PUBLICATION -> "book-open";
-            case PATENT -> "lightbulb";
-            case AWARD -> "award";
-            case RECOGNITION -> "star";
-        };
+        return "something";
     }
 
     // ===== METADATA SUPPORT =====

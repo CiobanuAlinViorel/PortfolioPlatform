@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -31,7 +32,6 @@ public class VolunteerService {
     private final AchievementRepository achievementRepository;
     private final SkillRepository skillRepository;
     private final EntityMetadataRepository entityMetadataRepository;
-    private final EntitySkillRepository entitySkillRepository;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM yyyy");
 
@@ -118,12 +118,7 @@ public class VolunteerService {
     }
 
     private List<AchievementDto> getVolunteerAchievements(VolunteerExperience volunteer) {
-        return achievementRepository.findByPersonalId(volunteer.getPersonal().getId())
-                .stream()
-                .filter(achievement -> achievement.getEntityType() == EntityType.VOLUNTEER &&
-                        achievement.getEntityId().equals(volunteer.getId()))
-                .map(this::mapToAchievementDto)
-                .collect(Collectors.toList());
+        return new ArrayList<>();
     }
 
     private AchievementDto mapToAchievementDto(Achievement achievement) {
@@ -190,10 +185,7 @@ public class VolunteerService {
     }
 
     private List<String> getSkillsForVolunteer(Long volunteerId) {
-        return entitySkillRepository.findByEntityTypeAndEntityId(EntityType.VOLUNTEER, volunteerId)
-                .stream()
-                .map(entitySkill -> entitySkill.getSkill().getName())
-                .collect(Collectors.toList());
+        return new ArrayList<>();
     }
 
 

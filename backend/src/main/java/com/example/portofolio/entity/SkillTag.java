@@ -11,9 +11,9 @@ import lombok.*;
 @Table(name = "skill_tag", indexes = {
         @Index(name = "idx_skill_tag_unique", columnList = "skill_id, tag_name", unique = true)
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class SkillTag extends BaseEntity {

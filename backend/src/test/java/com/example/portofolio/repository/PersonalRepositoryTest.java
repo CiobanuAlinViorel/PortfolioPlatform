@@ -68,7 +68,6 @@ class PersonalRepositoryTest {
                 .phone("+1234567890")
                 .github("johndoe")
                 .linkedin("john-doe")
-                .website("https://johndoe.dev")
                 .contactLocation(testContactLocation)
                 .build();
 
@@ -96,7 +95,6 @@ class PersonalRepositoryTest {
 
         // Set up relationships
         testContactLocation.setContactInfo(testContactInfo);
-        testPersonal.setContactInfo(testContactInfo);
         testPersonal.getSkills().add(testSkill);
     }
 
@@ -154,6 +152,7 @@ class PersonalRepositoryTest {
         assertThat(found).isPresent();
 
         Personal personal = found.get();
+
         assertThat(personal.getContactInfo()).isNotNull();
         assertThat(personal.getContactInfo().getEmail()).isEqualTo("john.doe@example.com");
         assertThat(personal.getContactInfo().getContactLocation()).isNotNull();

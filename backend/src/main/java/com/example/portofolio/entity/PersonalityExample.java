@@ -11,9 +11,9 @@ import lombok.*;
 @Table(name = "personality_example", indexes = {
         @Index(name = "idx_personality_example_order", columnList = "trait_id, sort_order")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class PersonalityExample extends BaseEntity {

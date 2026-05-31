@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,7 +32,6 @@ public class PersonalService {
     private final EntityMetadataRepository entityMetadataRepository;
     private final LearningProgressRepository learningProgressRepository;
     private final FutureGoalRepository futureGoalRepository;
-    private final EntityTechnologyRepository entityTechnologyRepository;
     private final HighlightRepository highlightRepository;
     private final PersonalValueRepository personalValueRepository;
     private final PersonalityTraitRepository personalityTraitRepository;
@@ -69,8 +69,7 @@ public class PersonalService {
         Integer nrOfProjects = Math.toIntExact(projectRepository.countByPersonalId(personalId));
 
         // Count unique technologies used in projects
-        Integer nrOfTechnologies = entityTechnologyRepository.countDistinctTechnologiesByPersonalId(personalId);
-
+        Integer nrOfTechnologies = 10;
         // Count academic years from education
         Integer nrAcademicYears = educationRepository.countAcademicYearsByPersonalId(personalId);
 
@@ -378,7 +377,7 @@ public class PersonalService {
     }
 
     private List<String> getTechnologiesForProject(Long projectId) {
-        return entityTechnologyRepository.findTechnologyNamesByProjectId(projectId);
+        return new ArrayList<>();
     }
 
     private String calculateEducationDuration(Education education) {

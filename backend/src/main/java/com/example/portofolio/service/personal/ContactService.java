@@ -34,10 +34,6 @@ public class ContactService extends BaseService<ContactInfo, Long, ContactInfoRe
         this.contactLocationRepository = contactLocationRepository;
     }
 
-    @Override
-    protected String getEntityTypeName() {
-        return EntityType.CONTACT_INFO.name();
-    }
 
     @Override
     protected ContactInfoDto toDto(ContactInfo contactInfo) {

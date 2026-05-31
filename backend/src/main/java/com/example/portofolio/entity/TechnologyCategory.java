@@ -14,9 +14,9 @@ import java.util.Set;
 @Table(name = "technology_category", indexes = {
         @Index(name = "idx_tech_category_hierarchy", columnList = "parent_id, sort_order")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class TechnologyCategory extends BaseEntity {
@@ -37,9 +37,32 @@ public class TechnologyCategory extends BaseEntity {
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<TechnologyCategory> children = new HashSet<>();
+
+    @OneToMany(mappedBy = "technologyCategory", fetch = FetchType.LAZY)
+    @Builder.Default
+    @Setter(AccessLevel.NONE)
+    private Set<Technology> technologies = new HashSet<>();
 
     @Builder.Default
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
+
+    // COLLECTION METHODS
+    public void addChild(TechnologyCategory technologyCategory) {
+       children.add(technologyCategory);
+    }
+
+    public void removeChild(TechnologyCategory technologyCategory) {
+        children.remove(technologyCategory);
+    }
+
+    public void addTechnology(Technology technology) {
+        technologies.add(technology);
+    }
+
+    public void removeTechnology(Technology technology) {
+        technologies.remove(technology);
+    }
 }

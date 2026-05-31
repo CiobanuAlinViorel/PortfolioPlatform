@@ -16,47 +16,32 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     // Basic queries
     List<Project> findByPersonalId(Long personalId);
 
-    // Featured projects
-    @Query("SELECT p FROM Project p " +
-            "JOIN EntityMetadata em ON em.entityType = 'PROJECT' AND em.entityId = p.id " +
-            "WHERE p.personal.id = :personalId AND em.featured = true " +
-            "ORDER BY p.year DESC, p.completionDate DESC")
-    List<Project> findFeaturedByPersonalId(@Param("personalId") Long personalId);
 
-    @Query("SELECT p FROM Project p " +
-            "JOIN EntityTechnology et ON et.entityType = 'PROJECT' AND et.entityId = p.id " +
-            "WHERE et.technology.id = :technologyId " +
-            "ORDER BY p.completionDate DESC")
-    Optional<Project> findLatestProjectUsingTechnology(@Param("technologyId") Long technologyId);
 
     // Statistics
     @Query("SELECT COUNT(p) FROM Project p WHERE p.personal.id = :personalId")
     Long countByPersonalId(@Param("personalId") Long personalId);
 
     // Search
-    @Query("SELECT p FROM Project p " +
-            "WHERE p.personal.id = :personalId " +
-            "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(p.category) LIKE LOWER(CONCAT('%', :search, '%')))")
-    List<Project> findByPersonalIdAndSearchTerm(@Param("personalId") Long personalId,
-                                                @Param("search") String search);
+//    @Query("SELECT p FROM Project p " +
+//            "WHERE p.personal.id = :personalId " +
+//            "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')) " +
+//            "OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')) ")
+//    List<Project> findByPersonalIdAndSearchTerm(@Param("personalId") Long personalId,
+//                                                @Param("search") String search);
 
-    @Query("SELECT p FROM Project p JOIN EntityMetadata em ON em.entityType = 'PROJECT' AND em.entityId = p.id " +
-            "WHERE p.personal.id = :personalId AND em.featured = true ORDER BY p.year DESC")
-    List<Project> findFeaturedByPersonalId(@Param("personalId") Long personalId, Pageable pageable);
 
     @Query("SELECT p FROM Project p WHERE p.personal.id = :personalId AND p.complexity = 'ADVANCED' " +
             "ORDER BY p.year DESC")
     List<Project> findMajorProjectsByPersonalId(@Param("personalId") Long personalId);
 
     // Methods for distribution
-    @Query("SELECT p.category, COUNT(p) as projectCount " +
-            "FROM Project p " +
-            "WHERE p.personal.id = :personalId " +
-            "GROUP BY p.category " +
-            "ORDER BY projectCount DESC, p.category ASC")
-    List<Object[]> findProjectCategoryDistribution(@Param("personalId") Long personalId);
+//    @Query("SELECT p.category_id, COUNT(p) as projectCount " +
+//            "FROM Project p " +
+//            "WHERE p.personal.id = :personalId " +
+//            "GROUP BY p.project_category_id " +
+//            "ORDER BY projectCount DESC, p.category ASC")
+//    List<Object[]> findProjectCategoryDistribution(@Param("personalId") Long personalId);
 
     /**
      * Return total projects

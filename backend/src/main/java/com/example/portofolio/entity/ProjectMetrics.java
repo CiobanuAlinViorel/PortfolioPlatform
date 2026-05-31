@@ -12,9 +12,9 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "project_metrics")
-@Data
+@Getter @Setter 
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class ProjectMetrics extends BaseEntity {

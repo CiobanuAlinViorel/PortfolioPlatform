@@ -20,9 +20,9 @@ import java.time.LocalDate;
         @Index(name = "idx_future_goal_target_priority", columnList = "target_date, priority"),
         @Index(name = "idx_future_goal_progress", columnList = "status, progress_percentage")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class FutureGoal extends BaseEntity {

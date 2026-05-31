@@ -20,12 +20,6 @@ public interface VolunteerExperienceRepository extends JpaRepository<VolunteerEx
             "WHERE ve.personal.id = :personalId")
     List<VolunteerExperience> findByPersonalIdWithResponsibilities(@Param("personalId") Long personalId);
 
-    // Featured volunteer experiences
-    @Query("SELECT ve FROM VolunteerExperience ve " +
-            "JOIN EntityMetadata em ON em.entityType = 'VOLUNTEER' AND em.entityId = ve.id " +
-            "WHERE ve.personal.id = :personalId AND em.featured = true " +
-            "ORDER BY ve.startDate DESC")
-    List<VolunteerExperience> findFeaturedByPersonalId(@Param("personalId") Long personalId);
 
     // Statistics
     @Query("SELECT COUNT(ve) FROM VolunteerExperience ve WHERE ve.personal.id = :personalId")

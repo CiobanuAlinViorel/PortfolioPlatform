@@ -22,9 +22,9 @@ import java.util.Set;
         @Index(name = "idx_project_category_complexity", columnList = "category, complexity"),
         @Index(name = "idx_project_timeline", columnList = "year, completion_date")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class Project extends BaseEntity {
@@ -41,9 +41,6 @@ public class Project extends BaseEntity {
 
     @Column(name = "long_description", columnDefinition = "TEXT")
     private String longDescription;
-
-    @Column(nullable = false, length = 100)
-    private String category;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -70,23 +67,78 @@ public class Project extends BaseEntity {
     private List<String> tags = new ArrayList<>();
 
     // Relationships
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private ProjectCategory projectCategory;
+
+    @OneToOne(mappedBy = "project", cascade = CascadeType.ALL)
+    private ProjectMetrics metrics;
+
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<ProjectFeature> features = new HashSet<>();
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<ProjectChallenge> challenges = new HashSet<>();
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<ProjectImage> images = new HashSet<>();
 
-    @OneToOne(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private ProjectMetrics metrics;
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    @Setter(AccessLevel.NONE)
+    private Set<ProjectSkill> skills = new HashSet<>();
 
-    // Helper method for metadata
-    public String getEntityType() {
-        return "project";
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    @Setter(AccessLevel.NONE)
+    private Set<ProjectAchievement> achievements = new HashSet<>();
+
+    // COLLECTIONS METHODS
+
+    public void addFeature(ProjectFeature feature){
+        this.features.add(feature);
+    }
+
+    public void removeFeature(ProjectFeature feature){
+        this.features.remove(feature);
+    }
+
+    public void addChallenge(ProjectChallenge challenge){
+        this.challenges.add(challenge);
+    }
+
+    public void removeChallenge(ProjectChallenge challenge){
+        this.challenges.remove(challenge);
+    }
+
+    public void addImage(ProjectImage image){
+        this.images.add(image);
+    }
+
+    public void removeImage(ProjectImage image){
+        this.images.remove(image);
+    }
+
+    public void addAchievement(ProjectAchievement achievement){
+        this.achievements.add(achievement);
+    }
+
+    public void removeAchievement(ProjectAchievement achievement){
+        this.achievements.remove(achievement);
+    }
+
+    public void addSkill(ProjectSkill skill){
+        this.skills.add(skill);
+    }
+
+    public void removeSkill(ProjectSkill skill){
+        this.skills.remove(skill);
     }
 }

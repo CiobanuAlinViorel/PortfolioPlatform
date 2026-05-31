@@ -33,11 +33,7 @@ public class InterestService extends BaseService<Interest, Long, InterestReposit
         super(interestRepository);
         this.entityMetadataRepository = entityMetadataRepository;
     }
-
-    @Override
-    protected String getEntityTypeName() {
-        return EntityType.INTEREST.name();
-    }
+    
 
     @Override
     protected InterestDto toDto(Interest interest) {

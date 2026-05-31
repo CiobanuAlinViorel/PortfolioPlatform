@@ -18,9 +18,9 @@ import java.time.LocalDate;
         @Index(name = "idx_certificate_verified_relevance", columnList = "is_verified, relevance_score"),
         @Index(name = "idx_certificate_expiry", columnList = "expiry_date, has_expiry")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class Certificate extends BaseEntity {
@@ -34,7 +34,7 @@ public class Certificate extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
-    private CertificationCategory category;
+    private CertificationCategory certificationCategory;
 
     @Column(nullable = false, length = 150)
     private String provider;
@@ -70,9 +70,5 @@ public class Certificate extends BaseEntity {
     @Builder.Default
     @Column(name = "is_verified")
     private Boolean verified = false;
-
-    // Helper method pentru metadata
-    public String getEntityType() {
-        return "certificate";
-    }
+    
 }

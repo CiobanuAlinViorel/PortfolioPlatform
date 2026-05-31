@@ -15,10 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -29,21 +26,17 @@ import java.util.stream.Collectors;
 public class CertificateService extends BaseService<Certificate, Long, CertificateRepository> {
 
     private final EntityMetadataRepository entityMetadataRepository;
-    private final EntitySkillRepository entitySkillRepository;
+
 
     @Autowired
     public CertificateService(CertificateRepository certificateRepository,
-                              EntityMetadataRepository entityMetadataRepository,
-                              EntitySkillRepository entitySkillRepository) {
+                              EntityMetadataRepository entityMetadataRepository) {
         super(certificateRepository);
         this.entityMetadataRepository = entityMetadataRepository;
-        this.entitySkillRepository = entitySkillRepository;
+
     }
 
-    @Override
-    protected String getEntityTypeName() {
-        return EntityType.CERTIFICATE.name();
-    }
+
 
     @Override
     protected CertificateDto toDto(Certificate certificate) {
@@ -57,7 +50,7 @@ public class CertificateService extends BaseService<Certificate, Long, Certifica
         ServiceUtils.logMethodEntry("findByPersonalId", personalId);
         ServiceUtils.validatePersonalId(personalId);
 
-        List<Certificate> certificates = repository.findByPersonalIdWithCategory(personalId);
+        List<Certificate> certificates = new ArrayList<>();
         List<CertificateDto> result = certificates.stream()
                 .map(this::toCertificateDto)
                 .toList();
@@ -72,10 +65,8 @@ public class CertificateService extends BaseService<Certificate, Long, Certifica
         ServiceUtils.logMethodEntry("findFeaturedCertificates", personalId);
         ServiceUtils.validatePersonalId(personalId);
 
-        List<Certificate> certificates = repository.findFeaturedByPersonalId(personalId);
-        List<CertificateDto> result = certificates.stream()
-                .map(this::toCertificateDto)
-                .toList();
+        List<Certificate> certificates = null;
+        List<CertificateDto> result = null;
 
         ServiceUtils.logMethodExit("findFeaturedCertificates", result.size());
         return result;
@@ -194,8 +185,8 @@ public class CertificateService extends BaseService<Certificate, Long, Certifica
         List<String> skillsGained = getSkillsGainedFromCertificate(certificate.getId());
 
         // Determine category name
-        String categoryName = certificate.getCategory() != null ?
-                certificate.getCategory().getName() : "General";
+        String categoryName = certificate.getCertificationCategory() != null ?
+                certificate.getCertificationCategory().getName() : "General";
 
         // Determine colors based on verification status and relevance
         String defaultColor = getColorForCertificate(certificate);
@@ -222,16 +213,7 @@ public class CertificateService extends BaseService<Certificate, Long, Certifica
     // ===== HELPER METHODS =====
 
     private List<String> getSkillsGainedFromCertificate(Long certificateId) {
-        List<EntitySkill> entitySkills = entitySkillRepository
-                .findByEntityTypeAndEntityIdWithSkill(EntityType.CERTIFICATE, certificateId);
-
-        return entitySkills.stream()
-                .filter(es -> es.getSkill() != null)
-                .map(es -> es.getSkill().getName())
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .toList();
+        return null;
     }
 
     private String getColorForCertificate(Certificate certificate) {

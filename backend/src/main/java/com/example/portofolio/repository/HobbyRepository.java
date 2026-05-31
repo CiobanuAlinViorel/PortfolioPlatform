@@ -14,13 +14,6 @@ public interface HobbyRepository extends JpaRepository<Hobby, Long> {
     // Basic queries
     List<Hobby> findByPersonalId(Long personalId);
 
-    // Featured hobbies
-    @Query("SELECT h FROM Hobby h " +
-            "JOIN EntityMetadata em ON em.entityType = 'HOBBY' AND em.entityId = h.id " +
-            "WHERE h.personal.id = :personalId AND em.featured = true " +
-            "ORDER BY h.yearsActive DESC")
-    List<Hobby> findFeaturedByPersonalId(@Param("personalId") Long personalId);
-
     // Activity level queries
     @Query("SELECT h FROM Hobby h " +
             "WHERE h.personal.id = :personalId " +

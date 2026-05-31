@@ -20,9 +20,9 @@ import java.util.Set;
         @Index(name = "idx_volunteer_org_type", columnList = "organization, type"),
         @Index(name = "idx_volunteer_dates", columnList = "start_date, end_date")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class VolunteerExperience extends BaseEntity {
@@ -72,10 +72,27 @@ public class VolunteerExperience extends BaseEntity {
     // Relationships
     @OneToMany(mappedBy = "volunteerExperience", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<VolunteerResponsibility> responsibilities = new HashSet<>();
 
-    // Helper method for metadata
-    public String getEntityType() {
-        return "volunteer";
+    @OneToMany(mappedBy = "volunteerExperience", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    @Setter(AccessLevel.NONE)
+    private Set<VolunteerProject>  volunteerProjects = new HashSet<>();
+
+    // COLLECTIONS METHODS
+    public void addResponsibility(VolunteerResponsibility responsibility) {
+        responsibilities.add(responsibility);
+    }
+    public void removeResponsibility(VolunteerResponsibility responsibility) {
+        responsibilities.remove(responsibility);
+    }
+
+    public void addProject(VolunteerProject p){
+        this.volunteerProjects.add(p);
+    }
+
+    public void removeProject(VolunteerProject p){
+        this.volunteerProjects.remove(p);
     }
 }

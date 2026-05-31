@@ -20,9 +20,9 @@ import java.time.LocalDateTime;
         @Index(name = "idx_learning_progress_skill_status", columnList = "skill_id, status"),
         @Index(name = "idx_learning_progress_dates", columnList = "start_date, completion_date")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class LearningProgress extends BaseEntity {

@@ -22,9 +22,9 @@ import java.util.Map;
         indexes = {
                 @Index(name = "idx_metadata_priority", columnList = "importance, featured")
         })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class EntityMetadata extends BaseEntity {
@@ -60,10 +60,4 @@ public class EntityMetadata extends BaseEntity {
 
     @Builder.Default
     private Boolean featured = false;
-
-    // JSON field with custom props
-    @Type(JsonType.class)
-    @Column(name = "custom_properties", columnDefinition = "jsonb")
-    @Builder.Default
-    private Map<String, Object> customProperties = new HashMap<>();
 }

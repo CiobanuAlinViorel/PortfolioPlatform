@@ -17,9 +17,9 @@ import java.util.Set;
         @Index(name = "idx_interest_personal_category", columnList = "personal_id, category"),
         @Index(name = "idx_interest_intensity_category", columnList = "intensity, category")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class Interest extends BaseEntity {
@@ -45,10 +45,16 @@ public class Interest extends BaseEntity {
     // Relationships
     @OneToMany(mappedBy = "interest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<RecentDiscovery> recentDiscoveries = new HashSet<>();
 
-    // Helper method for metadata
-    public String getEntityType() {
-        return "interest";
+    // COLLECTIONS METHODS
+
+    public void addRecentDiscovery(RecentDiscovery recentDiscovery) {
+        this.recentDiscoveries.add(recentDiscovery);
+    }
+
+    public void removeRecentDiscovery(RecentDiscovery recentDiscovery) {
+        this.recentDiscoveries.remove(recentDiscovery);
     }
 }

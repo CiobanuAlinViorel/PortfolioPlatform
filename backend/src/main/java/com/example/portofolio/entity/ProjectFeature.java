@@ -14,9 +14,9 @@ import java.time.LocalDate;
 @Table(name = "project_feature", indexes = {
         @Index(name = "idx_project_feature_order", columnList = "project_id, sort_order")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class ProjectFeature extends BaseEntity {

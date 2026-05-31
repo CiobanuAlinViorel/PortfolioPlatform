@@ -21,9 +21,9 @@ import java.util.Set;
         @Index(name = "idx_skill_proficiency", columnList = "proficiency, level"),
         @Index(name = "idx_skill_status", columnList = "is_trending, is_learning")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class Skill extends BaseEntity {
@@ -32,11 +32,15 @@ public class Skill extends BaseEntity {
     @JoinColumn(name = "personal_id", nullable = false)
     private Personal personal;
 
+    @OneToOne
+    @JoinColumn(name ="technology_id")
+    private Technology technology;
+
     @Column(nullable = false, length = 100)
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id")
     private SkillCategory category;
 
     @Enumerated(EnumType.STRING)
@@ -72,18 +76,29 @@ public class Skill extends BaseEntity {
     // Relationships
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<SkillTag> tags = new HashSet<>();
 
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @Setter(AccessLevel.NONE)
     private Set<LearningProgress> learningProgress = new HashSet<>();
 
-    @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<EntitySkill> entitySkills = new HashSet<>();
+    // COLLECTIONS METHODS
 
-    // Helper method for metadata
-    public String getEntityType() {
-        return "skill";
+    public void addLearningProgress(LearningProgress learningProgress) {
+        this.learningProgress.add(learningProgress);
+    }
+
+    public void removeLearningProgress(LearningProgress learningProgress) {
+        this.learningProgress.remove(learningProgress);
+    }
+
+    public void addSkillTag(SkillTag skillTag) {
+        this.tags.add(skillTag);
+    }
+
+    public void removeSkillTag(SkillTag skillTag) {
+        this.tags.remove(skillTag);
     }
 }

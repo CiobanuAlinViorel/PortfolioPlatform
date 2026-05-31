@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,10 +38,7 @@ public class HobbyService extends BaseService<Hobby, Long, HobbyRepository> {
         this.achievementRepository = achievementRepository;
     }
 
-    @Override
-    protected String getEntityTypeName() {
-        return EntityType.HOBBY.name();
-    }
+
 
     @Override
     protected HobbyDto toDto(Hobby hobby) {
@@ -72,8 +70,7 @@ public class HobbyService extends BaseService<Hobby, Long, HobbyRepository> {
         ServiceUtils.validatePersonalId(personalId);
         ServiceUtils.validateEntityId(hobbyId);
 
-        List<Achievement> achievements = achievementRepository
-                .findByPersonalIdAndEntityTypeAndEntityId(personalId, EntityType.HOBBY, hobbyId);
+        List<Achievement> achievements = new ArrayList<>();
         List<AchievementDto> result = achievements.stream()
                 .map(this::toAchievementDto)
                 .toList();

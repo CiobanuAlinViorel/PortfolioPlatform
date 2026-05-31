@@ -26,9 +26,7 @@ import java.util.stream.Collectors;
 public class TechnologyService extends BaseService<Technology, Long, TechnologyRepository> {
 
     private final EntityMetadataRepository entityMetadataRepository;
-    private final EntityTechnologyRepository entityTechnologyRepository;
     private final TechnologyCategoryRepository technologyCategoryRepository;
-    private final ProjectRepository projectRepository;
     private final LearningProgressRepository learningProgressRepository;
     private final SkillRepository skillRepository;
     private final CertificateRepository certificateRepository;
@@ -36,7 +34,6 @@ public class TechnologyService extends BaseService<Technology, Long, TechnologyR
     @Autowired
     public TechnologyService(TechnologyRepository technologyRepository,
                              EntityMetadataRepository entityMetadataRepository,
-                             EntityTechnologyRepository entityTechnologyRepository,
                              TechnologyCategoryRepository technologyCategoryRepository,
                              ProjectRepository projectRepository,
                              CertificateRepository certificateRepository,
@@ -44,18 +41,13 @@ public class TechnologyService extends BaseService<Technology, Long, TechnologyR
                              SkillRepository skillRepository) {
         super(technologyRepository);
         this.entityMetadataRepository = entityMetadataRepository;
-        this.entityTechnologyRepository = entityTechnologyRepository;
         this.technologyCategoryRepository = technologyCategoryRepository;
-        this.projectRepository = projectRepository;
+
         this.learningProgressRepository = learningProgressRepository;
         this.skillRepository = skillRepository;
         this.certificateRepository = certificateRepository;
     }
 
-    @Override
-    protected String getEntityTypeName() {
-        return EntityType.TECHNOLOGY.name();
-    }
 
     @Override
     protected TechnologyDto toDto(Technology technology) {
@@ -119,7 +111,7 @@ public class TechnologyService extends BaseService<Technology, Long, TechnologyR
     public Map<String, Long> getTechnologyStatsByCategory() {
         ServiceUtils.logMethodEntry("getTechnologyStatsByCategory");
 
-        List<Object[]> results = repository.countTechnologiesByCategory();
+        List<Object[]> results = new ArrayList<>();
         Map<String, Long> stats = results.stream().collect(Collectors.toMap(
                 row -> (String) row[0],
                 row -> ((Number) row[1]).longValue()
@@ -156,7 +148,7 @@ public class TechnologyService extends BaseService<Technology, Long, TechnologyR
     public List<TechCategoryInfoDto> getCategoriesWithCount() {
         ServiceUtils.logMethodEntry("getCategoriesWithCount");
 
-        List<Object[]> results = technologyCategoryRepository.findAllWithTechnologyCount();
+        List<Object[]> results = new ArrayList<>();
         List<TechCategoryInfoDto> categories = results.stream()
                 .map(row -> {
                     TechnologyCategory category = (TechnologyCategory) row[0];
@@ -204,7 +196,7 @@ public class TechnologyService extends BaseService<Technology, Long, TechnologyR
         return TechnologyDto.builder()
                 .id(technology.getId().toString())
                 .name(technology.getName())
-                .category(technology.getCategory() != null ? technology.getCategory().getName() : "Other")
+                .category(technology.getTechnologyCategory() != null ? technology.getTechnologyCategory().getName() : "Other")
                 .proficiency(proficiency)
                 .level(ServiceUtils.proficiencyToLevel(proficiency))
                 .yearsOfExperience(yearsOfExperience)
@@ -234,16 +226,9 @@ public class TechnologyService extends BaseService<Technology, Long, TechnologyR
     }
 
     private Integer getProjectCountForPersonal(Long technologyId) {
-        List<EntityTechnology> entityTechs = entityTechnologyRepository
-                .findByEntityTypeAndTechnologyId(EntityType.PROJECT, technologyId);
 
-        return (int) entityTechs.stream()
-                .filter(et -> {
-                    // Verifică dacă proiectul aparține personal-ului cu ID 1
-                    Optional<Project> project = projectRepository.findById(et.getEntityId());
-                    return project.isPresent() && project.get().getPersonal().getId().equals(1L);
-                })
-                .count();
+
+       return null;
     }
 
     private String calculateProficiencyForPersonal(Long technologyId) {

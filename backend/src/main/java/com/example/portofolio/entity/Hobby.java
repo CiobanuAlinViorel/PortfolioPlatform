@@ -20,9 +20,10 @@ import java.util.Set;
         @Index(name = "idx_hobby_personal_category", columnList = "personal_id, category"),
         @Index(name = "idx_hobby_activity", columnList = "activity_level, years_active")
 })
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class Hobby extends BaseEntity {
@@ -40,7 +41,6 @@ public class Hobby extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    // Use:
     @Enumerated(EnumType.STRING)
     @Column(name = "category")
     private HobbyCategory category;
@@ -65,11 +65,43 @@ public class Hobby extends BaseEntity {
 
     // Relationships
     @OneToMany(mappedBy = "hobby", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<RecentDiscovery> recentDiscoveries;
+    @Builder.Default
+    @Setter(AccessLevel.NONE)
+    private Set<RecentDiscovery> recentDiscoveries = new HashSet<>();
 
+    @OneToMany(mappedBy = "hobby", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    @Setter(AccessLevel.NONE)
+    private Set<HobbyAchievement>  hobbyAchievements =  new HashSet<>();
 
-    // Helper method for metadata
-    public String getEntityType() {
-        return "interest";
+    @OneToMany(mappedBy = "hobby", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    @Setter(AccessLevel.NONE)
+    private Set<HobbySkill> hobbySkills = new HashSet<>();
+
+    // INTERACTION WITH THE COLLECTION FROM ENTITY
+
+    public void addRecentDiscovery(RecentDiscovery recentDiscovery) {
+        this.recentDiscoveries.add(recentDiscovery);
+    }
+
+    public void removeRecentDiscovery(RecentDiscovery recentDiscovery) {
+        this.recentDiscoveries.remove(recentDiscovery);
+    }
+
+    public void addHobbyAchievement(HobbyAchievement hobbyAchievement) {
+        this.hobbyAchievements.add(hobbyAchievement);
+    }
+
+    public void removeHobbyAchievement(HobbyAchievement hobbyAchievement) {
+        this.hobbyAchievements.remove(hobbyAchievement);
+    }
+
+    public void addHobbySkill(HobbySkill hobbySkill) {
+        this.hobbySkills.add(hobbySkill);
+    }
+
+    public void removeHobbySkill(HobbySkill hobbySkill) {
+        this.hobbySkills.remove(hobbySkill);
     }
 }

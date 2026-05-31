@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,8 +34,7 @@ public class StatisticsService {
         List<Project> projects = projectRepository.findByPersonalId(personalId);
 
         // Category distribution
-        Map<String, Long> categoryDistribution = projects.stream()
-                .collect(Collectors.groupingBy(Project::getCategory, Collectors.counting()));
+        Map<String, Long> categoryDistribution = new HashMap<>();
 
         // Status distribution
         Map<String, Long> statusDistribution = projects.stream()

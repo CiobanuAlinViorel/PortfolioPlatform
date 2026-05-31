@@ -11,9 +11,9 @@ import lombok.*;
 @Table(name = "technology_feature", indexes = {
         @Index(name = "idx_tech_feature_status", columnList = "technology_id, is_deprecated")
 })
-@Data
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
 public class TechnologyFeature extends BaseEntity {
