@@ -1,5 +1,0 @@
-package com.example.portofolio.entity.enums;
-
-public enum InterestCategory {
-    LEARNING, TECHNOLOGY, CULTURE, ENTERTAINMENT, SCIENCE, BUSINESS, ARTS, HEALTH, SPORTS,EDUCATION, ENVIRONMENT, POLITICS, TRAVEL , FOOD
-}

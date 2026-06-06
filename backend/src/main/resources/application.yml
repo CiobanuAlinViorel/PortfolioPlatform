@@ -47,6 +47,11 @@ spring:
   cache:
     type: simple
 
+  security:
+    jwt:
+      secret-key: TS/3GmrMXOmRzo3/vymhAbUg77ruVeiT96WaL4MU0rY=
+      expiration-ms: 86400000
+
   # 🔥 ADĂUGAT: DevTools configuration globală
   devtools:
     restart:
