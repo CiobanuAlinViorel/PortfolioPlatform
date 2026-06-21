@@ -1,6 +1,6 @@
 package com.example.portfolio.certificate.domain;
 
-import com.example.portfolio.profile.domain.Personal;
+import com.example.portfolio.profile.domain.Profile;
 import com.example.portfolio.shared.base.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
@@ -23,7 +23,7 @@ public class Certificate extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personal_id", nullable = false)
-    private Personal personal;
+    private Profile profile;
 
     @Column(nullable = false, length = 200)
     private String name;

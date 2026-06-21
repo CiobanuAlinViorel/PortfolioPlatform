@@ -1,6 +1,6 @@
 package com.example.portfolio.hobby.domain;
 
-import com.example.portfolio.profile.domain.Personal;
+import com.example.portfolio.profile.domain.Profile;
 import com.example.portfolio.shared.base.BaseEntity;
 import com.example.portfolio.experience.domain.ImpactLevel;
 import jakarta.persistence.*;
@@ -24,7 +24,7 @@ public class Hobby extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personal_id", nullable = false)
-    private Personal personal;
+    private Profile profile;
 
     @Column(name = "why_interested", columnDefinition = "TEXT")
     private String whyInterested;

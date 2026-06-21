@@ -1,6 +1,6 @@
 package com.example.portfolio.skills.domain;
 
-import com.example.portfolio.profile.domain.Personal;
+import com.example.portfolio.profile.domain.Profile;
 import com.example.portfolio.shared.base.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
@@ -29,7 +29,7 @@ public class Skill extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personal_id", nullable = false)
-    private Personal personal;
+    private Profile profile;
 
 
     @Column(nullable = false, length = 100)
@@ -64,6 +64,9 @@ public class Skill extends BaseEntity {
     @Builder.Default
     @Column(name = "is_learning")
     private Boolean learning = false;
+
+    @Column(name = "sort_order")
+    private Integer sortOrder;
 
     // Relationships
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

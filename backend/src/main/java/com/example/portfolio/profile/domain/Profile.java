@@ -24,7 +24,7 @@ import java.util.Set;
 @Builder
 
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public class Personal extends BaseEntity {
+public class Profile extends BaseEntity {
 
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
@@ -42,21 +42,21 @@ public class Personal extends BaseEntity {
 
     // Relationships
     @Setter(AccessLevel.NONE)
-    @OneToMany(mappedBy = "personal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Skill> skills = new HashSet<>();
 
     @Setter(AccessLevel.NONE)
-    @OneToMany(mappedBy = "personal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Project> projects = new HashSet<>();
 
     @Setter(AccessLevel.NONE)
-    @OneToMany(mappedBy = "personal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Certificate> certificates = new HashSet<>();
 
-    @OneToOne(mappedBy = "personal")
+    @OneToOne(mappedBy = "profile")
     private ContactInfo contactInfo;
 
     // FUNCTIONS TO POPULATE THE COLLECTIONS

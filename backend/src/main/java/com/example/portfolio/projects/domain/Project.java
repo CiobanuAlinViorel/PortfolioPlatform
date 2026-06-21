@@ -1,7 +1,8 @@
 package com.example.portfolio.projects.domain;
 
-import com.example.portfolio.profile.domain.Personal;
+import com.example.portfolio.profile.domain.Profile;
 import com.example.portfolio.shared.base.BaseEntity;
+import com.example.portfolio.shared.converter.StringListConverter;
 import com.example.portfolio.hobby.domain.ComplexityLevel;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,7 +27,7 @@ public class Project extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personal_id", nullable = false)
-    private Personal personal;
+    private Profile profile;
 
     @Column(nullable = false, length = 200)
     private String title;
@@ -58,6 +59,10 @@ public class Project extends BaseEntity {
     @Column(name = "development_time")
     private Double developmentTime;
 
+    @Column(name = "sort_order")
+    private Integer sortOrder;
+
+    @Convert(converter = StringListConverter.class)
     @Column(nullable = false, length = 200)
     private List<String> tags = new ArrayList<>();
 

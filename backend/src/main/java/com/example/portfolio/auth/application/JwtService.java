@@ -1,56 +1,60 @@
 package com.example.portfolio.auth.application;
 
-
-import com.example.portfolio.auth.domain.User;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 
-import static java.lang.Long.parseLong;
-
 @Service
 public class JwtService {
+
     @Value("${spring.security.jwt.secret-key}")
     private String secretKey;
 
-    @Value("${spring.security.jwt.expiration-ms")
-    private String expirationMs;
+    @Value("${spring.security.jwt.expiration-ms}")
+    private long expirationMs;
 
-    public String generateToken(User user){
+    public String generateToken(UserDetails userDetails) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + parseLong(expirationMs));
-
+        Date expiry = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
-                .subject(user.getEmail())
-                .claim("role",user.getRole().name())
+                .subject(userDetails.getUsername())
+                .claim("role", userDetails.getAuthorities().iterator().next().getAuthority())
                 .issuedAt(now)
-                .expiration(expiryDate)
+                .expiration(expiry)
                 .signWith(getSignInKey())
                 .compact();
     }
 
-    public String extractEmail(String token){
+    public String extractEmail(String token) {
         return extractAllClaims(token).getSubject();
     }
 
-    public boolean isTokenValid(String token, User user){
-        String email = extractEmail(token);
-        return email.equals(user.getEmail()) && !isTokenExpired(token);
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        try {
+            String email = extractEmail(token);
+            return email.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            return false;
+        }
     }
 
-    public boolean isTokenExpired(String token){
-        Date expiration = extractAllClaims(token).getExpiration();
-        return expiration.before(new Date());
+    public boolean isTokenExpired(String token) {
+        try {
+            return extractAllClaims(token).getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true;
+        }
     }
 
-    private Claims extractAllClaims(String token){
+    private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSignInKey())
                 .build()
@@ -58,7 +62,7 @@ public class JwtService {
                 .getPayload();
     }
 
-    private SecretKey getSignInKey(){
+    private SecretKey getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }

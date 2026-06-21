@@ -44,6 +44,10 @@ spring:
     baseline-on-migrate: true
     validate-on-migrate: true
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
   cache:
     type: simple
 
@@ -51,6 +55,25 @@ spring:
     jwt:
       secret-key: TS/3GmrMXOmRzo3/vymhAbUg77ruVeiT96WaL4MU0rY=
       expiration-ms: 86400000
+      refresh-token-expiration-days: 7
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080/api}
+  mail:
+    from: ${MAIL_FROM:noreply@portfolio.dev}
+    enabled: ${MAIL_ENABLED:false}
 
   # 🔥 ADĂUGAT: DevTools configuration globală
   devtools:

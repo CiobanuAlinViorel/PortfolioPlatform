@@ -1,6 +1,6 @@
 package com.example.portfolio.experience.domain;
 
-import com.example.portfolio.profile.domain.Personal;
+import com.example.portfolio.profile.domain.Profile;
 import com.example.portfolio.shared.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,7 +19,7 @@ import java.util.Set;
 public class JobExperience extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personal_id",  nullable = false)
-    private Personal personal;
+    private Profile profile;
 
     @Column(name = "start_date")
     private LocalDate startDate;

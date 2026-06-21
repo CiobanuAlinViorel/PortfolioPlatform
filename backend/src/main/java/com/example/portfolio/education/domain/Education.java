@@ -1,6 +1,6 @@
 package com.example.portfolio.education.domain;
 
-import com.example.portfolio.profile.domain.Personal;
+import com.example.portfolio.profile.domain.Profile;
 import com.example.portfolio.shared.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,7 +23,7 @@ public class Education extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personal_id", nullable = false)
-    private Personal personal;
+    private Profile profile;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

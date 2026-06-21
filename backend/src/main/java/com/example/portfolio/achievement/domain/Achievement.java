@@ -1,6 +1,6 @@
 package com.example.portfolio.achievement.domain;
 
-import com.example.portfolio.profile.domain.Personal;
+import com.example.portfolio.profile.domain.Profile;
 import com.example.portfolio.shared.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,7 +21,7 @@ public class Achievement extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personal_id", nullable = false)
-    private Personal personal;
+    private Profile profile;
 
 
     @Column(nullable = false, length = 200)

@@ -4,21 +4,18 @@ import com.example.portfolio.shared.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-/**
- * Contact info
- */
 @Entity
 @Table(name = "contact_info")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class ContactInfo extends BaseEntity {
 
     @OneToOne
     @JoinColumn(name = "personal_id", nullable = false)
-    private Personal personal;
+    private Profile profile;
 
     @Column(unique = true, length = 150)
     private String email;
@@ -32,9 +29,9 @@ public class ContactInfo extends BaseEntity {
     @Column(length = 100)
     private String linkedin;
 
-    @Column(length=100)
+    @Column(length = 100)
     private String city;
 
-    @Column(length=100)
+    @Column(length = 100)
     private String country;
 }

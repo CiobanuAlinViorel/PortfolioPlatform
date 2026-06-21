@@ -8,7 +8,9 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "project_skill")
+@Table(name = "project_skill", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_project_skill", columnNames = {"project_id", "skill_id"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,7 +21,7 @@ public class ProjectSkill extends BaseEntity {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "skill_id", nullable = false)
     private Skill skill;
 

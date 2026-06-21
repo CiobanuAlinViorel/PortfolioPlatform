@@ -257,6 +257,12 @@
 			<optional>true</optional>
 		</dependency>
 
+		<!-- Mail (email verification, password reset) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>
