@@ -1,13 +1,3 @@
-/* Global styles doar */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* You can add global styles to this file, and also import other style files */
 
-body {
-    font-family: Inter, system-ui, sans-serif;
-    line-height: 1.6;
-}
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+@import 'tailwindcss';
