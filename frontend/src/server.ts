@@ -6,6 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { AnyCatcher } from 'rxjs/internal/AnyCatcher';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -41,7 +42,7 @@ app.use(
 app.use((req, res, next) => {
   angularApp
     .handle(req)
-    .then((response) =>
+    .then((response:any) =>
       response ? writeResponseToNodeResponse(response, res) : next(),
     )
     .catch(next);
