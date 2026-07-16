@@ -6,17 +6,26 @@ import com.example.portfolio.auth.dto.AuthResponse;
 import com.example.portfolio.auth.dto.ForgotPasswordRequest;
 import com.example.portfolio.auth.dto.LoginRequest;
 import com.example.portfolio.auth.dto.RegisterRequest;
+import com.example.portfolio.auth.dto.RegisterResponse;
+import com.example.portfolio.auth.dto.ResendVerificationRequest;
 import com.example.portfolio.auth.dto.ResetPasswordRequest;
 import com.example.portfolio.auth.persistence.UserRepository;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.GeneralSecurityException;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -25,12 +34,13 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final GoogleIdTokenVerifier googleIdTokenVerifier;
 
     @Value("${spring.security.jwt.refresh-token-expiration-days:7}")
     private int refreshTokenExpirationDays;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
@@ -50,16 +60,74 @@ public class AuthService {
                 .build();
 
         User saved = userRepository.save(user);
-        emailService.sendVerificationEmail(saved.getEmail(), verificationToken);
+        String verificationLink = emailService.sendVerificationEmail(saved.getEmail(), verificationToken);
+
+        return new RegisterResponse(verificationLink, saved.getEmail());
+    }
+
+    @Transactional
+    public void resendVerification(ResendVerificationRequest request) {
+        // Always return without error to avoid leaking whether the email exists
+        userRepository.findByEmail(request.getEmail())
+                .filter(user -> !user.isEmailVerified())
+                .ifPresent(user -> {
+                    String verificationToken = UUID.randomUUID().toString();
+                    user.setVerificationToken(verificationToken);
+                    user.setVerificationTokenExpiry(LocalDateTime.now().plusDays(1));
+                    userRepository.save(user);
+                    emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+                });
+    }
+
+    @Transactional
+    public AuthResponse authenticateGoogle(String idTokenString) {
+        GoogleIdToken idToken;
+        try {
+            idToken = googleIdTokenVerifier.verify(idTokenString);
+        } catch (GeneralSecurityException | IOException e) {
+            throw new IllegalArgumentException("Unable to verify Google ID token", e);
+        }
+        if (idToken == null) {
+            throw new IllegalArgumentException("Invalid Google ID token");
+        }
+
+        GoogleIdToken.Payload payload = idToken.getPayload();
+        String googleId = payload.getSubject();
+        String email = payload.getEmail();
+
+        User user = userRepository.findByGoogleId(googleId)
+                .or(() -> userRepository.findByEmail(email))
+                .orElseGet(() -> User.builder()
+                        .email(email)
+                        .role(UserRole.USER)
+                        .emailVerified(true)
+                        .build());
+
+        user.setGoogleId(googleId);
+        user.setEmailVerified(true);
+
+        String refreshToken = UUID.randomUUID().toString();
+        user.setRefreshToken(refreshToken);
+        user.setRefreshTokenExpiry(LocalDateTime.now().plusDays(refreshTokenExpirationDays));
+        User saved = userRepository.save(user);
 
         return AuthResponse.builder()
                 .id(saved.getId())
                 .email(saved.getEmail())
                 .role(saved.getRole())
                 .token(jwtService.generateToken(saved))
-                .emailVerified(saved.isEmailVerified())
+                .emailVerified(true)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    @Scheduled(fixedRateString = "${app.auth.unverified-purge-interval-ms:3600000}")
+    @Transactional
+    public void purgeExpiredUnverifiedUsers() {
+        long deleted = userRepository.deleteByEmailVerifiedFalseAndVerificationTokenExpiryBefore(LocalDateTime.now());
+        if (deleted > 0) {
+            log.info("Purged {} unverified user(s) with expired verification tokens", deleted);
+        }
     }
 
     @Transactional

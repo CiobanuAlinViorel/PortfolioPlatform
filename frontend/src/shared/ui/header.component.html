@@ -1,0 +1,127 @@
+<header
+    class="sticky top-0 z-50 border-b border-black/5 bg-beige-light/90 text-emerald-900 backdrop-blur supports-backdrop-filter:bg-beige-light/70 dark:border-white/5 dark:bg-green-900/90 dark:text-beige-light dark:supports-backdrop-filter:bg-green-900/70">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-8">
+        <!-- Logo -->
+        <a routerLink="/" (click)="closeMenu()"
+            class="flex shrink-0 items-center gap-2 transition-transform duration-200 ease-out hover:scale-[1.03]">
+            @if(isDarkMode()) {
+            <img src='/logo-light.svg' alt="{{ title }}" class="h-10 w-10 sm:h-12 sm:w-12" />
+            } @else {
+            <img src='/logo-dark.svg' alt="{{ title }}" class="h-10 w-10 sm:h-12 sm:w-12" />
+            }
+
+            <span class="font-brand text-xl font-semibold tracking-tight sm:text-2xl">{{ title }}</span>
+        </a>
+
+        <!-- Page navigation (desktop / large tablet) -->
+        <nav class="hidden items-center gap-1 lg:flex">
+            @for (link of navLinks; track link.path) {
+            <a [routerLink]="link.path" routerLinkActive="bg-black/10 dark:bg-white/10"
+                [routerLinkActiveOptions]="{ exact: link.path === '/' }"
+                class="rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                {{ link.label }}
+            </a>
+            }
+            @if (isAdmin()) {
+            <a routerLink="/admin" routerLinkActive="bg-black/10 dark:bg-white/10"
+                class="rounded-md px-3 py-2 text-sm font-medium text-emerald-800 transition-colors duration-150 ease-out hover:bg-black/5 dark:text-beige-dark dark:hover:bg-white/10">
+                Admin
+            </a>
+            }
+        </nav>
+
+        <!-- Auth actions + theme toggle (desktop / large tablet) -->
+        <div class="hidden items-center gap-2 lg:flex">
+            @if (!isAuthenticated()) {
+            <a routerLink="/login"
+                class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                Login
+            </a>
+            <a routerLink="/register"
+                class="rounded-md bg-emerald-800 px-3 py-1.5 text-sm font-medium text-beige-light shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md active:translate-y-0">
+                Register
+            </a>
+            } @else {
+            <button type="button" (click)="logout()"
+                class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                Logout
+            </button>
+            }
+
+            <button type="button" (click)="toggleTheme()"
+                class="rounded-md p-1.5 transition-transform duration-200 ease-out hover:scale-110 hover:bg-black/5 dark:hover:bg-white/10"
+                [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
+                @if (isDarkMode()) {
+                <svg lucideSun class="h-5 w-5"></svg>
+                } @else {
+                <svg lucideMoon class="h-5 w-5"></svg>
+                }
+            </button>
+        </div>
+
+        <!-- Mobile / tablet controls -->
+        <div class="flex items-center gap-1 lg:hidden">
+            <button type="button" (click)="toggleTheme()"
+                class="rounded-md p-1.5 transition-transform duration-200 ease-out hover:scale-110 hover:bg-black/5 dark:hover:bg-white/10"
+                [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
+                @if (isDarkMode()) {
+                <svg lucideSun class="h-5 w-5"></svg>
+                } @else {
+                <svg lucideMoon class="h-5 w-5"></svg>
+                }
+            </button>
+
+            <button type="button" (click)="toggleMenu()"
+                class="relative flex h-10 w-10 items-center justify-center rounded-md transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10"
+                [attr.aria-expanded]="isMenuOpen()" aria-controls="mobile-nav" aria-label="Toggle navigation menu">
+                @if (!isMenuOpen()) {
+                <svg lucideMenu class="h-6 w-6"></svg>
+                } @else {
+                <svg lucideX class="h-6 w-6"></svg>
+                }
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile / tablet navigation panel -->
+    <div id="mobile-nav"
+        class="overflow-hidden transition-[max-height,opacity] duration-300 ease-out lg:hidden"
+        [class.max-h-0]="!isMenuOpen()" [class.opacity-0]="!isMenuOpen()" [class.max-h-[32rem]]="isMenuOpen()"
+        [class.opacity-100]="isMenuOpen()">
+        <nav class="flex flex-col gap-1 border-t border-black/5 px-4 pb-4 pt-2 sm:px-6 dark:border-white/5">
+            @for (link of navLinks; track link.path) {
+            <a [routerLink]="link.path" (click)="closeMenu()" routerLinkActive="bg-black/10 dark:bg-white/10"
+                [routerLinkActiveOptions]="{ exact: link.path === '/' }"
+                class="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                <svg [lucideIcon]="link.icon" class="h-5 w-5 shrink-0"></svg>
+                {{ link.label }}
+            </a>
+            }
+            @if (isAdmin()) {
+            <a routerLink="/admin" (click)="closeMenu()" routerLinkActive="bg-black/10 dark:bg-white/10"
+                class="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-emerald-800 transition-colors duration-150 ease-out hover:bg-black/5 dark:text-beige-dark dark:hover:bg-white/10">
+                <svg lucideShieldCheck class="h-5 w-5 shrink-0"></svg>
+                Admin
+            </a>
+            }
+
+            <div class="mt-2 flex flex-col gap-2 border-t border-black/5 pt-3 dark:border-white/5">
+                @if (!isAuthenticated()) {
+                <a routerLink="/login" (click)="closeMenu()"
+                    class="rounded-md px-3 py-2.5 text-center text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                    Login
+                </a>
+                <a routerLink="/register" (click)="closeMenu()"
+                    class="rounded-md bg-emerald-800 px-3 py-2.5 text-center text-base font-medium text-beige-light shadow-sm transition-all duration-150 ease-out hover:bg-emerald-700 active:translate-y-0">
+                    Register
+                </a>
+                } @else {
+                <button type="button" (click)="logout()"
+                    class="rounded-md px-3 py-2.5 text-center text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                    Logout
+                </button>
+                }
+            </div>
+        </nav>
+    </div>
+</header>

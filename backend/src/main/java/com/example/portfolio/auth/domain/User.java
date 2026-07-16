@@ -32,6 +32,9 @@ public class User extends BaseEntity implements UserDetails {
 
     private String password;
 
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+
     @Enumerated(EnumType.STRING)
     private UserRole role;
 

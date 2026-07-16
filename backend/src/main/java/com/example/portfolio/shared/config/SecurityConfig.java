@@ -17,7 +17,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -45,6 +44,8 @@ public class SecurityConfig {
                                 "/auth/refresh",
                                 "/auth/logout",
                                 "/auth/verify-email",
+                                "/auth/resend-verification",
+                                "/auth/google",
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
                                 "/v3/api-docs/**",
@@ -55,6 +56,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/skills/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/projects/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/experience/jobs", "/experience/jobs/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/certificates/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/hobbies/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/education/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/achievements/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e

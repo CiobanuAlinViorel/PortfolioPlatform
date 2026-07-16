@@ -1,3 +1,17 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --color-beige-light: #FBF5DD;
+    --color-beige-dark: #E7E1B1;
+    --font-brand: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+html,
+body {
+    @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 font-sans;
+}

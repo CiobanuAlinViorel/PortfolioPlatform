@@ -23,11 +23,12 @@ public class EmailService {
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
 
-    public void sendVerificationEmail(String to, String token) {
+    public String sendVerificationEmail(String to, String token) {
         String link = baseUrl + "/auth/verify-email?token=" + token;
         String body = "Please verify your email by clicking the link below:\n\n" + link
                 + "\n\nThis link expires in 24 hours.";
         send(to, "Verify your email", body);
+        return link;
     }
 
     public void sendPasswordResetEmail(String to, String token) {

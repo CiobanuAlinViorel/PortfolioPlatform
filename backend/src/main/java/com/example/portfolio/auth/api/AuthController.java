@@ -3,8 +3,11 @@ package com.example.portfolio.auth.api;
 import com.example.portfolio.auth.application.AuthService;
 import com.example.portfolio.auth.dto.AuthResponse;
 import com.example.portfolio.auth.dto.ForgotPasswordRequest;
+import com.example.portfolio.auth.dto.GoogleAuthRequest;
 import com.example.portfolio.auth.dto.LoginRequest;
 import com.example.portfolio.auth.dto.RegisterRequest;
+import com.example.portfolio.auth.dto.RegisterResponse;
+import com.example.portfolio.auth.dto.ResendVerificationRequest;
 import com.example.portfolio.auth.dto.ResetPasswordRequest;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,9 +34,22 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest req) {
-        AuthResponse res = authService.register(req);
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest req) {
+        RegisterResponse res = authService.register(req);
         return ResponseEntity.status(HttpStatus.CREATED)
+                .body(res);
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Map<String, String>> resendVerification(@Valid @RequestBody ResendVerificationRequest req) {
+        authService.resendVerification(req);
+        return ResponseEntity.ok(Map.of("message", "If this email is registered and not yet verified, a new verification link has been sent"));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleAuth(@Valid @RequestBody GoogleAuthRequest req) {
+        AuthResponse res = authService.authenticateGoogle(req.getIdToken());
+        return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(res.getRefreshToken()).toString())
                 .body(res);
     }

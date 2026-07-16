@@ -75,6 +75,10 @@ app:
     from: ${MAIL_FROM:noreply@portfolio.dev}
     enabled: ${MAIL_ENABLED:false}
 
+google:
+  oauth:
+    client-id: ${GOOGLE_CLIENT_ID:}
+
   # 🔥 ADĂUGAT: DevTools configuration globală
   devtools:
     restart:
