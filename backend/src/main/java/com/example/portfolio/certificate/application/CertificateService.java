@@ -30,8 +30,10 @@ public class CertificateService {
     public CertificateDto createCertificate(CreateCertificateRequest request) {
         Profile profile = profileRepository.findFirstByOrderByIdAsc()
                 .orElseThrow(() -> new NoSuchElementException("Profile not found"));
-        CertificationCategory category = certificateCategoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new NoSuchElementException("Category not found"));
+        CertificationCategory category = resolveOrCreateCategory(request.getCategoryId(), request.getCategoryName());
+        if (category == null) {
+            throw new IllegalArgumentException("Either categoryId or categoryName must be provided");
+        }
 
         Certificate certificate = Certificate.builder()
                 .profile(profile)
@@ -56,10 +58,9 @@ public class CertificateService {
         Certificate certificate = certificateRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Certificate not found"));
 
-        if (request.getCategoryId() != null) {
-            CertificationCategory category = certificateCategoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new NoSuchElementException("Category not found"));
-            certificate.setCertificationCategory(category);
+        if (request.getCategoryId() != null || request.getCategoryName() != null) {
+            certificate.setCertificationCategory(
+                    resolveOrCreateCategory(request.getCategoryId(), request.getCategoryName()));
         }
 
         certificateMapper.updateCertificate(request, certificate);
@@ -143,5 +144,27 @@ public class CertificateService {
                 .stream()
                 .map(certificateMapper::toCategoryDto)
                 .toList();
+    }
+
+    /**
+     * Find-or-create by name; if an id is given and a differing name is supplied alongside it,
+     * the shared category row is renamed in place (affects every certificate referencing it).
+     */
+    private CertificationCategory resolveOrCreateCategory(Long categoryId, String categoryName) {
+        if (categoryId != null) {
+            CertificationCategory category = certificateCategoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new NoSuchElementException("Category not found"));
+            if (categoryName != null && !categoryName.isBlank() && !categoryName.equals(category.getName())) {
+                category.setName(categoryName);
+                certificateCategoryRepository.save(category);
+            }
+            return category;
+        }
+        if (categoryName != null && !categoryName.isBlank()) {
+            return certificateCategoryRepository.findByName(categoryName)
+                    .orElseGet(() -> certificateCategoryRepository.save(
+                            CertificationCategory.builder().name(categoryName).build()));
+        }
+        return null;
     }
 }

@@ -58,6 +58,16 @@ public class ProfileService {
             throw new IllegalArgumentException("A profile already exists");
         }
         Profile profile = profileMapper.toProfile(request);
+        ContactInfo contactInfo = ContactInfo.builder()
+                .profile(profile)
+                .phone(request.getContactInfo().getPhone())
+                .email(request.getContactInfo().getEmail())
+                .github(request.getContactInfo().getGithub())
+                .linkedin(request.getContactInfo().getLinkedin())
+                .city(request.getContactInfo().getCity())
+                .country(request.getContactInfo().getCountry())
+                .build();
+        contactInfoRepository.save(contactInfo);
         return profileMapper.toProfileInfoDto(profileRepository.save(profile));
     }
 
@@ -66,16 +76,16 @@ public class ProfileService {
         Profile profile = profileRepository.findFirstByOrderByIdAsc()
                 .orElseThrow(() -> new NoSuchElementException("Profile not found"));
         profileMapper.updateProfile(request, profile);
+        ContactInfo contactInfo = ContactInfo.builder()
+                .profile(profile)
+                .phone(request.getContactInfo().getPhone())
+                .email(request.getContactInfo().getEmail())
+                .github(request.getContactInfo().getGithub())
+                .linkedin(request.getContactInfo().getLinkedin())
+                .city(request.getContactInfo().getCity())
+                .country(request.getContactInfo().getCountry())
+                .build();
+        contactInfoRepository.save(contactInfo);
         return profileMapper.toProfileInfoDto(profileRepository.save(profile));
-    }
-
-    @Transactional
-    public ContactInfoDto upsertContactInfo(UpsertContactInfoRequest request) {
-        Profile profile = profileRepository.findFirstByOrderByIdAsc()
-                .orElseThrow(() -> new NoSuchElementException("Profile not found"));
-        ContactInfo contactInfo = contactInfoRepository.findByProfile(profile)
-                .orElse(ContactInfo.builder().profile(profile).build());
-        profileMapper.updateContactInfo(request, contactInfo);
-        return profileMapper.toContactInfoDto(contactInfoRepository.save(contactInfo));
     }
 }

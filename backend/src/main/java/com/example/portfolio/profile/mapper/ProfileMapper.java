@@ -42,11 +42,4 @@ public interface ProfileMapper {
     @Mapping(target = "certificates", ignore = true)
     @Mapping(target = "contactInfo", ignore = true)
     void updateProfile(UpdateProfileRequest request, @MappingTarget Profile profile);
-
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "profile", ignore = true)
-    void updateContactInfo(UpsertContactInfoRequest request, @MappingTarget ContactInfo contactInfo);
 }

@@ -27,6 +27,8 @@ public class CreateCertificateRequest {
     private String description;
     private String score;
     private Integer relevanceScore;
-    @NotNull
+
+    // Category — link by id or find-or-create by name; one of the two is required
     private Long categoryId;
+    private String categoryName;
 }

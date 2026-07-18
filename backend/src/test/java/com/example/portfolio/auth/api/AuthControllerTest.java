@@ -3,23 +3,20 @@ package com.example.portfolio.auth.api;
 import com.example.portfolio.auth.application.AuthService;
 import com.example.portfolio.auth.application.JwtService;
 import com.example.portfolio.auth.domain.UserRole;
-import com.example.portfolio.auth.dto.AuthResponse;
-import com.example.portfolio.auth.dto.ForgotPasswordRequest;
-import com.example.portfolio.auth.dto.LoginRequest;
-import com.example.portfolio.auth.dto.RegisterRequest;
-import com.example.portfolio.auth.dto.ResetPasswordRequest;
+import com.example.portfolio.auth.dto.*;
 import com.example.portfolio.auth.persistence.UserRepository;
 import com.example.portfolio.shared.config.SecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
+
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
@@ -32,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = AuthController.class)
 @Import(SecurityConfig.class)
-@MockBean(JpaMetamodelMappingContext.class)
+
 class AuthControllerTest {
 
     @Autowired
@@ -41,16 +38,20 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private AuthService authService;
 
     // Required by JwtAuthenticationFilter (loaded via SecurityConfig)
-    @MockBean
+    @MockitoBean
     private JwtService jwtService;
 
     // Required by SecurityConfig.userDetailsService()
-    @MockBean
+    @MockitoBean
     private UserRepository userRepository;
+
+    // Prevents JPA auto-configuration from building a real (empty) metamodel in a @WebMvcTest slice
+    @MockitoBean
+    private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 
     private AuthResponse buildAuthResponse(String refreshToken) {
         return AuthResponse.builder()
@@ -63,25 +64,25 @@ class AuthControllerTest {
                 .build();
     }
 
+    private RegisterResponse buildRegisterRes(String link) {
+        return new RegisterResponse(link, "user@test.com");
+    }
+
+
     // ── POST /auth/register ───────────────────────────────────────────────────
 
     @Test
-    void register_shouldReturn201WithBodyAndCookie_whenRequestIsValid() throws Exception {
+    void register_shouldReturn201WithVerificationLinkAndNoCookie_whenRequestIsValid() throws Exception {
         RegisterRequest req = new RegisterRequest("user@test.com", "password123");
-        when(authService.register(any(RegisterRequest.class))).thenReturn(buildAuthResponse("refresh-value"));
+        when(authService.register(any(RegisterRequest.class))).thenReturn(buildRegisterRes("https://app.test/verify?token=abc"));
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.token").value("access-jwt-token"))
+                .andExpect(jsonPath("$.link").value("https://app.test/verify?token=abc"))
                 .andExpect(jsonPath("$.email").value("user@test.com"))
-                .andExpect(jsonPath("$.role").value("USER"))
-                .andExpect(jsonPath("$.emailVerified").value(false))
-                .andExpect(jsonPath("$.refreshToken").doesNotExist())
-                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refresh_token=refresh-value")))
-                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
-                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=Strict")));
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
     }
 
     @Test

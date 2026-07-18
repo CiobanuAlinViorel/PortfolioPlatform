@@ -32,10 +32,4 @@ public class ProfileController {
     public ResponseEntity<ProfileInfoDto> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(profileService.updateProfile(request));
     }
-
-    @PutMapping("/contact")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ContactInfoDto> upsertContactInfo(@Valid @RequestBody UpsertContactInfoRequest request) {
-        return ResponseEntity.ok(profileService.upsertContactInfo(request));
-    }
 }

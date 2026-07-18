@@ -8,14 +8,18 @@ import com.example.portfolio.hobby.persistence.HobbyRepository;
 import com.example.portfolio.hobby.persistence.HobbySkillRepository;
 import com.example.portfolio.profile.domain.Profile;
 import com.example.portfolio.profile.persistence.ProfileRepository;
+import com.example.portfolio.skills.domain.ProficiencyLevel;
 import com.example.portfolio.skills.domain.Skill;
+import com.example.portfolio.skills.persistence.SkillRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,6 +36,7 @@ class HobbyServiceTest {
 
     @Mock private HobbyRepository hobbyRepository;
     @Mock private HobbySkillRepository hobbySkillRepository;
+    @Mock private SkillRepository skillRepository;
     @Mock private ProfileRepository profileRepository;
     @Mock private HobbyMapper hobbyMapper;
 
@@ -70,6 +75,12 @@ class HobbyServiceTest {
                 .name("Chess")
                 .category(HobbyCategory.GAMING)
                 .build();
+    }
+
+    private Skill buildSkill(long id, String name) {
+        Skill skill = Skill.builder().name(name).profile(profile).proficiency(ProficiencyLevel.INTERMEDIATE).build();
+        ReflectionTestUtils.setField(skill, "id", id);
+        return skill;
     }
 
     // ── getHobbies ────────────────────────────────────────────────────────────
@@ -207,6 +218,75 @@ class HobbyServiceTest {
     }
 
     @Test
+    void createHobby_shouldPersistSkills_whenProvided() {
+        Skill skill = buildSkill(10L, "Problem Solving");
+        HobbySkillRequest sr = new HobbySkillRequest();
+        sr.setSkillId(10L);
+        sr.setUsagePercentage(new BigDecimal("40.0"));
+
+        CreateHobbyRequest request = CreateHobbyRequest.builder()
+                .name("Chess").category(HobbyCategory.GAMING)
+                .skills(List.of(sr)).build();
+
+        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
+        when(hobbyRepository.save(any(Hobby.class))).thenReturn(hobby);
+        when(skillRepository.findById(10L)).thenReturn(Optional.of(skill));
+        when(hobbySkillRepository.findBySkill(skill)).thenReturn(Optional.empty());
+        when(hobbySkillRepository.save(any(HobbySkill.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(hobbyMapper.toHobbyDto(hobby)).thenReturn(hobbyDto);
+
+        hobbyService.createHobby(request);
+
+        var captor = ArgumentCaptor.forClass(HobbySkill.class);
+        verify(hobbySkillRepository).save(captor.capture());
+        assertThat(captor.getValue().getSkill()).isEqualTo(skill);
+        assertThat(captor.getValue().getUsagePercentage()).isEqualByComparingTo("40.0");
+    }
+
+    @Test
+    void createHobby_shouldThrowIllegalArgumentException_whenSkillAlreadyLinkedToAnotherHobby() {
+        Skill skill = buildSkill(10L, "Problem Solving");
+        HobbySkill existingLink = HobbySkill.builder().skill(skill).usagePercentage(BigDecimal.TEN).build();
+        ReflectionTestUtils.setField(existingLink, "id", 77L);
+
+        HobbySkillRequest sr = new HobbySkillRequest();
+        sr.setSkillId(10L);
+        sr.setUsagePercentage(BigDecimal.TEN);
+        CreateHobbyRequest request = CreateHobbyRequest.builder()
+                .name("Chess").category(HobbyCategory.GAMING)
+                .skills(List.of(sr)).build();
+
+        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
+        when(hobbyRepository.save(any(Hobby.class))).thenReturn(hobby);
+        when(skillRepository.findById(10L)).thenReturn(Optional.of(skill));
+        when(hobbySkillRepository.findBySkill(skill)).thenReturn(Optional.of(existingLink));
+
+        assertThatThrownBy(() -> hobbyService.createHobby(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Skill is already linked to a hobby");
+
+        verify(hobbySkillRepository, never()).save(any());
+    }
+
+    @Test
+    void createHobby_shouldThrowNoSuchElementException_whenSkillIdDoesNotExist() {
+        HobbySkillRequest sr = new HobbySkillRequest();
+        sr.setSkillId(404L);
+        sr.setUsagePercentage(BigDecimal.TEN);
+        CreateHobbyRequest request = CreateHobbyRequest.builder()
+                .name("Chess").category(HobbyCategory.GAMING)
+                .skills(List.of(sr)).build();
+
+        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
+        when(hobbyRepository.save(any(Hobby.class))).thenReturn(hobby);
+        when(skillRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> hobbyService.createHobby(request))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessage("Skill not found");
+    }
+
+    @Test
     void createHobby_shouldThrowNoSuchElementException_whenProfileNotFound() {
         CreateHobbyRequest request = CreateHobbyRequest.builder()
                 .name("Chess").category(HobbyCategory.GAMING).build();
@@ -238,6 +318,77 @@ class HobbyServiceTest {
     }
 
     @Test
+    void updateHobby_shouldUpdateUsagePercentageOnExistingSkillLink() {
+        Skill skill = buildSkill(10L, "Problem Solving");
+        HobbySkill existingLink = HobbySkill.builder().hobby(hobby).skill(skill).usagePercentage(new BigDecimal("20.0")).build();
+        ReflectionTestUtils.setField(existingLink, "id", 5L);
+
+        HobbySkillRequest updateExisting = new HobbySkillRequest();
+        updateExisting.setId(5L);
+        updateExisting.setSkillId(10L);
+        updateExisting.setUsagePercentage(new BigDecimal("55.0"));
+
+        UpdateHobbyRequest request = UpdateHobbyRequest.builder().skills(List.of(updateExisting)).build();
+
+        when(hobbyRepository.findById(1L)).thenReturn(Optional.of(hobby));
+        when(hobbyRepository.save(hobby)).thenReturn(hobby);
+        when(hobbySkillRepository.findAllByHobby(hobby)).thenReturn(List.of(existingLink));
+        when(hobbySkillRepository.save(any(HobbySkill.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(hobbyMapper.toHobbyDto(hobby)).thenReturn(hobbyDto);
+
+        hobbyService.updateHobby(1L, request);
+
+        assertThat(existingLink.getUsagePercentage()).isEqualByComparingTo("55.0");
+        verify(skillRepository, never()).findById(any());
+        verify(hobbySkillRepository, never()).delete(any());
+    }
+
+    @Test
+    void updateHobby_shouldAddNewSkillLink_whenIdNotProvided() {
+        Skill skill = buildSkill(15L, "Pattern Recognition");
+        HobbySkillRequest newLink = new HobbySkillRequest();
+        newLink.setSkillId(15L);
+        newLink.setUsagePercentage(new BigDecimal("60.0"));
+
+        UpdateHobbyRequest request = UpdateHobbyRequest.builder().skills(List.of(newLink)).build();
+
+        when(hobbyRepository.findById(1L)).thenReturn(Optional.of(hobby));
+        when(hobbyRepository.save(hobby)).thenReturn(hobby);
+        when(hobbySkillRepository.findAllByHobby(hobby)).thenReturn(List.of());
+        when(skillRepository.findById(15L)).thenReturn(Optional.of(skill));
+        when(hobbySkillRepository.findBySkill(skill)).thenReturn(Optional.empty());
+        when(hobbySkillRepository.save(any(HobbySkill.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(hobbyMapper.toHobbyDto(hobby)).thenReturn(hobbyDto);
+
+        hobbyService.updateHobby(1L, request);
+
+        assertThat(hobby.getHobbySkills()).hasSize(1);
+        var captor = ArgumentCaptor.forClass(HobbySkill.class);
+        verify(hobbySkillRepository).save(captor.capture());
+        assertThat(captor.getValue().getSkill()).isEqualTo(skill);
+    }
+
+    @Test
+    void updateHobby_shouldDeleteSkillLinksNotInRequest() {
+        Skill skill = buildSkill(10L, "Problem Solving");
+        HobbySkill toRemove = HobbySkill.builder().hobby(hobby).skill(skill).usagePercentage(BigDecimal.TEN).build();
+        ReflectionTestUtils.setField(toRemove, "id", 5L);
+        hobby.addHobbySkill(toRemove);
+
+        UpdateHobbyRequest request = UpdateHobbyRequest.builder().skills(List.of()).build();
+
+        when(hobbyRepository.findById(1L)).thenReturn(Optional.of(hobby));
+        when(hobbyRepository.save(hobby)).thenReturn(hobby);
+        when(hobbySkillRepository.findAllByHobby(hobby)).thenReturn(List.of(toRemove));
+        when(hobbyMapper.toHobbyDto(hobby)).thenReturn(hobbyDto);
+
+        hobbyService.updateHobby(1L, request);
+
+        verify(hobbySkillRepository).delete(toRemove);
+        assertThat(hobby.getHobbySkills()).doesNotContain(toRemove);
+    }
+
+    @Test
     void updateHobby_shouldThrowNoSuchElementException_whenNotFound() {
         UpdateHobbyRequest request = UpdateHobbyRequest.builder().name("X").build();
         when(hobbyRepository.findById(99L)).thenReturn(Optional.empty());
@@ -252,22 +403,22 @@ class HobbyServiceTest {
     // ── deleteHobby ───────────────────────────────────────────────────────────
 
     @Test
-    void deleteHobby_shouldDeleteById_whenHobbyExists() {
-        when(hobbyRepository.existsById(1L)).thenReturn(true);
+    void deleteHobby_shouldDeleteHobby_whenFound() {
+        when(hobbyRepository.findById(1L)).thenReturn(Optional.of(hobby));
 
         hobbyService.deleteHobby(1L);
 
-        verify(hobbyRepository).deleteById(1L);
+        verify(hobbyRepository).delete(hobby);
     }
 
     @Test
     void deleteHobby_shouldThrowNoSuchElementException_whenNotFound() {
-        when(hobbyRepository.existsById(99L)).thenReturn(false);
+        when(hobbyRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> hobbyService.deleteHobby(99L))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("Hobby not found");
 
-        verify(hobbyRepository, never()).deleteById(any());
+        verify(hobbyRepository, never()).delete(any(Hobby.class));
     }
 }

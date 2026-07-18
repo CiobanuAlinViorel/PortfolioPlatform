@@ -2,11 +2,7 @@ package com.example.portfolio.auth.application;
 
 import com.example.portfolio.auth.domain.User;
 import com.example.portfolio.auth.domain.UserRole;
-import com.example.portfolio.auth.dto.AuthResponse;
-import com.example.portfolio.auth.dto.ForgotPasswordRequest;
-import com.example.portfolio.auth.dto.LoginRequest;
-import com.example.portfolio.auth.dto.RegisterRequest;
-import com.example.portfolio.auth.dto.ResetPasswordRequest;
+import com.example.portfolio.auth.dto.*;
 import com.example.portfolio.auth.persistence.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,16 +56,12 @@ class AuthServiceTest {
         when(userRepository.existsByEmail("user@test.com")).thenReturn(false);
         when(passwordEncoder.encode("raw-password")).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token");
-        doNothing().when(emailService).sendVerificationEmail(anyString(), anyString());
+        when(emailService.sendVerificationEmail(anyString(), anyString())).thenReturn("https://app.test/verify?token=abc");
 
-        AuthResponse result = authService.register(request);
+        RegisterResponse result = authService.register(request);
 
-        assertThat(result.getEmail()).isEqualTo("user@test.com");
-        assertThat(result.getRole()).isEqualTo(UserRole.USER);
-        assertThat(result.getToken()).isEqualTo("jwt-token");
-        assertThat(result.isEmailVerified()).isFalse();
-        assertThat(result.getRefreshToken()).isNotBlank();
+        assertThat(result.email()).isEqualTo("user@test.com");
+
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
@@ -90,8 +82,7 @@ class AuthServiceTest {
         when(userRepository.existsByEmail("user@test.com")).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token");
-        doNothing().when(emailService).sendVerificationEmail(anyString(), anyString());
+        when(emailService.sendVerificationEmail(anyString(), anyString())).thenReturn("https://app.test/verify?token=abc");
 
         authService.register(request);
 

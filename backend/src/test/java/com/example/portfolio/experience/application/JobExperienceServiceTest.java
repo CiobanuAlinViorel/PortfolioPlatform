@@ -1,11 +1,15 @@
 package com.example.portfolio.experience.application;
 
+import com.example.portfolio.education.domain.CourseProject;
+import com.example.portfolio.education.persistence.CourseProjectRepository;
 import com.example.portfolio.experience.domain.JobExperience;
 import com.example.portfolio.experience.domain.JobProjects;
+import com.example.portfolio.experience.domain.VolunteerProject;
 import com.example.portfolio.experience.dto.*;
 import com.example.portfolio.experience.mapper.JobExperienceMapper;
 import com.example.portfolio.experience.persistence.JobExperienceRepository;
 import com.example.portfolio.experience.persistence.JobProjectsRepository;
+import com.example.portfolio.experience.persistence.VolunteerProjectRepository;
 import com.example.portfolio.hobby.domain.ComplexityLevel;
 import com.example.portfolio.profile.domain.Profile;
 import com.example.portfolio.profile.persistence.ProfileRepository;
@@ -15,11 +19,13 @@ import com.example.portfolio.projects.persistence.ProjectRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -36,6 +42,8 @@ class JobExperienceServiceTest {
     @Mock private ProfileRepository profileRepository;
     @Mock private JobExperienceRepository jobExperienceRepository;
     @Mock private JobProjectsRepository jobProjectsRepository;
+    @Mock private VolunteerProjectRepository volunteerProjectRepository;
+    @Mock private CourseProjectRepository courseProjectRepository;
     @Mock private ProjectRepository projectRepository;
     @Mock private JobExperienceMapper jobExperienceMapper;
 
@@ -187,6 +195,65 @@ class JobExperienceServiceTest {
         verifyNoInteractions(jobExperienceRepository);
     }
 
+    @Test
+    void createJobExperience_shouldPersistProjects_whenProvided() {
+        Project project = Project.builder().profile(profile).title("API").status(ProjectStatus.PRODUCTION).complexity(ComplexityLevel.ADVANCED).build();
+        ReflectionTestUtils.setField(project, "id", 10L);
+
+        JobProjectRequest pr = new JobProjectRequest();
+        pr.setProjectId(10L);
+        CreateJobExperienceRequest request = CreateJobExperienceRequest.builder()
+                .companyName("New Corp").role("Lead Dev").startDate(LocalDate.of(2024, 1, 1))
+                .projects(List.of(pr)).build();
+        JobExperience newJob = JobExperience.builder().profile(profile).companyName("New Corp").role("Lead Dev").startDate(LocalDate.of(2024, 1, 1)).build();
+        ReflectionTestUtils.setField(newJob, "id", 5L);
+
+        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
+        when(jobExperienceMapper.toJobExperience(request)).thenReturn(newJob);
+        when(jobExperienceRepository.save(newJob)).thenReturn(newJob);
+        when(projectRepository.findById(10L)).thenReturn(Optional.of(project));
+        when(jobProjectsRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(volunteerProjectRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(courseProjectRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(jobProjectsRepository.save(any(JobProjects.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jobExperienceMapper.toDetailDto(newJob)).thenReturn(JobExperienceDetailDto.builder().build());
+        when(jobExperienceMapper.toProjectInJobDto(project)).thenReturn(ProjectInJobDto.builder().title("API").build());
+
+        JobExperienceDetailDto result = jobExperienceService.createJobExperience(request);
+
+        var captor = ArgumentCaptor.forClass(JobProjects.class);
+        verify(jobProjectsRepository).save(captor.capture());
+        assertThat(captor.getValue().getProject()).isEqualTo(project);
+        assertThat(result.getProjects()).hasSize(1);
+    }
+
+    @Test
+    void createJobExperience_shouldThrowIllegalArgumentException_whenProjectAlreadyLinkedToVolunteerExperience() {
+        Project project = Project.builder().profile(profile).title("API").status(ProjectStatus.PRODUCTION).complexity(ComplexityLevel.ADVANCED).build();
+        ReflectionTestUtils.setField(project, "id", 10L);
+        VolunteerProject volunteerLink = VolunteerProject.builder().project(project).contributionPercentage(BigDecimal.TEN).build();
+
+        JobProjectRequest pr = new JobProjectRequest();
+        pr.setProjectId(10L);
+        CreateJobExperienceRequest request = CreateJobExperienceRequest.builder()
+                .companyName("New Corp").role("Lead Dev").startDate(LocalDate.of(2024, 1, 1))
+                .projects(List.of(pr)).build();
+        JobExperience newJob = JobExperience.builder().profile(profile).companyName("New Corp").role("Lead Dev").startDate(LocalDate.of(2024, 1, 1)).build();
+
+        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
+        when(jobExperienceMapper.toJobExperience(request)).thenReturn(newJob);
+        when(jobExperienceRepository.save(newJob)).thenReturn(newJob);
+        when(projectRepository.findById(10L)).thenReturn(Optional.of(project));
+        when(jobProjectsRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(volunteerProjectRepository.findByProject(project)).thenReturn(Optional.of(volunteerLink));
+
+        assertThatThrownBy(() -> jobExperienceService.createJobExperience(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Project is already linked to a volunteer experience");
+
+        verify(jobProjectsRepository, never()).save(any());
+    }
+
     // ── updateJobExperience ───────────────────────────────────────────────────
 
     @Test
@@ -214,6 +281,84 @@ class JobExperienceServiceTest {
         assertThatThrownBy(() -> jobExperienceService.updateJobExperience(99L, request))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("Job experience not found");
+    }
+
+    @Test
+    void updateJobExperience_shouldAddNewProjectLink_whenIdNotProvided() {
+        Project project = Project.builder().profile(profile).title("Beach Cleanup").status(ProjectStatus.PRODUCTION).complexity(ComplexityLevel.ADVANCED).build();
+        ReflectionTestUtils.setField(project, "id", 15L);
+
+        JobProjectRequest newLink = new JobProjectRequest();
+        newLink.setProjectId(15L);
+        UpdateJobExperienceRequest request = UpdateJobExperienceRequest.builder().projects(List.of(newLink)).build();
+
+        when(jobExperienceRepository.findById(1L)).thenReturn(Optional.of(job1));
+        when(jobExperienceRepository.save(job1)).thenReturn(job1);
+        when(jobProjectsRepository.findAllByJobExperience(job1)).thenReturn(List.of());
+        when(projectRepository.findById(15L)).thenReturn(Optional.of(project));
+        when(jobProjectsRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(volunteerProjectRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(courseProjectRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(jobProjectsRepository.save(any(JobProjects.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jobExperienceMapper.toDetailDto(job1)).thenReturn(JobExperienceDetailDto.builder().build());
+
+        jobExperienceService.updateJobExperience(1L, request);
+
+        assertThat(job1.getProjects()).hasSize(1);
+        var captor = ArgumentCaptor.forClass(JobProjects.class);
+        verify(jobProjectsRepository).save(captor.capture());
+        assertThat(captor.getValue().getProject()).isEqualTo(project);
+    }
+
+    @Test
+    void updateJobExperience_shouldDeleteProjectLinksNotInRequest() {
+        Project project = Project.builder().profile(profile).title("API").status(ProjectStatus.PRODUCTION).complexity(ComplexityLevel.ADVANCED).build();
+        ReflectionTestUtils.setField(project, "id", 10L);
+        JobProjects toRemove = JobProjects.builder().jobExperience(job1).project(project).build();
+        ReflectionTestUtils.setField(toRemove, "id", 5L);
+        job1.addProject(toRemove);
+
+        UpdateJobExperienceRequest request = UpdateJobExperienceRequest.builder().projects(List.of()).build();
+
+        when(jobExperienceRepository.findById(1L)).thenReturn(Optional.of(job1));
+        when(jobExperienceRepository.save(job1)).thenReturn(job1);
+        when(jobProjectsRepository.findAllByJobExperience(job1)).thenReturn(List.of(toRemove));
+        when(jobExperienceMapper.toDetailDto(job1)).thenReturn(JobExperienceDetailDto.builder().build());
+
+        jobExperienceService.updateJobExperience(1L, request);
+
+        verify(jobProjectsRepository).delete(toRemove);
+        assertThat(job1.getProjects()).doesNotContain(toRemove);
+    }
+
+    @Test
+    void updateJobExperience_shouldSwapLinkedProjectOnExistingLink() {
+        Project oldProject = Project.builder().profile(profile).title("Old").status(ProjectStatus.PRODUCTION).complexity(ComplexityLevel.ADVANCED).build();
+        ReflectionTestUtils.setField(oldProject, "id", 10L);
+        Project newProject = Project.builder().profile(profile).title("New").status(ProjectStatus.PRODUCTION).complexity(ComplexityLevel.ADVANCED).build();
+        ReflectionTestUtils.setField(newProject, "id", 20L);
+        JobProjects existingLink = JobProjects.builder().jobExperience(job1).project(oldProject).build();
+        ReflectionTestUtils.setField(existingLink, "id", 5L);
+
+        JobProjectRequest updateExisting = new JobProjectRequest();
+        updateExisting.setId(5L);
+        updateExisting.setProjectId(20L);
+        UpdateJobExperienceRequest request = UpdateJobExperienceRequest.builder().projects(List.of(updateExisting)).build();
+
+        when(jobExperienceRepository.findById(1L)).thenReturn(Optional.of(job1));
+        when(jobExperienceRepository.save(job1)).thenReturn(job1);
+        when(jobProjectsRepository.findAllByJobExperience(job1)).thenReturn(List.of(existingLink));
+        when(projectRepository.findById(20L)).thenReturn(Optional.of(newProject));
+        when(jobProjectsRepository.findByProject(newProject)).thenReturn(Optional.empty());
+        when(volunteerProjectRepository.findByProject(newProject)).thenReturn(Optional.empty());
+        when(courseProjectRepository.findByProject(newProject)).thenReturn(Optional.empty());
+        when(jobProjectsRepository.save(existingLink)).thenReturn(existingLink);
+        when(jobExperienceMapper.toDetailDto(job1)).thenReturn(JobExperienceDetailDto.builder().build());
+
+        jobExperienceService.updateJobExperience(1L, request);
+
+        assertThat(existingLink.getProject()).isEqualTo(newProject);
+        verify(jobProjectsRepository, never()).delete(any());
     }
 
     // ── deleteJobExperience ───────────────────────────────────────────────────
@@ -247,7 +392,9 @@ class JobExperienceServiceTest {
 
         when(jobExperienceRepository.findById(1L)).thenReturn(Optional.of(job1));
         when(projectRepository.findById(10L)).thenReturn(Optional.of(project));
-        when(jobProjectsRepository.existsByProject(project)).thenReturn(false);
+        when(jobProjectsRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(volunteerProjectRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(courseProjectRepository.findByProject(project)).thenReturn(Optional.empty());
         when(jobProjectsRepository.save(any(JobProjects.class))).thenReturn(savedLink);
         when(jobExperienceMapper.toDetailDto(job1)).thenReturn(dto);
 
@@ -258,17 +405,57 @@ class JobExperienceServiceTest {
     }
 
     @Test
-    void addProject_shouldThrowIllegalArgumentException_whenProjectAlreadyLinked() {
+    void addProject_shouldThrowIllegalArgumentException_whenProjectAlreadyLinkedToJob() {
         Project project = Project.builder().profile(profile).title("API").status(ProjectStatus.PRODUCTION).complexity(ComplexityLevel.ADVANCED).build();
         ReflectionTestUtils.setField(project, "id", 10L);
+        JobProjects existingLink = JobProjects.builder().jobExperience(job2).project(project).build();
+        ReflectionTestUtils.setField(existingLink, "id", 77L);
 
         when(jobExperienceRepository.findById(1L)).thenReturn(Optional.of(job1));
         when(projectRepository.findById(10L)).thenReturn(Optional.of(project));
-        when(jobProjectsRepository.existsByProject(project)).thenReturn(true);
+        when(jobProjectsRepository.findByProject(project)).thenReturn(Optional.of(existingLink));
 
         assertThatThrownBy(() -> jobExperienceService.addProject(1L, 10L))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Project is already linked to a job experience");
+
+        verify(jobProjectsRepository, never()).save(any());
+    }
+
+    @Test
+    void addProject_shouldThrowIllegalArgumentException_whenProjectAlreadyLinkedToVolunteerExperience() {
+        Project project = Project.builder().profile(profile).title("API").status(ProjectStatus.PRODUCTION).complexity(ComplexityLevel.ADVANCED).build();
+        ReflectionTestUtils.setField(project, "id", 10L);
+        VolunteerProject volunteerLink = VolunteerProject.builder().project(project).contributionPercentage(BigDecimal.TEN).build();
+
+        when(jobExperienceRepository.findById(1L)).thenReturn(Optional.of(job1));
+        when(projectRepository.findById(10L)).thenReturn(Optional.of(project));
+        when(jobProjectsRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(volunteerProjectRepository.findByProject(project)).thenReturn(Optional.of(volunteerLink));
+
+        assertThatThrownBy(() -> jobExperienceService.addProject(1L, 10L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Project is already linked to a volunteer experience");
+
+        verify(jobProjectsRepository, never()).save(any());
+    }
+
+    @Test
+    void addProject_shouldThrowIllegalArgumentException_whenProjectAlreadyLinkedToCourse() {
+        Project project = Project.builder().profile(profile).title("API").status(ProjectStatus.PRODUCTION).complexity(ComplexityLevel.ADVANCED).build();
+        ReflectionTestUtils.setField(project, "id", 10L);
+        CourseProject courseLink = CourseProject.builder().project(project).build();
+        ReflectionTestUtils.setField(courseLink, "id", 66L);
+
+        when(jobExperienceRepository.findById(1L)).thenReturn(Optional.of(job1));
+        when(projectRepository.findById(10L)).thenReturn(Optional.of(project));
+        when(jobProjectsRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(volunteerProjectRepository.findByProject(project)).thenReturn(Optional.empty());
+        when(courseProjectRepository.findByProject(project)).thenReturn(Optional.of(courseLink));
+
+        assertThatThrownBy(() -> jobExperienceService.addProject(1L, 10L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Project is already linked to a course");
 
         verify(jobProjectsRepository, never()).save(any());
     }

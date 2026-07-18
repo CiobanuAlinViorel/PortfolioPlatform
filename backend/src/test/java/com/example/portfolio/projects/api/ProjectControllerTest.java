@@ -69,8 +69,8 @@ class ProjectControllerTest {
                 .challenges(List.of(
                         ProjectChallengeDto.builder().id(1L).title("Scalability").difficulty(DifficultyLevel.HIGH).build()
                 ))
-                .images(List.of(
-                        ProjectImageDto.builder().id(1L).title("Screenshot").imageUrl("https://img.png").primary(true).build()
+                .media(List.of(
+                        ProjectMediaDto.builder().id(1L).title("Screenshot").imageUrl("https://img.png").primary(true).build()
                 ))
                 .skills(List.of(
                         SkillInProjectDto.builder().id(1L).name("Java").proficiency(ProficiencyLevel.EXPERT).usage(new BigDecimal("0.9")).build()
@@ -169,15 +169,15 @@ class ProjectControllerTest {
     }
 
     @Test
-    void getProject_shouldReturn200WithImagesAndSkills() throws Exception {
+    void getProject_shouldReturn200WithMediaAndSkills() throws Exception {
         when(projectService.getProjectById(1L)).thenReturn(buildProjectDetail());
 
         mockMvc.perform(get("/projects/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.images").isArray())
-                .andExpect(jsonPath("$.images[0].title").value("Screenshot"))
-                .andExpect(jsonPath("$.images[0].imageUrl").value("https://img.png"))
-                .andExpect(jsonPath("$.images[0].primary").value(true))
+                .andExpect(jsonPath("$.media").isArray())
+                .andExpect(jsonPath("$.media[0].title").value("Screenshot"))
+                .andExpect(jsonPath("$.media[0].imageUrl").value("https://img.png"))
+                .andExpect(jsonPath("$.media[0].primary").value(true))
                 .andExpect(jsonPath("$.skills").isArray())
                 .andExpect(jsonPath("$.skills[0].name").value("Java"))
                 .andExpect(jsonPath("$.skills[0].proficiency").value("EXPERT"));
@@ -198,7 +198,7 @@ class ProjectControllerTest {
     void getProject_shouldReturn200WithNullMetrics_whenNotPresent() throws Exception {
         ProjectDetailDto noMetrics = ProjectDetailDto.builder()
                 .id(1L).title("Blog").status(ProjectStatus.DEVELOPMENT)
-                .features(List.of()).challenges(List.of()).images(List.of()).skills(List.of())
+                .features(List.of()).challenges(List.of()).media(List.of()).skills(List.of())
                 .metrics(null).build();
         when(projectService.getProjectById(1L)).thenReturn(noMetrics);
 

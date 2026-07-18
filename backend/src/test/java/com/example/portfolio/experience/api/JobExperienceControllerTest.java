@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -199,6 +200,64 @@ class JobExperienceControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.companyName").value("Recent Corp"));
+    }
+
+    @Test
+    void createJobExperience_shouldForwardProjectsToService_whenProvided() throws Exception {
+        setupAdminAuth();
+        JobProjectRequest projectRequest = new JobProjectRequest();
+        projectRequest.setProjectId(10L);
+        CreateJobExperienceRequest request = CreateJobExperienceRequest.builder()
+                .companyName("New Corp").role("Lead Dev").startDate(LocalDate.of(2024, 1, 1))
+                .projects(List.of(projectRequest)).build();
+        when(jobExperienceService.createJobExperience(any())).thenReturn(buildJobDetail());
+
+        mockMvc.perform(post("/experience/jobs")
+                        .header("Authorization", "Bearer admin-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+
+        var captor = org.mockito.ArgumentCaptor.forClass(CreateJobExperienceRequest.class);
+        verify(jobExperienceService).createJobExperience(captor.capture());
+        assertThat(captor.getValue().getProjects()).hasSize(1);
+        assertThat(captor.getValue().getProjects().get(0).getProjectId()).isEqualTo(10L);
+    }
+
+    @Test
+    void createJobExperience_shouldReturn400_whenProjectIdIsMissingInNestedRequest() throws Exception {
+        setupAdminAuth();
+        JobProjectRequest projectRequest = new JobProjectRequest();
+        CreateJobExperienceRequest request = CreateJobExperienceRequest.builder()
+                .companyName("New Corp").role("Lead Dev").startDate(LocalDate.of(2024, 1, 1))
+                .projects(List.of(projectRequest)).build();
+
+        mockMvc.perform(post("/experience/jobs")
+                        .header("Authorization", "Bearer admin-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(jobExperienceService, never()).createJobExperience(any());
+    }
+
+    @Test
+    void createJobExperience_shouldReturn400_whenProjectAlreadyLinkedToVolunteerExperience() throws Exception {
+        setupAdminAuth();
+        JobProjectRequest projectRequest = new JobProjectRequest();
+        projectRequest.setProjectId(10L);
+        CreateJobExperienceRequest request = CreateJobExperienceRequest.builder()
+                .companyName("New Corp").role("Lead Dev").startDate(LocalDate.of(2024, 1, 1))
+                .projects(List.of(projectRequest)).build();
+        when(jobExperienceService.createJobExperience(any()))
+                .thenThrow(new IllegalArgumentException("Project is already linked to a volunteer experience"));
+
+        mockMvc.perform(post("/experience/jobs")
+                        .header("Authorization", "Bearer admin-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Project is already linked to a volunteer experience"));
     }
 
     @Test

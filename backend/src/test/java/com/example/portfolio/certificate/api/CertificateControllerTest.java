@@ -195,7 +195,41 @@ class CertificateControllerTest {
                 .andExpect(jsonPath("$.provider").value("Amazon"));
     }
 
+    @Test
+    void createCertificate_shouldReturn201_whenOnlyCategoryNameProvided() throws Exception {
+        setupAdminAuth();
+        CreateCertificateRequest request = CreateCertificateRequest.builder()
+                .name("AWS Certified Developer").provider("Amazon")
+                .issueDate(LocalDate.of(2024, 1, 15)).categoryName("Cloud").build();
+        when(certificateService.createCertificate(any(CreateCertificateRequest.class)))
+                .thenReturn(buildCertificateDto());
+
+        mockMvc.perform(post("/certificates")
+                        .header("Authorization", "Bearer admin-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("AWS Certified Developer"));
+    }
+
     // ── POST /certificates — validation ───────────────────────────────────────
+
+    @Test
+    void createCertificate_shouldReturn400_whenNeitherCategoryIdNorNameProvided() throws Exception {
+        setupAdminAuth();
+        CreateCertificateRequest request = CreateCertificateRequest.builder()
+                .name("AWS").provider("Amazon").issueDate(LocalDate.now()).build();
+        when(certificateService.createCertificate(any()))
+                .thenThrow(new IllegalArgumentException("Either categoryId or categoryName must be provided"));
+
+        mockMvc.perform(post("/certificates")
+                        .header("Authorization", "Bearer admin-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Either categoryId or categoryName must be provided"));
+    }
+
 
     @Test
     void createCertificate_shouldReturn400_whenNameIsBlank() throws Exception {

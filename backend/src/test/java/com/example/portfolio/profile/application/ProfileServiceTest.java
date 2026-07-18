@@ -246,7 +246,8 @@ class ProfileServiceTest {
     @Test
     void createProfile_shouldCreateAndReturnProfileInfoDto_whenNoProfileExists() {
         CreateProfileRequest request = CreateProfileRequest.builder()
-                .firstName("Alice").lastName("Smith").age(25).description("Developer").build();
+                .firstName("Alice").lastName("Smith").age(25).description("Developer")
+                .contactInfo(ContactInfoDto.builder().email("alice@test.com").build()).build();
         Profile newProfile = Profile.builder().firstName("Alice").lastName("Smith").age(25).build();
         ProfileInfoDto expectedDto = ProfileInfoDto.builder().firstName("Alice").lastName("Smith").age(25).build();
 
@@ -278,7 +279,8 @@ class ProfileServiceTest {
     @Test
     void createProfile_shouldCallMapperToProfile_withGivenRequest() {
         CreateProfileRequest request = CreateProfileRequest.builder()
-                .firstName("Alice").lastName("Smith").imageLink("http://img.png").build();
+                .firstName("Alice").lastName("Smith").imageLink("http://img.png")
+                .contactInfo(ContactInfoDto.builder().email("alice@test.com").build()).build();
         Profile newProfile = Profile.builder().firstName("Alice").lastName("Smith").build();
 
         when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
@@ -296,7 +298,8 @@ class ProfileServiceTest {
     @Test
     void updateProfile_shouldUpdateAndReturnProfileInfoDto_whenProfileExists() {
         UpdateProfileRequest request = UpdateProfileRequest.builder()
-                .firstName("Updated").age(35).build();
+                .firstName("Updated").age(35)
+                .contactInfo(ContactInfoDto.builder().email("updated@test.com").build()).build();
         ProfileInfoDto expectedDto = ProfileInfoDto.builder().firstName("Updated").age(35).build();
 
         when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
@@ -326,7 +329,8 @@ class ProfileServiceTest {
     @Test
     void updateProfile_shouldCallMapperUpdateProfile_withRequestAndExistingProfile() {
         UpdateProfileRequest request = UpdateProfileRequest.builder()
-                .description("New description").build();
+                .description("New description")
+                .contactInfo(ContactInfoDto.builder().email("existing@test.com").build()).build();
 
         when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
         when(profileRepository.save(profile)).thenReturn(profile);
@@ -337,55 +341,5 @@ class ProfileServiceTest {
         verify(profileMapper).updateProfile(request, profile);
     }
 
-    // ── upsertContactInfo ─────────────────────────────────────────────────────
 
-    @Test
-    void upsertContactInfo_shouldCreateNewContactInfo_whenNoneExistsForProfile() {
-        UpsertContactInfoRequest request = UpsertContactInfoRequest.builder()
-                .email("new@test.com").city("Bucharest").country("Romania").build();
-        ContactInfo saved = ContactInfo.builder().profile(profile).email("new@test.com").city("Bucharest").build();
-        ContactInfoDto expectedDto = ContactInfoDto.builder().email("new@test.com").city("Bucharest").build();
-
-        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
-        when(contactInfoRepository.findByProfile(profile)).thenReturn(Optional.empty());
-        when(contactInfoRepository.save(any(ContactInfo.class))).thenReturn(saved);
-        when(profileMapper.toContactInfoDto(saved)).thenReturn(expectedDto);
-
-        ContactInfoDto result = profileService.upsertContactInfo(request);
-
-        assertThat(result).isEqualTo(expectedDto);
-        verify(profileMapper).updateContactInfo(eq(request), any(ContactInfo.class));
-        verify(contactInfoRepository).save(any(ContactInfo.class));
-    }
-
-    @Test
-    void upsertContactInfo_shouldUpdateExistingContactInfo_whenAlreadyExists() {
-        UpsertContactInfoRequest request = UpsertContactInfoRequest.builder()
-                .email("updated@test.com").github("new-github").build();
-        ContactInfo existing = ContactInfo.builder().profile(profile).email("old@test.com").build();
-        ContactInfoDto expectedDto = ContactInfoDto.builder().email("updated@test.com").github("new-github").build();
-
-        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
-        when(contactInfoRepository.findByProfile(profile)).thenReturn(Optional.of(existing));
-        when(contactInfoRepository.save(existing)).thenReturn(existing);
-        when(profileMapper.toContactInfoDto(existing)).thenReturn(expectedDto);
-
-        ContactInfoDto result = profileService.upsertContactInfo(request);
-
-        assertThat(result).isEqualTo(expectedDto);
-        verify(profileMapper).updateContactInfo(request, existing);
-    }
-
-    @Test
-    void upsertContactInfo_shouldThrowNoSuchElementException_whenNoProfileExists() {
-        UpsertContactInfoRequest request = UpsertContactInfoRequest.builder()
-                .email("test@test.com").build();
-        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> profileService.upsertContactInfo(request))
-                .isInstanceOf(NoSuchElementException.class)
-                .hasMessage("Profile not found");
-
-        verify(contactInfoRepository, never()).save(any());
-    }
 }

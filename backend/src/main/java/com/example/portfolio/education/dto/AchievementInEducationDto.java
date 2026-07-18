@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AchievementInEducationDto {
+    private Long id;
     private Long achievementId;
     private String achievementTitle;
     private Long courseId;

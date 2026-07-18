@@ -23,7 +23,7 @@ import java.util.Set;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @EqualsAndHashCode(callSuper = true)
-public class Project extends BaseEntity {
+public class  Project extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personal_id", nullable = false)
@@ -87,7 +87,7 @@ public class Project extends BaseEntity {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     @Setter(AccessLevel.NONE)
-    private Set<ProjectImage> images = new HashSet<>();
+    private Set<ProjectMedia> media = new HashSet<>();
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
@@ -118,12 +118,12 @@ public class Project extends BaseEntity {
         this.challenges.remove(challenge);
     }
 
-    public void addImage(ProjectImage image){
-        this.images.add(image);
+    public void addMedia(ProjectMedia item) {
+        this.media.add(item);
     }
 
-    public void removeImage(ProjectImage image){
-        this.images.remove(image);
+    public void removeMedia(ProjectMedia item) {
+        this.media.remove(item);
     }
 
     public void addAchievement(ProjectAchievement achievement){

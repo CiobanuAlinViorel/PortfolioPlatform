@@ -27,4 +27,5 @@ public class SkillDetailDto {
     private Boolean learning;
     private List<String> tags;
     private List<ProjectInSkillDto> projects;
+    private List<LearningProgressDto> learningProgress;
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -20,4 +21,5 @@ public class CourseDto {
     private String semester;
     private Integer year;
     private Boolean relevant;
+    private List<CourseProjectDto> projects;
 }

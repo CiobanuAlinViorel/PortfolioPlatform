@@ -120,7 +120,7 @@ class ProjectServiceTest {
         assertThat(result.getTitle()).isEqualTo("Portfolio API");
         assertThat(result.getFeatures()).isEmpty();
         assertThat(result.getChallenges()).isEmpty();
-        assertThat(result.getImages()).isEmpty();
+        assertThat(result.getMedia()).isEmpty();
         assertThat(result.getSkills()).isEmpty();
         assertThat(result.getMetrics()).isNull();
     }

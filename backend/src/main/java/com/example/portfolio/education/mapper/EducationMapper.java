@@ -4,6 +4,7 @@ import com.example.portfolio.education.domain.Course;
 import com.example.portfolio.education.domain.Education;
 import com.example.portfolio.education.domain.EducationAchievement;
 import com.example.portfolio.education.dto.*;
+import com.example.portfolio.projects.domain.Project;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
@@ -15,7 +16,10 @@ public interface EducationMapper {
     @Mapping(target = "achievements", ignore = true)
     EducationDetailDto toEducationDetailDto(Education education);
 
+    @Mapping(target = "projects", ignore = true)
     CourseDto toCourseDto(Course course);
+
+    ProjectInCourseDto toProjectInCourseDto(Project project);
 
     @Mapping(source = "achievement.id", target = "achievementId")
     @Mapping(source = "achievement.title", target = "achievementTitle")

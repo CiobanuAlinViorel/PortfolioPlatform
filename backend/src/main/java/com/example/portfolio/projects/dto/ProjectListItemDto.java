@@ -28,4 +28,5 @@ public class ProjectListItemDto {
     private String categoryName;
     private Integer sortOrder;
     private Double developmentTime;
+    private String imageUrl;
 }

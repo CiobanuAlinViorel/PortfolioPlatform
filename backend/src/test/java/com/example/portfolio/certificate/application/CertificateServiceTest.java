@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -127,6 +128,53 @@ class CertificateServiceTest {
     }
 
     @Test
+    void createCertificate_shouldFindExistingCategoryByName_insteadOfCreatingDuplicate() {
+        CreateCertificateRequest request = CreateCertificateRequest.builder()
+                .name("AWS").provider("Amazon").issueDate(LocalDate.now()).categoryName("Cloud").build();
+
+        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
+        when(certificateCategoryRepository.findByName("Cloud")).thenReturn(Optional.of(category));
+        when(certificateRepository.save(any(Certificate.class))).thenReturn(certificate);
+        when(certificateMapper.toCertificateDto(certificate)).thenReturn(certificateDto);
+
+        certificateService.createCertificate(request);
+
+        verify(certificateCategoryRepository, never()).save(any());
+    }
+
+    @Test
+    void createCertificate_shouldCreateCategory_whenNameDoesNotExist() {
+        CreateCertificateRequest request = CreateCertificateRequest.builder()
+                .name("AWS").provider("Amazon").issueDate(LocalDate.now()).categoryName("Data Science").build();
+
+        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
+        when(certificateCategoryRepository.findByName("Data Science")).thenReturn(Optional.empty());
+        when(certificateCategoryRepository.save(any(CertificationCategory.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(certificateRepository.save(any(Certificate.class))).thenReturn(certificate);
+        when(certificateMapper.toCertificateDto(any())).thenReturn(certificateDto);
+
+        certificateService.createCertificate(request);
+
+        var captor = org.mockito.ArgumentCaptor.forClass(CertificationCategory.class);
+        verify(certificateCategoryRepository).save(captor.capture());
+        assertThat(captor.getValue().getName()).isEqualTo("Data Science");
+    }
+
+    @Test
+    void createCertificate_shouldThrowIllegalArgumentException_whenNeitherCategoryIdNorNameProvided() {
+        CreateCertificateRequest request = CreateCertificateRequest.builder()
+                .name("AWS").provider("Amazon").issueDate(LocalDate.now()).build();
+
+        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
+
+        assertThatThrownBy(() -> certificateService.createCertificate(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Either categoryId or categoryName must be provided");
+
+        verify(certificateRepository, never()).save(any());
+    }
+
+    @Test
     void createCertificate_shouldDefaultHasExpiryToFalse_whenNotProvided() {
         CreateCertificateRequest request = CreateCertificateRequest.builder()
                 .name("AWS").provider("Amazon").issueDate(LocalDate.now()).categoryId(1L)
@@ -173,6 +221,56 @@ class CertificateServiceTest {
         certificateService.updateCertificate(1L, request);
 
         assertThat(certificate.getCertificationCategory()).isEqualTo(newCategory);
+    }
+
+    @Test
+    void updateCertificate_shouldRenameSharedCategory_whenIdAndDifferingNameProvided() {
+        ReflectionTestUtils.setField(category, "id", 5L);
+        UpdateCertificateRequest request = UpdateCertificateRequest.builder()
+                .categoryId(5L).categoryName("Cloud Computing").build();
+
+        when(certificateRepository.findById(1L)).thenReturn(Optional.of(certificate));
+        when(certificateCategoryRepository.findById(5L)).thenReturn(Optional.of(category));
+        when(certificateCategoryRepository.save(any(CertificationCategory.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(certificateRepository.save(certificate)).thenReturn(certificate);
+        when(certificateMapper.toCertificateDto(certificate)).thenReturn(certificateDto);
+
+        certificateService.updateCertificate(1L, request);
+
+        assertThat(category.getName()).isEqualTo("Cloud Computing");
+        verify(certificateCategoryRepository).save(category);
+    }
+
+    @Test
+    void updateCertificate_shouldNotRenameCategory_whenNameMatchesCurrent() {
+        ReflectionTestUtils.setField(category, "id", 5L);
+        UpdateCertificateRequest request = UpdateCertificateRequest.builder()
+                .categoryId(5L).categoryName("Cloud").build();
+
+        when(certificateRepository.findById(1L)).thenReturn(Optional.of(certificate));
+        when(certificateCategoryRepository.findById(5L)).thenReturn(Optional.of(category));
+        when(certificateRepository.save(certificate)).thenReturn(certificate);
+        when(certificateMapper.toCertificateDto(certificate)).thenReturn(certificateDto);
+
+        certificateService.updateCertificate(1L, request);
+
+        verify(certificateCategoryRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCertificate_shouldFindOrCreateCategoryByName_whenOnlyNameProvided() {
+        UpdateCertificateRequest request = UpdateCertificateRequest.builder().categoryName("Security").build();
+
+        when(certificateRepository.findById(1L)).thenReturn(Optional.of(certificate));
+        when(certificateCategoryRepository.findByName("Security")).thenReturn(Optional.empty());
+        when(certificateCategoryRepository.save(any(CertificationCategory.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(certificateRepository.save(certificate)).thenReturn(certificate);
+        when(certificateMapper.toCertificateDto(certificate)).thenReturn(certificateDto);
+
+        certificateService.updateCertificate(1L, request);
+
+        assertThat(certificate.getCertificationCategory().getName()).isEqualTo("Security");
+        verify(certificateCategoryRepository, never()).findById(any());
     }
 
     @Test

@@ -22,5 +22,8 @@ public class UpdateCertificateRequest {
     private String description;
     private String score;
     private Integer relevanceScore;
+
+    // Category — link by id or find-or-create by name; sending both renames the shared category
     private Long categoryId;
+    private String categoryName;
 }

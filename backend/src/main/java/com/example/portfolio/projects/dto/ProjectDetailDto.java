@@ -30,7 +30,8 @@ public class ProjectDetailDto {
     private Double developmentTime;
     private List<ProjectFeatureDto> features;
     private List<ProjectChallengeDto> challenges;
-    private List<ProjectImageDto> images;
+    private List<ProjectMediaDto> media;
     private List<SkillInProjectDto> skills;
     private ProjectMetricsDto metrics;
+    private List<ProjectAchievementDto> achievements;
 }

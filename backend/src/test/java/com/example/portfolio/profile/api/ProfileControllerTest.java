@@ -13,10 +13,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+
+
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -31,7 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = ProfileController.class)
 @Import(SecurityConfig.class)
-@MockBean(JpaMetamodelMappingContext.class)
 class ProfileControllerTest {
 
     @Autowired
@@ -40,14 +41,18 @@ class ProfileControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private ProfileService profileService;
 
-    @MockBean
+    @MockitoBean
     private JwtService jwtService;
 
-    @MockBean
+    @MockitoBean
     private UserRepository userRepository;
+
+    // Prevents JPA auto-configuration from building a real (empty) metamodel in a @WebMvcTest slice
+    @MockitoBean
+    private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 
     private ProfileSummaryResponse buildFullResponse() {
         return ProfileSummaryResponse.builder()
@@ -225,7 +230,8 @@ class ProfileControllerTest {
     void createProfile_shouldReturn201WithProfileInfo_whenAdminAuthenticated() throws Exception {
         setupAdminAuth();
         CreateProfileRequest request = CreateProfileRequest.builder()
-                .firstName("John").lastName("Doe").age(30).description("Developer").build();
+                .firstName("John").lastName("Doe").age(30).description("Developer")
+                .contactInfo(buildContactInfoDto()).build();
         when(profileService.createProfile(any(CreateProfileRequest.class))).thenReturn(buildProfileInfoDto());
 
         mockMvc.perform(post("/profile")
@@ -270,7 +276,7 @@ class ProfileControllerTest {
     void createProfile_shouldReturn400_whenProfileAlreadyExists() throws Exception {
         setupAdminAuth();
         CreateProfileRequest request = CreateProfileRequest.builder()
-                .firstName("John").lastName("Doe").build();
+                .firstName("John").lastName("Doe").contactInfo(buildContactInfoDto()).build();
         when(profileService.createProfile(any())).thenThrow(new IllegalArgumentException("A profile already exists"));
 
         mockMvc.perform(post("/profile")
@@ -300,7 +306,7 @@ class ProfileControllerTest {
     void createProfile_shouldReturn403_whenUserRole() throws Exception {
         setupUserAuth();
         CreateProfileRequest request = CreateProfileRequest.builder()
-                .firstName("John").lastName("Doe").build();
+                .firstName("John").lastName("Doe").contactInfo(buildContactInfoDto()).build();
 
         mockMvc.perform(post("/profile")
                         .header("Authorization", "Bearer user-token")
@@ -317,7 +323,7 @@ class ProfileControllerTest {
     void updateProfile_shouldReturn200WithUpdatedInfo_whenAdminAuthenticated() throws Exception {
         setupAdminAuth();
         UpdateProfileRequest request = UpdateProfileRequest.builder()
-                .firstName("Updated").age(35).build();
+                .firstName("Updated").age(35).contactInfo(buildContactInfoDto()).build();
         when(profileService.updateProfile(any(UpdateProfileRequest.class))).thenReturn(buildProfileInfoDto());
 
         mockMvc.perform(put("/profile")
@@ -331,7 +337,7 @@ class ProfileControllerTest {
     @Test
     void updateProfile_shouldReturn404_whenProfileNotFound() throws Exception {
         setupAdminAuth();
-        UpdateProfileRequest request = UpdateProfileRequest.builder().firstName("Updated").build();
+        UpdateProfileRequest request = UpdateProfileRequest.builder().firstName("Updated").contactInfo(buildContactInfoDto()).build();
         when(profileService.updateProfile(any())).thenThrow(new NoSuchElementException("Profile not found"));
 
         mockMvc.perform(put("/profile")
@@ -359,7 +365,7 @@ class ProfileControllerTest {
     @Test
     void updateProfile_shouldReturn403_whenUserRole() throws Exception {
         setupUserAuth();
-        UpdateProfileRequest request = UpdateProfileRequest.builder().firstName("Updated").build();
+        UpdateProfileRequest request = UpdateProfileRequest.builder().firstName("Updated").contactInfo(buildContactInfoDto()).build();
 
         mockMvc.perform(put("/profile")
                         .header("Authorization", "Bearer user-token")
@@ -370,64 +376,5 @@ class ProfileControllerTest {
         verify(profileService, never()).updateProfile(any());
     }
 
-    // ── PUT /profile/contact — happy path ─────────────────────────────────────
 
-    @Test
-    void upsertContactInfo_shouldReturn200WithContactInfo_whenAdminAuthenticated() throws Exception {
-        setupAdminAuth();
-        UpsertContactInfoRequest request = UpsertContactInfoRequest.builder()
-                .email("john@test.com").github("john-gh").city("Bucharest").country("Romania").build();
-        when(profileService.upsertContactInfo(any(UpsertContactInfoRequest.class))).thenReturn(buildContactInfoDto());
-
-        mockMvc.perform(put("/profile/contact")
-                        .header("Authorization", "Bearer admin-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("john@test.com"))
-                .andExpect(jsonPath("$.github").value("john-gh"))
-                .andExpect(jsonPath("$.city").value("Bucharest"))
-                .andExpect(jsonPath("$.country").value("Romania"));
-    }
-
-    @Test
-    void upsertContactInfo_shouldReturn404_whenProfileNotFound() throws Exception {
-        setupAdminAuth();
-        UpsertContactInfoRequest request = UpsertContactInfoRequest.builder().email("j@test.com").build();
-        when(profileService.upsertContactInfo(any())).thenThrow(new NoSuchElementException("Profile not found"));
-
-        mockMvc.perform(put("/profile/contact")
-                        .header("Authorization", "Bearer admin-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound());
-    }
-
-    // ── PUT /profile/contact — security ───────────────────────────────────────
-
-    @Test
-    void upsertContactInfo_shouldReturn401_whenNotAuthenticated() throws Exception {
-        UpsertContactInfoRequest request = UpsertContactInfoRequest.builder().email("j@test.com").build();
-
-        mockMvc.perform(put("/profile/contact")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
-
-        verify(profileService, never()).upsertContactInfo(any());
-    }
-
-    @Test
-    void upsertContactInfo_shouldReturn403_whenUserRole() throws Exception {
-        setupUserAuth();
-        UpsertContactInfoRequest request = UpsertContactInfoRequest.builder().email("j@test.com").build();
-
-        mockMvc.perform(put("/profile/contact")
-                        .header("Authorization", "Bearer user-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
-
-        verify(profileService, never()).upsertContactInfo(any());
-    }
 }

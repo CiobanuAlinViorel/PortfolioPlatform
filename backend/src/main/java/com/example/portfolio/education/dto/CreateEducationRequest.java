@@ -2,6 +2,7 @@ package com.example.portfolio.education.dto;
 
 import com.example.portfolio.education.domain.EducationLevel;
 import com.example.portfolio.education.domain.EducationStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -31,4 +33,9 @@ public class CreateEducationRequest {
     private EducationStatus status;
     private String gpa;
     private String description;
+
+    @Valid
+    private List<CourseRequest> courses;
+    @Valid
+    private List<EducationAchievementRequest> achievements;
 }

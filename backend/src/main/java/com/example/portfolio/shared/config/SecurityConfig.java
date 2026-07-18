@@ -56,10 +56,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/skills/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/projects/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/experience/jobs", "/experience/jobs/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/experience/volunteers", "/experience/volunteers/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/certificates/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/hobbies/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/education/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/achievements/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e

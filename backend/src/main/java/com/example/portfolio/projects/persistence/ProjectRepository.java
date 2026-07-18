@@ -19,6 +19,8 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     @Query("SELECT p FROM Project p WHERE p.profile = :profile " +
            "AND p.id NOT IN (SELECT jp.project.id FROM JobProjects jp) " +
+           "AND p.id NOT IN (SELECT vp.project.id FROM VolunteerProject vp) " +
+           "AND p.id NOT IN (SELECT cp.project.id FROM CourseProject cp) " +
            "AND (p.projectCategory IS NULL OR LOWER(p.projectCategory.name) <> 'course') " +
            "ORDER BY p.title ASC")
     List<Project> findAvailableForJobExperience(@Param("profile") Profile profile);

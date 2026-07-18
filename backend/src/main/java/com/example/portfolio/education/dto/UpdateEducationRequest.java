@@ -2,12 +2,14 @@ package com.example.portfolio.education.dto;
 
 import com.example.portfolio.education.domain.EducationLevel;
 import com.example.portfolio.education.domain.EducationStatus;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -24,4 +26,10 @@ public class UpdateEducationRequest {
     private EducationStatus status;
     private String gpa;
     private String description;
+
+    // Diffed by id against existing courses: matched ids updated, unmatched ids removed, id-less entries created
+    @Valid
+    private List<CourseRequest> courses;
+    @Valid
+    private List<EducationAchievementRequest> achievements;
 }
