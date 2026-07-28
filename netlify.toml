@@ -1,0 +1,9 @@
+[build]
+  base = "frontend"
+  command = "ng build"
+  publish = "dist/frontend/browser"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.csr.html"
+  status = 200
