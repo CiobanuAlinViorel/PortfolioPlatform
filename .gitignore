@@ -58,9 +58,6 @@ backend/.env
 
 # Backend (Spring Boot)
 backend/target/
-backend/.mvn/
-backend/mvnw
-backend/mvnw.cmd
 backend/logs/
 backend/application-local.properties
 backend/application-prod.yml
