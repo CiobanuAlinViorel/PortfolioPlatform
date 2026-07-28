@@ -29,4 +29,5 @@ public class ProjectListItemDto {
     private Integer sortOrder;
     private Double developmentTime;
     private String imageUrl;
+    private List<String> skills;
 }

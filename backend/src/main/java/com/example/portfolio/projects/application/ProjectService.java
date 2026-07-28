@@ -55,6 +55,15 @@ public class ProjectService {
     }
 
     @Transactional(readOnly = true)
+    public List<ProjectListItemDto> getPublicProjectsList() {
+        Profile profile = getProfile();
+        return projectRepository.findStandaloneByProfile(profile)
+                .stream()
+                .map(projectMapper::toProjectListItemDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public ProjectDetailDto getProjectById(Long id) {
         return buildDetailDto(findProject(id));
     }

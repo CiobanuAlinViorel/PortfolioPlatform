@@ -1,0 +1,188 @@
+<section class="min-h-[calc(100vh-3.5rem)] bg-beige-dark px-4 py-12 dark:bg-green-950 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-7xl">
+        <div class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-emerald-900 dark:text-beige-light sm:text-4xl">Education</h1>
+            <p class="mt-2 text-sm text-emerald-900/70 dark:text-beige-light/70">My academic background.</p>
+        </div>
+
+        @if (loading()) {
+        <div class="flex justify-center py-24 text-emerald-900 dark:text-beige-light">Loading...</div>
+        } @else if (errorMessage()) {
+        <div class="flex justify-center py-24 text-red-700 dark:text-red-300">{{ errorMessage() }}</div>
+        } @else if (items().length === 0) {
+        <div class="flex flex-col items-center gap-3 py-24 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideGraduationCap class="h-10 w-10"></svg>
+            <p>No education history to show yet.</p>
+        </div>
+        } @else {
+
+        <!-- Search -->
+        <div class="relative mb-6">
+            <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-900/50 dark:text-beige-light/50"></svg>
+            <input type="text" placeholder="Search education..." [value]="searchTerm()" (input)="onSearchInput($event)"
+                class="w-full rounded-lg bg-beige-light py-2.5 pl-10 pr-9 text-sm text-emerald-900 placeholder-emerald-900/40 shadow-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-emerald-800 dark:bg-green-900 dark:text-beige-light dark:placeholder-beige-light/40 dark:ring-white/5 dark:focus:ring-beige-light" />
+            @if (searchTerm()) {
+            <button type="button" (click)="clearSearch()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-900/50 hover:text-emerald-900 dark:text-beige-light/50 dark:hover:text-beige-light">
+                <svg lucideX class="h-4 w-4"></svg>
+            </button>
+            }
+        </div>
+
+        <!-- Floating filter button -->
+        <button type="button" (click)="openFilters()"
+            class="fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-800 text-beige-light shadow-lg transition-transform duration-150 ease-out hover:scale-105 hover:bg-emerald-700">
+            <svg lucideListFilter class="h-6 w-6"></svg>
+            @if (activeFilterCount() > 0) {
+            <span class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-semibold text-white">
+                {{ activeFilterCount() }}
+            </span>
+            }
+        </button>
+
+        <!-- Filter modal -->
+        @if (filtersOpen()) {
+        <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4" (click)="closeFilters()">
+            <div (click)="$event.stopPropagation()"
+                class="w-full max-h-[85vh] max-w-md overflow-y-auto rounded-2xl bg-beige-light p-6 shadow-xl dark:bg-green-900">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-emerald-900 dark:text-beige-light">Filters</h2>
+                    <button type="button" (click)="closeFilters()"
+                        class="text-emerald-900/60 hover:text-emerald-900 dark:text-beige-light/60 dark:hover:text-beige-light">
+                        <svg lucideX class="h-5 w-5"></svg>
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    @if (levels().length > 1) {
+                    <div>
+                        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-900/60 dark:text-beige-light/60">Level</h3>
+                        <div class="flex flex-wrap gap-2">
+                            @for (level of levels(); track level) {
+                            <button type="button" (click)="setLevel(level)"
+                                class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-out"
+                                [class.bg-emerald-800]="activeLevel() === level"
+                                [class.text-beige-light]="activeLevel() === level"
+                                [class.bg-black/5]="activeLevel() !== level"
+                                [class.text-emerald-900]="activeLevel() !== level"
+                                [class.dark:bg-white/10]="activeLevel() !== level"
+                                [class.dark:text-beige-light]="activeLevel() !== level">
+                                {{ level === "All" ? "All" : levelLabel(level) }}
+                            </button>
+                            }
+                        </div>
+                    </div>
+                    }
+
+                    @if (statuses().length > 1) {
+                    <div>
+                        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-900/60 dark:text-beige-light/60">Status</h3>
+                        <div class="flex flex-wrap gap-2">
+                            @for (status of statuses(); track status) {
+                            <button type="button" (click)="setStatus(status)"
+                                class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-out"
+                                [class.bg-emerald-800]="activeStatus() === status"
+                                [class.text-beige-light]="activeStatus() === status"
+                                [class.bg-black/5]="activeStatus() !== status"
+                                [class.text-emerald-900]="activeStatus() !== status"
+                                [class.dark:bg-white/10]="activeStatus() !== status"
+                                [class.dark:text-beige-light]="activeStatus() !== status">
+                                {{ status === "All" ? "All" : statusLabel(status) }}
+                            </button>
+                            }
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <div class="mt-6 flex items-center justify-between gap-3 border-t border-black/5 pt-4 dark:border-white/5">
+                    <button type="button" (click)="clearFilters()"
+                        class="text-sm font-medium text-emerald-800 hover:underline dark:text-beige-light"
+                        [class.opacity-40]="activeFilterCount() === 0"
+                        [disabled]="activeFilterCount() === 0">
+                        Clear filters
+                    </button>
+                    <button type="button" (click)="closeFilters()"
+                        class="rounded-md bg-emerald-800 px-4 py-2 text-sm font-medium text-beige-light shadow-sm transition-colors duration-150 ease-out hover:bg-emerald-700">
+                        Show results
+                    </button>
+                </div>
+            </div>
+        </div>
+        }
+
+        @if (visibleItems().length === 0) {
+        <div class="flex flex-col items-center gap-3 py-24 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideSearch class="h-10 w-10"></svg>
+            <p>No education entries match your search or filters.</p>
+            <button type="button" (click)="clearFilters(); clearSearch()"
+                class="text-sm font-medium text-emerald-800 hover:underline dark:text-beige-light">
+                Clear all
+            </button>
+        </div>
+        } @else {
+        <div class="relative">
+            <!-- Timeline rail -->
+            <div class="absolute bottom-0 left-4 top-2 w-px bg-emerald-900/15 dark:bg-beige-light/15 sm:left-5"></div>
+
+            <div class="flex flex-col gap-8">
+                @for (item of visibleItems(); track item.id) {
+                <div class="relative pl-10 sm:pl-14">
+                    <!-- Timeline dot -->
+                    <div class="absolute left-4 top-2 flex h-4 w-4 -translate-x-1/2 items-center justify-center rounded-full border-4 border-beige-dark dark:border-green-950 sm:left-5"
+                        [class.bg-emerald-800]="item.status !== 'DROPPED'" [class.dark:bg-beige-light]="item.status !== 'DROPPED'"
+                        [class.bg-red-600]="item.status === 'DROPPED'"></div>
+
+                    <div class="flex flex-col gap-3 rounded-xl bg-beige-light p-5 shadow-sm transition-all duration-200 ease-out hover:-translate-x-1 hover:shadow-lg dark:bg-green-900 sm:p-6">
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                                <h2 class="text-lg font-semibold leading-tight text-emerald-900 dark:text-beige-light">
+                                    {{ item.degree ?? item.fieldOfStudy }}
+                                </h2>
+                                <p class="text-sm text-emerald-900/70 dark:text-beige-light/70">
+                                    {{ item.institution }}{{ item.location ? ", " + item.location : "" }}
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="rounded-full bg-emerald-800/10 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-beige-light/10 dark:text-beige-light">
+                                    {{ levelLabel(item.level) }}
+                                </span>
+                                <span class="rounded-full px-2.5 py-1 text-xs font-medium"
+                                    [class.bg-emerald-800/10]="item.status !== 'DROPPED'"
+                                    [class.text-emerald-800]="item.status !== 'DROPPED'"
+                                    [class.dark:bg-beige-light/10]="item.status !== 'DROPPED'"
+                                    [class.dark:text-beige-light]="item.status !== 'DROPPED'"
+                                    [class.bg-red-600/10]="item.status === 'DROPPED'"
+                                    [class.text-red-700]="item.status === 'DROPPED'"
+                                    [class.dark:text-red-400]="item.status === 'DROPPED'">
+                                    {{ statusLabel(item.status) }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="text-xs font-medium uppercase tracking-wide text-emerald-800 dark:text-beige-light/80">
+                            {{ item.startDate | date: "MMM y" }} &ndash; {{ item.endDate ? (item.endDate | date: "MMM y") : "Present" }}
+                        </p>
+
+                        @if (item.fieldOfStudy && item.degree) {
+                        <p class="text-sm text-emerald-900/70 dark:text-beige-light/70">{{ item.fieldOfStudy }}</p>
+                        }
+
+                        @if (item.description) {
+                        <p class="text-sm text-emerald-900/80 dark:text-beige-light/80">{{ item.description }}</p>
+                        }
+
+                        @if (item.gpa) {
+                        <p class="border-t border-black/5 pt-3 text-xs text-emerald-900/60 dark:border-white/5 dark:text-beige-light/60">
+                            GPA: {{ item.gpa }}
+                        </p>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+        }
+        }
+    </div>
+</section>

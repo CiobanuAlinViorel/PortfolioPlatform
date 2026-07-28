@@ -23,10 +23,10 @@ public class ProjectAchievement extends BaseEntity {
     private Project project;
 
 
-    @Column(name = "impact_summary", nullable = false)
+    @Column(name = "impact_summary")
     private String impactSummary;
 
-    @Column(name="demo_url", nullable = false)
+    @Column(name="demo_url")
     private String demoUrl;
 
     @Column(name="metric_before")

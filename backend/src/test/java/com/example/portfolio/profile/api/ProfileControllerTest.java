@@ -17,7 +17,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -224,6 +226,10 @@ class ProfileControllerTest {
         return ContactInfoDto.builder().email("john@test.com").github("john-gh").city("Bucharest").country("Romania").build();
     }
 
+    private MockMultipartFile dataPart(Object request) throws Exception {
+        return new MockMultipartFile("data", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+    }
+
     // ── POST /profile — happy path ────────────────────────────────────────────
 
     @Test
@@ -232,12 +238,11 @@ class ProfileControllerTest {
         CreateProfileRequest request = CreateProfileRequest.builder()
                 .firstName("John").lastName("Doe").age(30).description("Developer")
                 .contactInfo(buildContactInfoDto()).build();
-        when(profileService.createProfile(any(CreateProfileRequest.class))).thenReturn(buildProfileInfoDto());
+        when(profileService.createProfile(any(CreateProfileRequest.class), any())).thenReturn(buildProfileInfoDto());
 
-        mockMvc.perform(post("/profile")
-                        .header("Authorization", "Bearer admin-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart("/profile")
+                        .file(dataPart(request))
+                        .header("Authorization", "Bearer admin-token"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firstName").value("John"))
                 .andExpect(jsonPath("$.lastName").value("Doe"))
@@ -252,10 +257,9 @@ class ProfileControllerTest {
         CreateProfileRequest request = CreateProfileRequest.builder()
                 .firstName("").lastName("Doe").build();
 
-        mockMvc.perform(post("/profile")
-                        .header("Authorization", "Bearer admin-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart("/profile")
+                        .file(dataPart(request))
+                        .header("Authorization", "Bearer admin-token"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -265,10 +269,9 @@ class ProfileControllerTest {
         CreateProfileRequest request = CreateProfileRequest.builder()
                 .firstName("John").lastName("").build();
 
-        mockMvc.perform(post("/profile")
-                        .header("Authorization", "Bearer admin-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart("/profile")
+                        .file(dataPart(request))
+                        .header("Authorization", "Bearer admin-token"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -277,12 +280,11 @@ class ProfileControllerTest {
         setupAdminAuth();
         CreateProfileRequest request = CreateProfileRequest.builder()
                 .firstName("John").lastName("Doe").contactInfo(buildContactInfoDto()).build();
-        when(profileService.createProfile(any())).thenThrow(new IllegalArgumentException("A profile already exists"));
+        when(profileService.createProfile(any(), any())).thenThrow(new IllegalArgumentException("A profile already exists"));
 
-        mockMvc.perform(post("/profile")
-                        .header("Authorization", "Bearer admin-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart("/profile")
+                        .file(dataPart(request))
+                        .header("Authorization", "Bearer admin-token"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("A profile already exists"));
     }
@@ -294,12 +296,11 @@ class ProfileControllerTest {
         CreateProfileRequest request = CreateProfileRequest.builder()
                 .firstName("John").lastName("Doe").build();
 
-        mockMvc.perform(post("/profile")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart("/profile")
+                        .file(dataPart(request)))
                 .andExpect(status().isUnauthorized());
 
-        verify(profileService, never()).createProfile(any());
+        verify(profileService, never()).createProfile(any(), any());
     }
 
     @Test
@@ -308,13 +309,12 @@ class ProfileControllerTest {
         CreateProfileRequest request = CreateProfileRequest.builder()
                 .firstName("John").lastName("Doe").contactInfo(buildContactInfoDto()).build();
 
-        mockMvc.perform(post("/profile")
-                        .header("Authorization", "Bearer user-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart("/profile")
+                        .file(dataPart(request))
+                        .header("Authorization", "Bearer user-token"))
                 .andExpect(status().isForbidden());
 
-        verify(profileService, never()).createProfile(any());
+        verify(profileService, never()).createProfile(any(), any());
     }
 
     // ── PUT /profile — happy path ─────────────────────────────────────────────
@@ -324,12 +324,11 @@ class ProfileControllerTest {
         setupAdminAuth();
         UpdateProfileRequest request = UpdateProfileRequest.builder()
                 .firstName("Updated").age(35).contactInfo(buildContactInfoDto()).build();
-        when(profileService.updateProfile(any(UpdateProfileRequest.class))).thenReturn(buildProfileInfoDto());
+        when(profileService.updateProfile(any(UpdateProfileRequest.class), any())).thenReturn(buildProfileInfoDto());
 
-        mockMvc.perform(put("/profile")
-                        .header("Authorization", "Bearer admin-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart(HttpMethod.PUT, "/profile")
+                        .file(dataPart(request))
+                        .header("Authorization", "Bearer admin-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("John"));
     }
@@ -338,12 +337,11 @@ class ProfileControllerTest {
     void updateProfile_shouldReturn404_whenProfileNotFound() throws Exception {
         setupAdminAuth();
         UpdateProfileRequest request = UpdateProfileRequest.builder().firstName("Updated").contactInfo(buildContactInfoDto()).build();
-        when(profileService.updateProfile(any())).thenThrow(new NoSuchElementException("Profile not found"));
+        when(profileService.updateProfile(any(), any())).thenThrow(new NoSuchElementException("Profile not found"));
 
-        mockMvc.perform(put("/profile")
-                        .header("Authorization", "Bearer admin-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart(HttpMethod.PUT, "/profile")
+                        .file(dataPart(request))
+                        .header("Authorization", "Bearer admin-token"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Profile not found"));
     }
@@ -354,12 +352,11 @@ class ProfileControllerTest {
     void updateProfile_shouldReturn401_whenNotAuthenticated() throws Exception {
         UpdateProfileRequest request = UpdateProfileRequest.builder().firstName("Updated").build();
 
-        mockMvc.perform(put("/profile")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart(HttpMethod.PUT, "/profile")
+                        .file(dataPart(request)))
                 .andExpect(status().isUnauthorized());
 
-        verify(profileService, never()).updateProfile(any());
+        verify(profileService, never()).updateProfile(any(), any());
     }
 
     @Test
@@ -367,13 +364,12 @@ class ProfileControllerTest {
         setupUserAuth();
         UpdateProfileRequest request = UpdateProfileRequest.builder().firstName("Updated").contactInfo(buildContactInfoDto()).build();
 
-        mockMvc.perform(put("/profile")
-                        .header("Authorization", "Bearer user-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart(HttpMethod.PUT, "/profile")
+                        .file(dataPart(request))
+                        .header("Authorization", "Bearer user-token"))
                 .andExpect(status().isForbidden());
 
-        verify(profileService, never()).updateProfile(any());
+        verify(profileService, never()).updateProfile(any(), any());
     }
 
 

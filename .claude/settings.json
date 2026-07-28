@@ -22,7 +22,21 @@
       "Bash(mvn -q -o compile test-compile)",
       "Bash(pnpm add *)",
       "Bash(pnpm remove *)",
-      "Bash(curl -s http://localhost:4200/)"
+      "Bash(curl -s http://localhost:4200/)",
+      "Bash(npm view *)",
+      "Bash(./mvnw -q -DskipTests compile)",
+      "Bash(mvn -q -DskipTests compile)",
+      "Bash(./mvnw -q -Dtest=EmailServiceTest test)",
+      "Bash(./mvnw -Dtest=EmailServiceTest test)",
+      "Bash(identify frontend/public/logo.png)",
+      "Bash(python3 -c \"print\\('py3 ok'\\)\")",
+      "Bash(python -c \"print\\('py ok'\\)\")",
+      "Bash(./mvnw -Dtest=EmailServiceTest#sendVerificationEmail_shouldCallMailSenderWithCorrectDetails_whenMailIsEnabled test)",
+      "Bash(./mvnw test *)",
+      "Bash(sleep 15 && tail -30 /tmp/backend.log 2>/dev/null || tail -30 \"C:\\\\Users\\\\alinv\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-alinv-Documents-Projects-PortofolioPlatform-PortofolioFullStack\\\\cbd5ea8b-eafe-4840-8907-bb8cc0945ed0\\\\tasks\\\\bzd7mg138.output\")",
+      "Read(//tmp/**)",
+      "Bash(npx ng *)",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

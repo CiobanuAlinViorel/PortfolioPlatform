@@ -9,12 +9,14 @@ import com.example.portfolio.profile.persistence.ContactInfoRepository;
 import com.example.portfolio.profile.persistence.ProfileRepository;
 import com.example.portfolio.projects.domain.Project;
 import com.example.portfolio.projects.persistence.ProjectRepository;
+import com.example.portfolio.shared.service.CloudinaryService;
 import com.example.portfolio.skills.domain.Skill;
 import com.example.portfolio.skills.persistence.SkillRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -29,6 +31,7 @@ public class ProfileService {
     private final ProjectRepository projectRepository;
     private final JobExperienceRepository jobExperienceRepository;
     private final ProfileMapper profileMapper;
+    private final CloudinaryService cloudinaryService;
 
     @Transactional(readOnly = true)
     public ProfileSummaryResponse getProfileSummary() {
@@ -53,11 +56,14 @@ public class ProfileService {
     }
 
     @Transactional
-    public ProfileInfoDto createProfile(CreateProfileRequest request) {
+    public ProfileInfoDto createProfile(CreateProfileRequest request, MultipartFile image) {
         if (profileRepository.findFirstByOrderByIdAsc().isPresent()) {
             throw new IllegalArgumentException("A profile already exists");
         }
-        Profile profile = profileMapper.toProfile(request);
+        if (image != null && !image.isEmpty()) {
+            request.setImageLink(cloudinaryService.uploadMedia(image, "profile"));
+        }
+        Profile profile = profileRepository.save(profileMapper.toProfile(request));
         ContactInfo contactInfo = ContactInfo.builder()
                 .profile(profile)
                 .phone(request.getContactInfo().getPhone())
@@ -68,23 +74,28 @@ public class ProfileService {
                 .country(request.getContactInfo().getCountry())
                 .build();
         contactInfoRepository.save(contactInfo);
-        return profileMapper.toProfileInfoDto(profileRepository.save(profile));
+        return profileMapper.toProfileInfoDto(profile);
     }
 
     @Transactional
-    public ProfileInfoDto updateProfile(UpdateProfileRequest request) {
+    public ProfileInfoDto updateProfile(UpdateProfileRequest request, MultipartFile image) {
         Profile profile = profileRepository.findFirstByOrderByIdAsc()
                 .orElseThrow(() -> new NoSuchElementException("Profile not found"));
+        if (image != null && !image.isEmpty()) {
+            if (profile.getImageLink() != null && !profile.getImageLink().isBlank()) {
+                cloudinaryService.deleteMedia(profile.getImageLink());
+            }
+            request.setImageLink(cloudinaryService.uploadMedia(image, "profile"));
+        }
         profileMapper.updateProfile(request, profile);
-        ContactInfo contactInfo = ContactInfo.builder()
-                .profile(profile)
-                .phone(request.getContactInfo().getPhone())
-                .email(request.getContactInfo().getEmail())
-                .github(request.getContactInfo().getGithub())
-                .linkedin(request.getContactInfo().getLinkedin())
-                .city(request.getContactInfo().getCity())
-                .country(request.getContactInfo().getCountry())
-                .build();
+        ContactInfo contactInfo = contactInfoRepository.findByProfile(profile)
+                .orElseGet(() -> ContactInfo.builder().profile(profile).build());
+        contactInfo.setPhone(request.getContactInfo().getPhone());
+        contactInfo.setEmail(request.getContactInfo().getEmail());
+        contactInfo.setGithub(request.getContactInfo().getGithub());
+        contactInfo.setLinkedin(request.getContactInfo().getLinkedin());
+        contactInfo.setCity(request.getContactInfo().getCity());
+        contactInfo.setCountry(request.getContactInfo().getCountry());
         contactInfoRepository.save(contactInfo);
         return profileMapper.toProfileInfoDto(profileRepository.save(profile));
     }

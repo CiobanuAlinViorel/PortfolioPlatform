@@ -1,0 +1,263 @@
+<div class="flex h-full flex-col p-6 md:overflow-hidden md:p-8">
+    @if (mode() === 'list') {
+    <div class="flex shrink-0 items-start justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-emerald-900 dark:text-beige-light">Job Experiences</h1>
+            <p class="mt-2 text-emerald-900/70 dark:text-beige-light/70">Manage your professional work experience.</p>
+        </div>
+        <button
+            type="button"
+            (click)="startCreate()"
+            class="flex shrink-0 items-center gap-2 rounded-lg bg-emerald-900 px-4 py-2 text-sm font-medium text-beige-light transition hover:bg-emerald-800 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+        >
+            <svg lucidePlus class="h-4 w-4"></svg>
+            New Job Experience
+        </button>
+    </div>
+    }
+
+    @if (errorMessage()) {
+    <div class="mt-4 flex shrink-0 items-center gap-2 rounded-lg border border-red-400/40 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+        <svg lucideCircleAlert class="h-5 w-5 shrink-0"></svg>
+        <span>{{ errorMessage() }}</span>
+    </div>
+    }
+
+    <div class="min-h-0 flex-1 md:overflow-y-auto" [class.mt-6]="mode() === 'list'">
+        @switch (mode()) { @case ('list') {
+        <!-- ─────────────────────────── LIST ─────────────────────────── -->
+        @if (loadingList()) {
+        <div class="flex items-center justify-center gap-2 py-10 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideLoaderCircle class="h-6 w-6 animate-spin"></svg>
+            <span>Loading job experiences...</span>
+        </div>
+        } @else if (jobExperiences().length === 0) {
+        <div class="rounded-xl border border-dashed border-emerald-900/20 p-10 text-center text-emerald-900/60 dark:border-beige-light/20 dark:text-beige-light/60">
+            <svg lucideBriefcase class="mx-auto h-8 w-8"></svg>
+            <p class="mt-2">No job experiences yet. Add your first one.</p>
+        </div>
+        } @else {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            @for (job of jobExperiences(); track job.id) {
+            <div class="flex flex-col overflow-hidden rounded-xl border border-emerald-900/10 bg-beige-light p-4 shadow-sm dark:border-beige-light/10 dark:bg-green-900">
+                <div class="flex items-start justify-between gap-2">
+                    <h3 class="font-semibold text-emerald-900 dark:text-beige-light">{{ job.role }}</h3>
+                </div>
+                <span class="mt-1 text-sm text-emerald-900/70 dark:text-beige-light/70">{{ job.companyName }}</span>
+
+                <div class="mt-2 text-xs text-emerald-900/60 dark:text-beige-light/60">
+                    {{ job.startDate }} — {{ job.endDate || 'Present' }}
+                </div>
+
+                <div class="mt-2 flex items-center gap-1 text-xs text-emerald-900/60 dark:text-beige-light/60">
+                    <svg lucideFolderKanban class="h-3.5 w-3.5"></svg>
+                    {{ job.projectsCount }} {{ job.projectsCount === 1 ? 'project' : 'projects' }}
+                </div>
+
+                <div class="mt-auto flex items-center justify-end gap-2 pt-3">
+                    @if (deleteConfirmId() === job.id) {
+                    <div class="flex w-full items-center justify-end gap-2 text-sm">
+                        <span class="mr-auto text-red-600 dark:text-red-400">Delete this job experience?</span>
+                        <button
+                            type="button"
+                            (click)="deleteJobExperience(job.id)"
+                            [disabled]="deletingId() === job.id"
+                            class="flex items-center rounded-lg bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                        >
+                            @if (deletingId() === job.id) {
+                            <svg lucideLoaderCircle class="h-3.5 w-3.5 animate-spin"></svg>
+                            } @else { Yes }
+                        </button>
+                        <button
+                            type="button"
+                            (click)="cancelDelete()"
+                            class="rounded-lg border border-emerald-900/20 px-2 py-1 text-xs font-medium text-emerald-900 hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                        >
+                            No
+                        </button>
+                    </div>
+                    } @else {
+                    <button
+                        type="button"
+                        (click)="startEdit(job)"
+                        class="flex items-center gap-1 rounded-lg border border-emerald-900/20 px-2 py-1 text-xs font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        <svg lucidePencil class="h-3.5 w-3.5"></svg>
+                        Edit
+                    </button>
+                    <button
+                        type="button"
+                        (click)="confirmDelete(job.id)"
+                        class="flex items-center gap-1 rounded-lg border border-red-400/40 px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                    >
+                        <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                    </button>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+        } } @case ('form') {
+        <!-- ─────────────────────────── FORM ─────────────────────────── -->
+        @if (loadingForm()) {
+        <div class="flex items-center justify-center gap-2 py-10 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideLoaderCircle class="h-6 w-6 animate-spin"></svg>
+            <span>Loading job experience...</span>
+        </div>
+        } @else {
+        <div class="mx-auto flex h-full max-w-3xl flex-col">
+            <!-- Slim header -->
+            <div class="flex shrink-0 items-center gap-3">
+                <button
+                    type="button"
+                    (click)="cancelForm()"
+                    title="Back to job experiences"
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-emerald-900/70 transition hover:bg-emerald-900/10 dark:text-beige-light/70 dark:hover:bg-beige-light/10"
+                >
+                    <svg lucideX class="h-4 w-4"></svg>
+                </button>
+                <h2 class="truncate text-base font-semibold text-emerald-900 dark:text-beige-light">
+                    {{ form.value.companyName || (editingId() == null ? 'New job experience' : 'Edit job experience') }}
+                </h2>
+                <div class="ml-auto flex shrink-0 items-center gap-2">
+                    <button
+                        type="button"
+                        (click)="cancelForm()"
+                        [disabled]="saving()"
+                        class="rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 disabled:opacity-60 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        (click)="submit()"
+                        [disabled]="saving()"
+                        class="flex items-center gap-2 rounded-lg bg-emerald-900 px-3 py-1.5 text-sm font-medium text-beige-light transition hover:bg-emerald-800 disabled:opacity-60 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+                    >
+                        @if (saving()) {
+                        <svg lucideLoaderCircle class="h-4 w-4 animate-spin"></svg>
+                        } @else {
+                        <svg lucideCheck class="h-4 w-4"></svg>
+                        }
+                        {{ editingId() == null ? 'Create' : 'Save' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <nav class="mt-4 flex shrink-0 gap-1 overflow-x-auto border-b border-emerald-900/10 dark:border-beige-light/10">
+                <button type="button" (click)="activeTab.set('basic')" [class]="tabButtonClass('basic')">
+                    <svg lucideSparkles class="h-4 w-4"></svg>
+                    Basic info
+                </button>
+                <button type="button" (click)="activeTab.set('projects')" [class]="tabButtonClass('projects')">
+                    <svg lucideFolderKanban class="h-4 w-4"></svg>
+                    Projects
+                    @if (linkedProjects.length > 0) {
+                    <span class="rounded-full bg-emerald-900/10 px-1.5 text-xs dark:bg-beige-light/10">{{ linkedProjects.length }}</span>
+                    }
+                </button>
+            </nav>
+
+            <div class="min-h-0 flex-1 overflow-y-auto pb-6 pt-6">
+                <!-- Basic info -->
+                @if (activeTab() === 'basic') {
+                <div [formGroup]="form">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Company *</label>
+                        <input
+                            type="text"
+                            formControlName="companyName"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Role *</label>
+                        <input
+                            type="text"
+                            formControlName="role"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Start date *</label>
+                        <input
+                            type="date"
+                            formControlName="startDate"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">End date</label>
+                        <input
+                            type="date"
+                            formControlName="endDate"
+                            placeholder="Leave empty if current"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                </div>
+                </div>
+                }
+
+                <!-- Projects -->
+                @if (activeTab() === 'projects') {
+                <div>
+                    <p class="mb-4 text-sm text-emerald-900/60 dark:text-beige-light/60">Link existing projects worked on during this role.</p>
+
+                    <select
+                        (change)="onProjectPicked($event)"
+                        [disabled]="loadingAvailableProjects()"
+                        class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 disabled:opacity-60 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                    >
+                        <option value="" selected>
+                            {{ loadingAvailableProjects() ? 'Loading projects...' : 'Select a project to link...' }}
+                        </option>
+                        @for (p of selectableProjects(); track p.id) {
+                        <option [value]="p.id">{{ p.title }}</option>
+                        }
+                    </select>
+
+                    @if (linkedProjects.length === 0) {
+                    <p class="mt-4 text-sm text-emerald-900/60 dark:text-beige-light/60">No projects linked yet.</p>
+                    } @else {
+                    <div class="mt-4 flex flex-col gap-2">
+                        @for (project of linkedProjects; track project.id) {
+                        <div class="flex items-center gap-3 rounded-lg border border-emerald-900/10 p-3 dark:border-beige-light/10">
+                            <svg lucideFolderKanban class="h-4 w-4 shrink-0 text-emerald-900/60 dark:text-beige-light/60"></svg>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-medium text-emerald-900 dark:text-beige-light">{{ project.title }}</p>
+                                @if (project.description) {
+                                <p class="truncate text-xs text-emerald-900/60 dark:text-beige-light/60">{{ project.description }}</p>
+                                }
+                            </div>
+                            @if (project.demoUrl || project.githubUrl) {
+                            <a
+                                [href]="project.demoUrl || project.githubUrl"
+                                target="_blank"
+                                rel="noopener"
+                                class="shrink-0 text-emerald-900/60 hover:text-emerald-900 dark:text-beige-light/60 dark:hover:text-beige-light"
+                            >
+                                <svg lucideExternalLink class="h-4 w-4"></svg>
+                            </a>
+                            }
+                            <button
+                                type="button"
+                                (click)="removeProjectLink(project.id)"
+                                class="flex shrink-0 items-center gap-1 rounded-lg border border-red-400/40 px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                            >
+                                <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                            </button>
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+        } } }
+    </div>
+</div>

@@ -1,0 +1,472 @@
+<div class="flex h-full flex-col p-6 md:overflow-hidden md:p-8">
+    @if (mode() === 'list') {
+    <div class="flex shrink-0 items-start justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-emerald-900 dark:text-beige-light">Hobbies</h1>
+            <p class="mt-2 text-emerald-900/70 dark:text-beige-light/70">Manage hobbies and interests.</p>
+        </div>
+        <button
+            type="button"
+            (click)="startCreate()"
+            class="flex shrink-0 items-center gap-2 rounded-lg bg-emerald-900 px-4 py-2 text-sm font-medium text-beige-light transition hover:bg-emerald-800 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+        >
+            <svg lucidePlus class="h-4 w-4"></svg>
+            New Hobby
+        </button>
+    </div>
+
+    <div class="mt-4 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+            <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-900/40 dark:text-beige-light/40"></svg>
+            <input
+                type="text"
+                [(ngModel)]="searchQuery"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Search hobbies by name or description..."
+                class="w-full rounded-lg border border-emerald-900/15 bg-white py-2 pl-9 pr-3 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+            />
+        </div>
+        <button
+            type="button"
+            (click)="openFilterModal()"
+            class="flex shrink-0 items-center gap-2 rounded-lg border border-emerald-900/20 px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+        >
+            <svg lucideFilter class="h-4 w-4"></svg>
+            Filters
+            @if (activeFilterCount() > 0) {
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-900 text-xs font-semibold text-beige-light dark:bg-beige-light dark:text-green-900">
+                {{ activeFilterCount() }}
+            </span>
+            }
+        </button>
+    </div>
+    }
+
+    @if (errorMessage()) {
+    <div class="mt-4 flex shrink-0 items-center gap-2 rounded-lg border border-red-400/40 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+        <svg lucideCircleAlert class="h-5 w-5 shrink-0"></svg>
+        <span>{{ errorMessage() }}</span>
+    </div>
+    }
+
+    <div class="min-h-0 flex-1 md:overflow-y-auto" [class.mt-6]="mode() === 'list'">
+        @switch (mode()) { @case ('list') {
+        <!-- ─────────────────────────── LIST ─────────────────────────── -->
+        @if (loadingList()) {
+        <div class="flex items-center justify-center gap-2 py-10 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideLoaderCircle class="h-6 w-6 animate-spin"></svg>
+            <span>Loading hobbies...</span>
+        </div>
+        } @else if (hobbies().length === 0) {
+        <div class="rounded-xl border border-dashed border-emerald-900/20 p-10 text-center text-emerald-900/60 dark:border-beige-light/20 dark:text-beige-light/60">
+            <svg lucideHeart class="mx-auto h-8 w-8"></svg>
+            <p class="mt-2">No hobbies yet. Add your first one.</p>
+        </div>
+        } @else if (filteredHobbies().length === 0) {
+        <div class="rounded-xl border border-dashed border-emerald-900/20 p-10 text-center text-emerald-900/60 dark:border-beige-light/20 dark:text-beige-light/60">
+            <svg lucideSearch class="mx-auto h-8 w-8"></svg>
+            <p class="mt-2">No hobbies match your search or filters.</p>
+        </div>
+        } @else {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            @for (hobby of filteredHobbies(); track hobby.id) {
+            <div class="flex flex-col overflow-hidden rounded-xl border border-emerald-900/10 bg-beige-light p-4 shadow-sm dark:border-beige-light/10 dark:bg-green-900">
+                <div class="flex items-start justify-between gap-2">
+                    <h3 class="font-semibold text-emerald-900 dark:text-beige-light">{{ hobby.name }}</h3>
+                    <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium" [class]="categoryBadgeClass(hobby.category)">
+                        {{ hobby.category }}
+                    </span>
+                </div>
+                @if (hobby.description) {
+                <p class="mt-2 line-clamp-2 text-sm text-emerald-900/70 dark:text-beige-light/70">{{ hobby.description }}</p>
+                }
+
+                <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-emerald-900/60 dark:text-beige-light/60">
+                    @if (hobby.activityLevel) {
+                    <span>{{ hobby.activityLevel }}</span>
+                    } @if (hobby.complexityLevel) {
+                    <span>{{ hobby.complexityLevel }}</span>
+                    } @if (hobby.yearsActive) {
+                    <span>{{ hobby.yearsActive }} yrs</span>
+                    } @if (hobby.impactOnWork) {
+                    <span class="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                        <svg lucideSparkles class="h-3.5 w-3.5"></svg>
+                        {{ hobby.impactOnWork }} impact on work
+                    </span>
+                    }
+                </div>
+
+                @if (hobby.favoriteAspect) {
+                <p class="mt-2 text-xs italic text-emerald-900/60 dark:text-beige-light/60">"{{ hobby.favoriteAspect }}"</p>
+                }
+
+                <div class="mt-auto flex items-center justify-end gap-2 pt-3">
+                    @if (deleteConfirmId() === hobby.id) {
+                    <div class="flex w-full items-center justify-end gap-2 text-sm">
+                        <span class="mr-auto text-red-600 dark:text-red-400">Delete this hobby?</span>
+                        <button
+                            type="button"
+                            (click)="deleteHobby(hobby.id)"
+                            [disabled]="deletingId() === hobby.id"
+                            class="flex items-center rounded-lg bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                        >
+                            @if (deletingId() === hobby.id) {
+                            <svg lucideLoaderCircle class="h-3.5 w-3.5 animate-spin"></svg>
+                            } @else { Yes }
+                        </button>
+                        <button
+                            type="button"
+                            (click)="cancelDelete()"
+                            class="rounded-lg border border-emerald-900/20 px-2 py-1 text-xs font-medium text-emerald-900 hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                        >
+                            No
+                        </button>
+                    </div>
+                    } @else {
+                    <button
+                        type="button"
+                        (click)="startEdit(hobby)"
+                        class="flex items-center gap-1 rounded-lg border border-emerald-900/20 px-2 py-1 text-xs font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        <svg lucidePencil class="h-3.5 w-3.5"></svg>
+                        Edit
+                    </button>
+                    <button
+                        type="button"
+                        (click)="confirmDelete(hobby.id)"
+                        class="flex items-center gap-1 rounded-lg border border-red-400/40 px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                    >
+                        <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                    </button>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+        } } @case ('form') {
+        <!-- ─────────────────────────── FORM ─────────────────────────── -->
+        @if (loadingForm()) {
+        <div class="flex items-center justify-center gap-2 py-10 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideLoaderCircle class="h-6 w-6 animate-spin"></svg>
+            <span>Loading hobby...</span>
+        </div>
+        } @else {
+        <div class="mx-auto flex h-full max-w-3xl flex-col">
+            <!-- Slim header -->
+            <div class="flex shrink-0 items-center gap-3">
+                <button
+                    type="button"
+                    (click)="cancelForm()"
+                    title="Back to hobbies"
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-emerald-900/70 transition hover:bg-emerald-900/10 dark:text-beige-light/70 dark:hover:bg-beige-light/10"
+                >
+                    <svg lucideX class="h-4 w-4"></svg>
+                </button>
+                <h2 class="truncate text-base font-semibold text-emerald-900 dark:text-beige-light">
+                    {{ form.value.name || (editingId() == null ? 'New hobby' : 'Edit hobby') }}
+                </h2>
+                <div class="ml-auto flex shrink-0 items-center gap-2">
+                    <button
+                        type="button"
+                        (click)="cancelForm()"
+                        [disabled]="saving()"
+                        class="rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 disabled:opacity-60 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        (click)="submit()"
+                        [disabled]="saving()"
+                        class="flex items-center gap-2 rounded-lg bg-emerald-900 px-3 py-1.5 text-sm font-medium text-beige-light transition hover:bg-emerald-800 disabled:opacity-60 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+                    >
+                        @if (saving()) {
+                        <svg lucideLoaderCircle class="h-4 w-4 animate-spin"></svg>
+                        } @else {
+                        <svg lucideCheck class="h-4 w-4"></svg>
+                        }
+                        {{ editingId() == null ? 'Create' : 'Save' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <nav class="mt-4 flex shrink-0 gap-1 overflow-x-auto border-b border-emerald-900/10 dark:border-beige-light/10">
+                <button type="button" (click)="activeTab.set('basic')" [class]="tabButtonClass('basic')">
+                    <svg lucideHeart class="h-4 w-4"></svg>
+                    Basic info
+                </button>
+                <button type="button" (click)="activeTab.set('skills')" [class]="tabButtonClass('skills')">
+                    <svg lucideSparkles class="h-4 w-4"></svg>
+                    Skills used
+                    @if (skills.length > 0) {
+                    <span class="rounded-full bg-emerald-900/10 px-1.5 text-xs dark:bg-beige-light/10">{{ skills.length }}</span>
+                    }
+                </button>
+            </nav>
+
+            <div class="min-h-0 flex-1 overflow-y-auto pb-6 pt-6">
+                <!-- Basic info -->
+                @if (activeTab() === 'basic') {
+                <div [formGroup]="form">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Name *</label>
+                        <input
+                            type="text"
+                            formControlName="name"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Category *</label>
+                        <select
+                            formControlName="category"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            @for (c of hobbyCategories; track c) {
+                            <option [value]="c">{{ c }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Activity level</label>
+                        <select
+                            formControlName="activityLevel"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            <option value="">Not set</option>
+                            @for (a of activityLevels; track a) {
+                            <option [value]="a">{{ a }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Complexity level</label>
+                        <select
+                            formControlName="complexityLevel"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            <option value="">Not set</option>
+                            @for (c of complexityLevels; track c) {
+                            <option [value]="c">{{ c }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Impact on work</label>
+                        <select
+                            formControlName="impactOnWork"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            <option value="">Not set</option>
+                            @for (i of impactLevels; track i) {
+                            <option [value]="i">{{ i }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Years active</label>
+                        <input
+                            type="number"
+                            min="0"
+                            formControlName="yearsActive"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Why interested</label>
+                        <textarea
+                            formControlName="whyInterested"
+                            rows="2"
+                            class="w-full resize-y rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        ></textarea>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Favorite aspect</label>
+                        <textarea
+                            formControlName="favoriteAspect"
+                            rows="2"
+                            class="w-full resize-y rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Description</label>
+                    <textarea
+                        formControlName="description"
+                        rows="3"
+                        class="w-full resize-y rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                    ></textarea>
+                </div>
+                </div>
+                }
+
+                <!-- Skills used -->
+                @if (activeTab() === 'skills') {
+                <div>
+                <div class="mb-4 flex items-center justify-between">
+                    <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">
+                        Link existing skills you apply through this hobby, with how much you use them.
+                    </p>
+                    <button
+                        type="button"
+                        (click)="addSkill()"
+                        class="flex shrink-0 items-center gap-2 rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        <svg lucidePlus class="h-4 w-4"></svg>
+                        Link skill
+                    </button>
+                </div>
+
+                @if (skills.length === 0) {
+                <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">No skills linked yet.</p>
+                } @else {
+                <div class="flex flex-col gap-2">
+                    @for (row of skills; track $index) {
+                    <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-900/10 p-3 sm:grid-cols-4 dark:border-beige-light/10">
+                        <select
+                            [(ngModel)]="row.skillId"
+                            [ngModelOptions]="{ standalone: true }"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 sm:col-span-2 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            <option [ngValue]="null" disabled>Select skill *</option>
+                            @for (s of skillOptions(); track s.id) {
+                            <option [ngValue]="s.id">{{ s.name }}</option>
+                            }
+                        </select>
+                        <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            [(ngModel)]="row.usagePercentage"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Usage %"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <button
+                            type="button"
+                            (click)="removeSkill($index)"
+                            class="flex items-center justify-center gap-1 rounded-lg border border-red-400/40 px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                        >
+                            <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                            Remove
+                        </button>
+                    </div>
+                    }
+                </div>
+                }
+                </div>
+                }
+            </div>
+        </div>
+        } } }
+    </div>
+
+    <!-- ─────────────────────────── FILTER MODAL ─────────────────────────── -->
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        [class.hidden]="!showFilterModal()"
+        (click)="closeFilterModal()"
+    >
+        <div
+            (click)="$event.stopPropagation()"
+            class="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-emerald-900/10 bg-beige-light shadow-xl dark:border-beige-light/10 dark:bg-emerald-950"
+        >
+            <div class="flex shrink-0 items-center justify-between border-b border-emerald-900/10 p-5 dark:border-beige-light/10">
+                <h3 class="text-lg font-semibold text-emerald-900 dark:text-beige-light">Filter hobbies</h3>
+                <button
+                    type="button"
+                    (click)="closeFilterModal()"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-900/70 transition hover:bg-emerald-900/10 dark:text-beige-light/70 dark:hover:bg-beige-light/10"
+                >
+                    <svg lucideX class="h-4 w-4"></svg>
+                </button>
+            </div>
+
+            <div class="min-h-0 flex-1 overflow-y-auto p-5">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <h4 class="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-900/70 dark:text-beige-light/70">Category</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @for (c of hobbyCategories; track c) {
+                            <button
+                                type="button"
+                                (click)="toggleDraftCategory(c)"
+                                class="rounded-full border px-3 py-1 text-xs font-medium transition"
+                                [class.border-emerald-900]="draftCategories.includes(c)"
+                                [class.bg-emerald-900]="draftCategories.includes(c)"
+                                [class.text-beige-light]="draftCategories.includes(c)"
+                                [class.dark:border-beige-light]="draftCategories.includes(c)"
+                                [class.dark:bg-beige-light]="draftCategories.includes(c)"
+                                [class.dark:text-green-900]="draftCategories.includes(c)"
+                                [class.border-emerald-900/20]="!draftCategories.includes(c)"
+                                [class.text-emerald-900]="!draftCategories.includes(c)"
+                                [class.dark:border-beige-light/20]="!draftCategories.includes(c)"
+                                [class.dark:text-beige-light]="!draftCategories.includes(c)"
+                            >
+                                {{ c }}
+                            </button>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <h4 class="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-900/70 dark:text-beige-light/70">Activity level</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @for (a of activityLevels; track a) {
+                            <button
+                                type="button"
+                                (click)="toggleDraftActivityLevel(a)"
+                                class="rounded-full border px-3 py-1 text-xs font-medium transition"
+                                [class.border-emerald-900]="draftActivityLevels.includes(a)"
+                                [class.bg-emerald-900]="draftActivityLevels.includes(a)"
+                                [class.text-beige-light]="draftActivityLevels.includes(a)"
+                                [class.dark:border-beige-light]="draftActivityLevels.includes(a)"
+                                [class.dark:bg-beige-light]="draftActivityLevels.includes(a)"
+                                [class.dark:text-green-900]="draftActivityLevels.includes(a)"
+                                [class.border-emerald-900/20]="!draftActivityLevels.includes(a)"
+                                [class.text-emerald-900]="!draftActivityLevels.includes(a)"
+                                [class.dark:border-beige-light/20]="!draftActivityLevels.includes(a)"
+                                [class.dark:text-beige-light]="!draftActivityLevels.includes(a)"
+                            >
+                                {{ a }}
+                            </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex shrink-0 items-center justify-between gap-3 border-t border-emerald-900/10 p-5 dark:border-beige-light/10">
+                <button
+                    type="button"
+                    (click)="clearDraftFilters()"
+                    class="text-sm font-medium text-emerald-900/60 underline-offset-2 hover:text-emerald-900 hover:underline dark:text-beige-light/60 dark:hover:text-beige-light"
+                >
+                    Clear all
+                </button>
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        (click)="closeFilterModal()"
+                        class="rounded-lg border border-emerald-900/20 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        (click)="applyFilters()"
+                        class="rounded-lg bg-emerald-900 px-4 py-2 text-sm font-medium text-beige-light transition hover:bg-emerald-800 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+                    >
+                        Apply filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

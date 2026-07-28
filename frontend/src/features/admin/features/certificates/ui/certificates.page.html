@@ -1,0 +1,604 @@
+<div class="flex h-full flex-col p-6 md:overflow-hidden md:p-8">
+    @if (mode() === 'list') {
+    <div class="flex shrink-0 items-start justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-emerald-900 dark:text-beige-light">Certificates</h1>
+            <p class="mt-2 text-emerald-900/70 dark:text-beige-light/70">Manage certifications and credentials.</p>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+            <button
+                type="button"
+                (click)="openCategoryModal()"
+                class="flex items-center gap-2 rounded-lg border border-emerald-900/20 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+            >
+                <svg lucideFolders class="h-4 w-4"></svg>
+                Categories
+            </button>
+            <button
+                type="button"
+                (click)="startCreate()"
+                class="flex items-center gap-2 rounded-lg bg-emerald-900 px-4 py-2 text-sm font-medium text-beige-light transition hover:bg-emerald-800 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+            >
+                <svg lucidePlus class="h-4 w-4"></svg>
+                New Certificate
+            </button>
+        </div>
+    </div>
+
+    <div class="mt-4 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+            <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-900/40 dark:text-beige-light/40"></svg>
+            <input
+                type="text"
+                [(ngModel)]="searchQuery"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Search certificates by name, provider or description..."
+                class="w-full rounded-lg border border-emerald-900/15 bg-white py-2 pl-9 pr-3 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+            />
+        </div>
+        <button
+            type="button"
+            (click)="openFilterModal()"
+            class="flex shrink-0 items-center gap-2 rounded-lg border border-emerald-900/20 px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+        >
+            <svg lucideFilter class="h-4 w-4"></svg>
+            Filters
+            @if (activeFilterCount() > 0) {
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-900 text-xs font-semibold text-beige-light dark:bg-beige-light dark:text-green-900">
+                {{ activeFilterCount() }}
+            </span>
+            }
+        </button>
+    </div>
+    }
+
+    @if (errorMessage()) {
+    <div class="mt-4 flex shrink-0 items-center gap-2 rounded-lg border border-red-400/40 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+        <svg lucideCircleAlert class="h-5 w-5 shrink-0"></svg>
+        <span>{{ errorMessage() }}</span>
+    </div>
+    }
+
+    <div class="min-h-0 flex-1 md:overflow-y-auto" [class.mt-6]="mode() === 'list'">
+        @switch (mode()) { @case ('list') {
+        <!-- ─────────────────────────── LIST ─────────────────────────── -->
+        @if (loadingList()) {
+        <div class="flex items-center justify-center gap-2 py-10 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideLoaderCircle class="h-6 w-6 animate-spin"></svg>
+            <span>Loading certificates...</span>
+        </div>
+        } @else if (certificates().length === 0) {
+        <div class="rounded-xl border border-dashed border-emerald-900/20 p-10 text-center text-emerald-900/60 dark:border-beige-light/20 dark:text-beige-light/60">
+            <svg lucideAward class="mx-auto h-8 w-8"></svg>
+            <p class="mt-2">No certificates yet. Add your first one.</p>
+        </div>
+        } @else if (filteredCertificates().length === 0) {
+        <div class="rounded-xl border border-dashed border-emerald-900/20 p-10 text-center text-emerald-900/60 dark:border-beige-light/20 dark:text-beige-light/60">
+            <svg lucideSearch class="mx-auto h-8 w-8"></svg>
+            <p class="mt-2">No certificates match your search or filters.</p>
+        </div>
+        } @else {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            @for (cert of filteredCertificates(); track cert.id) {
+            <div class="flex flex-col overflow-hidden rounded-xl border border-emerald-900/10 bg-beige-light p-4 shadow-sm dark:border-beige-light/10 dark:bg-green-900">
+                <div class="flex items-start justify-between gap-2">
+                    <h3 class="font-semibold text-emerald-900 dark:text-beige-light">{{ cert.name }}</h3>
+                    @if (cert.verified) {
+                    <span class="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                        <svg lucideBadgeCheck class="h-3.5 w-3.5"></svg>
+                        Verified
+                    </span>
+                    }
+                </div>
+                <span class="mt-1 text-xs text-emerald-900/60 dark:text-beige-light/60">{{ cert.provider }}</span>
+                @if (cert.categoryName) {
+                <span class="mt-1 inline-block w-fit rounded-full bg-emerald-900/10 px-2 py-0.5 text-xs text-emerald-900/70 dark:bg-beige-light/10 dark:text-beige-light/70">
+                    {{ cert.categoryName }}
+                </span>
+                }
+                @if (cert.description) {
+                <p class="mt-2 line-clamp-2 text-sm text-emerald-900/70 dark:text-beige-light/70">{{ cert.description }}</p>
+                }
+
+                <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-emerald-900/60 dark:text-beige-light/60">
+                    <span class="flex items-center gap-1">
+                        <svg lucideCalendar class="h-3.5 w-3.5"></svg>
+                        Issued {{ cert.issueDate }}
+                    </span>
+                    @if (cert.hasExpiry && cert.expiryDate) {
+                    <span class="flex items-center gap-1 text-amber-600 dark:text-amber-400">Expires {{ cert.expiryDate }}</span>
+                    } @if (cert.credentialId) {
+                    <span>ID: {{ cert.credentialId }}</span>
+                    }
+                </div>
+
+                @if (cert.certificateUrl) {
+                <a
+                    [href]="cert.certificateUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="mt-2 flex w-fit items-center gap-1 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-300"
+                >
+                    <svg lucideExternalLink class="h-3.5 w-3.5"></svg>
+                    View credential
+                </a>
+                }
+
+                <div class="mt-3 flex items-center gap-2">
+                    <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-emerald-900/10 dark:bg-beige-light/10">
+                        <div class="h-full rounded-full bg-emerald-600 dark:bg-beige-light" [style.width.%]="cert.relevanceScore ?? 0"></div>
+                    </div>
+                    <span class="shrink-0 text-xs text-emerald-900/60 dark:text-beige-light/60">{{ cert.relevanceScore ?? 0 }}/100</span>
+                </div>
+
+                <div class="mt-auto flex items-center justify-end gap-2 pt-3">
+                    @if (deleteConfirmId() === cert.id) {
+                    <div class="flex w-full items-center justify-end gap-2 text-sm">
+                        <span class="mr-auto text-red-600 dark:text-red-400">Delete this certificate?</span>
+                        <button
+                            type="button"
+                            (click)="deleteCertificate(cert.id)"
+                            [disabled]="deletingId() === cert.id"
+                            class="flex items-center rounded-lg bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                        >
+                            @if (deletingId() === cert.id) {
+                            <svg lucideLoaderCircle class="h-3.5 w-3.5 animate-spin"></svg>
+                            } @else { Yes }
+                        </button>
+                        <button
+                            type="button"
+                            (click)="cancelDelete()"
+                            class="rounded-lg border border-emerald-900/20 px-2 py-1 text-xs font-medium text-emerald-900 hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                        >
+                            No
+                        </button>
+                    </div>
+                    } @else {
+                    <button
+                        type="button"
+                        (click)="startEdit(cert)"
+                        class="flex items-center gap-1 rounded-lg border border-emerald-900/20 px-2 py-1 text-xs font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        <svg lucidePencil class="h-3.5 w-3.5"></svg>
+                        Edit
+                    </button>
+                    <button
+                        type="button"
+                        (click)="confirmDelete(cert.id)"
+                        class="flex items-center gap-1 rounded-lg border border-red-400/40 px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                    >
+                        <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                    </button>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+        } } @case ('form') {
+        <!-- ─────────────────────────── FORM ─────────────────────────── -->
+        @if (loadingForm()) {
+        <div class="flex items-center justify-center gap-2 py-10 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideLoaderCircle class="h-6 w-6 animate-spin"></svg>
+            <span>Loading certificate...</span>
+        </div>
+        } @else {
+        <div class="mx-auto flex h-full max-w-3xl flex-col">
+            <!-- Slim header -->
+            <div class="flex shrink-0 items-center gap-3">
+                <button
+                    type="button"
+                    (click)="cancelForm()"
+                    title="Back to certificates"
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-emerald-900/70 transition hover:bg-emerald-900/10 dark:text-beige-light/70 dark:hover:bg-beige-light/10"
+                >
+                    <svg lucideX class="h-4 w-4"></svg>
+                </button>
+                <h2 class="truncate text-base font-semibold text-emerald-900 dark:text-beige-light">
+                    {{ form.value.name || (editingId() == null ? 'New certificate' : 'Edit certificate') }}
+                </h2>
+                <div class="ml-auto flex shrink-0 items-center gap-2">
+                    <button
+                        type="button"
+                        (click)="cancelForm()"
+                        [disabled]="saving()"
+                        class="rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 disabled:opacity-60 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        (click)="submit()"
+                        [disabled]="saving()"
+                        class="flex items-center gap-2 rounded-lg bg-emerald-900 px-3 py-1.5 text-sm font-medium text-beige-light transition hover:bg-emerald-800 disabled:opacity-60 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+                    >
+                        @if (saving()) {
+                        <svg lucideLoaderCircle class="h-4 w-4 animate-spin"></svg>
+                        } @else {
+                        <svg lucideCheck class="h-4 w-4"></svg>
+                        }
+                        {{ editingId() == null ? 'Create' : 'Save' }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="min-h-0 flex-1 overflow-y-auto pb-6 pt-6" [formGroup]="form">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Name *</label>
+                        <input
+                            type="text"
+                            formControlName="name"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Provider *</label>
+                        <input
+                            type="text"
+                            formControlName="provider"
+                            placeholder="e.g. AWS, Google, Coursera"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Category</label>
+                        <input
+                            type="text"
+                            formControlName="categoryName"
+                            list="certificate-category-options"
+                            placeholder="e.g. Cloud Computing"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <datalist id="certificate-category-options">
+                            @for (name of categoryNames(); track name) {
+                            <option [value]="name"></option>
+                            }
+                        </datalist>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Credential ID</label>
+                        <input
+                            type="text"
+                            formControlName="credentialId"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Credential URL</label>
+                        <input
+                            type="url"
+                            formControlName="certificateUrl"
+                            placeholder="https://..."
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="mb-1 flex items-center gap-1 text-sm font-medium text-emerald-900 dark:text-beige-light">
+                            <svg lucideCalendar class="h-3.5 w-3.5"></svg>
+                            Issue date *
+                        </label>
+                        <input
+                            type="date"
+                            formControlName="issueDate"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 flex items-center gap-1 text-sm font-medium text-emerald-900 dark:text-beige-light">
+                            <svg lucideCalendar class="h-3.5 w-3.5"></svg>
+                            Expiry date
+                        </label>
+                        <input
+                            type="date"
+                            formControlName="expiryDate"
+                            [attr.disabled]="!form.value.hasExpiry ? true : null"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 disabled:opacity-50 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Score</label>
+                        <input
+                            type="text"
+                            formControlName="score"
+                            placeholder="e.g. 95%, Pass"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Relevance score (0-100)</label>
+                        <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            formControlName="relevanceScore"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+
+                    <div class="flex items-center gap-4 pt-6 sm:col-span-2">
+                        <label class="flex items-center gap-2 text-sm text-emerald-900 dark:text-beige-light">
+                            <input type="checkbox" formControlName="hasExpiry" />
+                            Has expiry
+                        </label>
+                        <label class="flex items-center gap-2 text-sm text-emerald-900 dark:text-beige-light">
+                            <input type="checkbox" formControlName="verified" />
+                            <svg lucideBadgeCheck class="h-4 w-4"></svg>
+                            Verified
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Description</label>
+                    <textarea
+                        formControlName="description"
+                        rows="3"
+                        class="w-full resize-y rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                    ></textarea>
+                </div>
+            </div>
+        </div>
+        } } }
+    </div>
+
+    <!-- ─────────────────────────── FILTER MODAL ─────────────────────────── -->
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        [class.hidden]="!showFilterModal()"
+        (click)="closeFilterModal()"
+    >
+        <div
+            (click)="$event.stopPropagation()"
+            class="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-emerald-900/10 bg-beige-light shadow-xl dark:border-beige-light/10 dark:bg-emerald-950"
+        >
+            <div class="flex shrink-0 items-center justify-between border-b border-emerald-900/10 p-5 dark:border-beige-light/10">
+                <h3 class="text-lg font-semibold text-emerald-900 dark:text-beige-light">Filter certificates</h3>
+                <button
+                    type="button"
+                    (click)="closeFilterModal()"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-900/70 transition hover:bg-emerald-900/10 dark:text-beige-light/70 dark:hover:bg-beige-light/10"
+                >
+                    <svg lucideX class="h-4 w-4"></svg>
+                </button>
+            </div>
+
+            <div class="min-h-0 flex-1 overflow-y-auto p-5">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <h4 class="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-900/70 dark:text-beige-light/70">Category</h4>
+                        @if (categoryNames().length === 0) {
+                        <p class="text-sm text-emerald-900/50 dark:text-beige-light/50">No categories yet.</p>
+                        } @else {
+                        <div class="flex max-h-40 flex-wrap gap-2 overflow-y-auto">
+                            @for (c of categoryNames(); track c) {
+                            <button
+                                type="button"
+                                (click)="toggleDraftCategory(c)"
+                                class="rounded-full border px-3 py-1 text-xs font-medium transition"
+                                [class.border-emerald-900]="draftCategories.includes(c)"
+                                [class.bg-emerald-900]="draftCategories.includes(c)"
+                                [class.text-beige-light]="draftCategories.includes(c)"
+                                [class.dark:border-beige-light]="draftCategories.includes(c)"
+                                [class.dark:bg-beige-light]="draftCategories.includes(c)"
+                                [class.dark:text-green-900]="draftCategories.includes(c)"
+                                [class.border-emerald-900/20]="!draftCategories.includes(c)"
+                                [class.text-emerald-900]="!draftCategories.includes(c)"
+                                [class.dark:border-beige-light/20]="!draftCategories.includes(c)"
+                                [class.dark:text-beige-light]="!draftCategories.includes(c)"
+                            >
+                                {{ c }}
+                            </button>
+                            }
+                        </div>
+                        }
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <h4 class="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-900/70 dark:text-beige-light/70">Other</h4>
+                        <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center gap-2 text-sm text-emerald-900 dark:text-beige-light">
+                                <input type="checkbox" [(ngModel)]="draftVerifiedOnly" [ngModelOptions]="{ standalone: true }" />
+                                Verified only
+                            </label>
+                            <label class="flex items-center gap-2 text-sm text-emerald-900 dark:text-beige-light">
+                                <input type="checkbox" [(ngModel)]="draftExpiringOnly" [ngModelOptions]="{ standalone: true }" />
+                                Has expiry only
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex shrink-0 items-center justify-between gap-3 border-t border-emerald-900/10 p-5 dark:border-beige-light/10">
+                <button
+                    type="button"
+                    (click)="clearDraftFilters()"
+                    class="text-sm font-medium text-emerald-900/60 underline-offset-2 hover:text-emerald-900 hover:underline dark:text-beige-light/60 dark:hover:text-beige-light"
+                >
+                    Clear all
+                </button>
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        (click)="closeFilterModal()"
+                        class="rounded-lg border border-emerald-900/20 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        (click)="applyFilters()"
+                        class="rounded-lg bg-emerald-900 px-4 py-2 text-sm font-medium text-beige-light transition hover:bg-emerald-800 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+                    >
+                        Apply filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────── CATEGORY MODAL ─────────────────────────── -->
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        [class.hidden]="!showCategoryModal()"
+        (click)="closeCategoryModal()"
+    >
+        <div
+            (click)="$event.stopPropagation()"
+            class="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-emerald-900/10 bg-beige-light shadow-xl dark:border-beige-light/10 dark:bg-emerald-950"
+        >
+            <div class="flex shrink-0 items-center justify-between border-b border-emerald-900/10 p-5 dark:border-beige-light/10">
+                <h3 class="text-lg font-semibold text-emerald-900 dark:text-beige-light">Manage categories</h3>
+                <button
+                    type="button"
+                    (click)="closeCategoryModal()"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-900/70 transition hover:bg-emerald-900/10 dark:text-beige-light/70 dark:hover:bg-beige-light/10"
+                >
+                    <svg lucideX class="h-4 w-4"></svg>
+                </button>
+            </div>
+
+            <div class="min-h-0 flex-1 overflow-y-auto p-5">
+                @if (categoryError()) {
+                <div class="mb-4 flex items-center gap-2 rounded-lg border border-red-400/40 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+                    <svg lucideCircleAlert class="h-5 w-5 shrink-0"></svg>
+                    <span>{{ categoryError() }}</span>
+                </div>
+                }
+
+                <!-- Existing categories -->
+                @if (categoryRows().length === 0) {
+                <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">No categories yet. Create the first one below.</p>
+                } @else {
+                <div class="flex flex-col gap-2">
+                    @for (row of categoryRows(); track row.id) {
+                    <div class="flex items-center justify-between gap-3 rounded-lg border border-emerald-900/10 px-3 py-2 dark:border-beige-light/10">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-medium text-emerald-900 dark:text-beige-light">{{ row.name }}</p>
+                            @if (row.industry || row.description) {
+                            <p class="truncate text-xs text-emerald-900/60 dark:text-beige-light/60">
+                                {{ row.industry }}{{ row.industry && row.description ? ' · ' : '' }}{{ row.description }}
+                            </p>
+                            }
+                        </div>
+
+                        @if (categoryDeleteConfirmId() === row.id) {
+                        <div class="flex shrink-0 items-center gap-2 text-sm">
+                            <span class="text-red-600 dark:text-red-400">Delete?</span>
+                            <button
+                                type="button"
+                                (click)="deleteCategory(row.id!)"
+                                [disabled]="deletingCategoryId() === row.id"
+                                class="flex items-center rounded-lg bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                            >
+                                @if (deletingCategoryId() === row.id) {
+                                <svg lucideLoaderCircle class="h-3.5 w-3.5 animate-spin"></svg>
+                                } @else { Yes }
+                            </button>
+                            <button
+                                type="button"
+                                (click)="cancelDeleteCategory()"
+                                class="rounded-lg border border-emerald-900/20 px-2 py-1 text-xs font-medium text-emerald-900 hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                            >
+                                No
+                            </button>
+                        </div>
+                        } @else {
+                        <div class="flex shrink-0 items-center gap-2">
+                            <button
+                                type="button"
+                                (click)="startEditCategory(row)"
+                                class="flex items-center gap-1 rounded-lg border border-emerald-900/20 px-2 py-1 text-xs font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                            >
+                                <svg lucidePencil class="h-3.5 w-3.5"></svg>
+                                Edit
+                            </button>
+                            <button
+                                type="button"
+                                (click)="confirmDeleteCategory(row.id!)"
+                                class="flex items-center gap-1 rounded-lg border border-red-400/40 px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                            >
+                                <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                            </button>
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+                }
+
+                <!-- Create / edit category form -->
+                <div class="mt-5 border-t border-emerald-900/10 pt-4 dark:border-beige-light/10" [formGroup]="categoryForm">
+                    <h4 class="mb-3 text-sm font-semibold text-emerald-900 dark:text-beige-light">
+                        {{ editingCategoryId() == null ? 'New category' : 'Edit category' }}
+                    </h4>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-emerald-900/70 dark:text-beige-light/70">Name *</label>
+                            <input
+                                type="text"
+                                formControlName="name"
+                                class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                            />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-emerald-900/70 dark:text-beige-light/70">Industry</label>
+                            <input
+                                type="text"
+                                formControlName="industry"
+                                class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                            />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-emerald-900/70 dark:text-beige-light/70">Sort order</label>
+                            <input
+                                type="number"
+                                formControlName="sortOrder"
+                                placeholder="unchanged"
+                                class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                            />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="mb-1 block text-xs font-medium text-emerald-900/70 dark:text-beige-light/70">Description</label>
+                            <textarea
+                                formControlName="description"
+                                rows="2"
+                                class="w-full resize-y rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 flex items-center justify-end gap-2">
+                        @if (editingCategoryId() != null) {
+                        <button
+                            type="button"
+                            (click)="startCreateCategory()"
+                            [disabled]="savingCategory()"
+                            class="rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 disabled:opacity-60 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                        >
+                            Cancel
+                        </button>
+                        }
+                        <button
+                            type="button"
+                            (click)="submitCategory()"
+                            [disabled]="savingCategory()"
+                            class="flex items-center gap-2 rounded-lg bg-emerald-900 px-3 py-1.5 text-sm font-medium text-beige-light transition hover:bg-emerald-800 disabled:opacity-60 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+                        >
+                            @if (savingCategory()) {
+                            <svg lucideLoaderCircle class="h-4 w-4 animate-spin"></svg>
+                            } @else {
+                            <svg lucideCheck class="h-4 w-4"></svg>
+                            }
+                            {{ editingCategoryId() == null ? 'Create' : 'Save' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

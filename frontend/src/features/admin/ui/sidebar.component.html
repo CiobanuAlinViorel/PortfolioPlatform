@@ -1,0 +1,135 @@
+<div class="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 bg-beige-light px-4 dark:bg-green-900 md:hidden">
+    <button
+        type="button"
+        class="flex items-center justify-center rounded p-1 text-emerald-900 dark:text-beige-light"
+        (click)="toggle()"
+    >
+        <span class="sr-only">Toggle menu</span>
+        @if (isOpen()) {
+        <svg lucideX class="h-6 w-6"></svg>
+        } @else {
+        <svg lucideMenu class="h-6 w-6"></svg>
+        }
+    </button>
+    <span class="text-lg font-bold text-emerald-900 dark:text-beige-light">Admin Panel</span>
+</div>
+
+@if (isOpen()) {
+<div
+    class="fixed inset-0 top-14 z-30 bg-black/50 md:hidden"
+    (click)="close()"
+></div>
+}
+
+<div
+    class="fixed inset-y-0 left-0 top-14 z-30 flex h-[calc(100vh-3.5rem)] w-64 flex-col justify-between overflow-y-auto bg-beige-light transition-transform duration-300 ease-in-out dark:bg-green-900 md:top-0 md:z-40 md:h-screen md:translate-x-0"
+    [class.-translate-x-full]="!isOpen()"
+    [class.translate-x-0]="isOpen()"
+>
+    <div class="flex flex-col p-4">
+        <h1 class="mb-4 hidden text-2xl font-bold text-emerald-900 dark:text-beige-light md:block">Admin Panel</h1>
+
+        <nav class="flex flex-col gap-1">
+            <a
+                routerLink="/"
+                (click)="close()"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:text-beige-light dark:hover:bg-beige-light/10"
+            >
+                <svg lucideHouse class="h-5 w-5"></svg>
+                Back to Site
+            </a>
+            <hr class="my-2 border-emerald-900/20 dark:border-beige-light/20" />
+            <a
+                routerLink="/admin"
+                routerLinkActive="bg-emerald-900 text-beige-light dark:bg-beige-light dark:text-green-900"
+                ariaCurrentWhenActive="page"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="close()"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 aria-[current=page]:hover:bg-emerald-900! dark:text-beige-light dark:hover:bg-beige-light/10 dark:aria-[current=page]:hover:bg-beige-light!"
+            >
+                <svg lucideLayoutDashboard class="h-5 w-5"></svg>
+                Dashboard
+            </a>
+            <a
+                routerLink="/admin/general"
+                routerLinkActive="bg-emerald-900 text-beige-light dark:bg-beige-light dark:text-green-900"
+                ariaCurrentWhenActive="page"
+                (click)="close()"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 aria-[current=page]:hover:bg-emerald-900! dark:text-beige-light dark:hover:bg-beige-light/10 dark:aria-[current=page]:hover:bg-beige-light!"
+            >
+                <svg lucideSettings class="h-5 w-5"></svg>
+                General
+            </a>
+            <a
+                routerLink="/admin/education"
+                routerLinkActive="bg-emerald-900 text-beige-light dark:bg-beige-light dark:text-green-900"
+                ariaCurrentWhenActive="page"
+                (click)="close()"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 aria-[current=page]:hover:bg-emerald-900! dark:text-beige-light dark:hover:bg-beige-light/10 dark:aria-[current=page]:hover:bg-beige-light!"
+            >
+                <svg lucideGraduationCap class="h-5 w-5"></svg>
+                Education
+            </a>
+            <a
+                routerLink="/admin/job-experiences"
+                routerLinkActive="bg-emerald-900 text-beige-light dark:bg-beige-light dark:text-green-900"
+                ariaCurrentWhenActive="page"
+                (click)="close()"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 aria-[current=page]:hover:bg-emerald-900! dark:text-beige-light dark:hover:bg-beige-light/10 dark:aria-[current=page]:hover:bg-beige-light!"
+            >
+                <svg lucideBriefcase class="h-5 w-5"></svg>
+                Job Experiences
+            </a>
+            <a
+                routerLink="/admin/projects"
+                routerLinkActive="bg-emerald-900 text-beige-light dark:bg-beige-light dark:text-green-900"
+                ariaCurrentWhenActive="page"
+                (click)="close()"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 aria-[current=page]:hover:bg-emerald-900! dark:text-beige-light dark:hover:bg-beige-light/10 dark:aria-[current=page]:hover:bg-beige-light!"
+            >
+                <svg lucideFolderKanban class="h-5 w-5"></svg>
+                Projects
+            </a>
+            <a
+                routerLink="/admin/skills"
+                routerLinkActive="bg-emerald-900 text-beige-light dark:bg-beige-light dark:text-green-900"
+                ariaCurrentWhenActive="page"
+                (click)="close()"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 aria-[current=page]:hover:bg-emerald-900! dark:text-beige-light dark:hover:bg-beige-light/10 dark:aria-[current=page]:hover:bg-beige-light!"
+            >
+                <svg lucideSparkles class="h-5 w-5"></svg>
+                Skills
+            </a>
+            <a
+                routerLink="/admin/certificates"
+                routerLinkActive="bg-emerald-900 text-beige-light dark:bg-beige-light dark:text-green-900"
+                ariaCurrentWhenActive="page"
+                (click)="close()"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 aria-[current=page]:hover:bg-emerald-900! dark:text-beige-light dark:hover:bg-beige-light/10 dark:aria-[current=page]:hover:bg-beige-light!"
+            >
+                <svg lucideAward class="h-5 w-5"></svg>
+                Certificates
+            </a>
+            <a
+                routerLink="/admin/hobbies"
+                routerLinkActive="bg-emerald-900 text-beige-light dark:bg-beige-light dark:text-green-900"
+                ariaCurrentWhenActive="page"
+                (click)="close()"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 aria-[current=page]:hover:bg-emerald-900! dark:text-beige-light dark:hover:bg-beige-light/10 dark:aria-[current=page]:hover:bg-beige-light!"
+            >
+                <svg lucideHeart class="h-5 w-5"></svg>
+                Hobbies
+            </a>
+            <a
+                routerLink="/admin/volunteer-experiences"
+                routerLinkActive="bg-emerald-900 text-beige-light dark:bg-beige-light dark:text-green-900"
+                ariaCurrentWhenActive="page"
+                (click)="close()"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 aria-[current=page]:hover:bg-emerald-900! dark:text-beige-light dark:hover:bg-beige-light/10 dark:aria-[current=page]:hover:bg-beige-light!"
+            >
+                <svg lucideHandHeart class="h-5 w-5"></svg>
+                Volunteer Experiences
+            </a>
+        </nav>
+    </div>
+</div>

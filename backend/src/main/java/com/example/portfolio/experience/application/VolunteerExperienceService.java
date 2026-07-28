@@ -8,6 +8,7 @@ import com.example.portfolio.experience.dto.CreateVolunteerExperienceRequest;
 import com.example.portfolio.experience.dto.UpdateVolunteerExperienceRequest;
 import com.example.portfolio.experience.dto.VolunteerExperienceDetailDto;
 import com.example.portfolio.experience.dto.VolunteerExperienceListItemDto;
+import com.example.portfolio.experience.dto.ProjectInVolunteerDto;
 import com.example.portfolio.experience.dto.VolunteerProjectDto;
 import com.example.portfolio.experience.dto.VolunteerProjectRequest;
 import com.example.portfolio.experience.dto.VolunteerResponsibilityRequest;
@@ -104,6 +105,15 @@ public class VolunteerExperienceService {
     public void deleteVolunteerExperience(Long id) {
         // cascade = ALL on VolunteerExperience.responsibilities/volunteerProjects removes them along with the parent
         volunteerExperienceRepository.delete(requireVolunteerExperience(id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProjectInVolunteerDto> getAvailableProjects() {
+        Profile profile = requireProfile();
+        return projectRepository.findAvailableForJobExperience(profile)
+                .stream()
+                .map(volunteerExperienceMapper::toProjectInVolunteerDto)
+                .toList();
     }
 
     // ── Sync helpers ─────────────────────────────────────────────────────────

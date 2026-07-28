@@ -54,4 +54,10 @@ public class VolunteerExperienceController {
         volunteerExperienceService.deleteVolunteerExperience(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/available-projects")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ProjectInVolunteerDto>> getAvailableProjects() {
+        return ResponseEntity.ok(volunteerExperienceService.getAvailableProjects());
+    }
 }

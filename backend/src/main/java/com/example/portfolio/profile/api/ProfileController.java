@@ -5,9 +5,11 @@ import com.example.portfolio.profile.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/profile")
@@ -21,15 +23,25 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.getProfileSummary());
     }
 
-    @PostMapping
+    /**
+     * Multipart: part "data" = JSON (CreateProfileRequest), part "image" = profile photo (optional).
+     */
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProfileInfoDto> createProfile(@Valid @RequestBody CreateProfileRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(profileService.createProfile(request));
+    public ResponseEntity<ProfileInfoDto> createProfile(
+            @RequestPart("data") @Valid CreateProfileRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(profileService.createProfile(request, image));
     }
 
-    @PutMapping
+    /**
+     * Multipart: part "data" = JSON (UpdateProfileRequest), part "image" = new profile photo (optional).
+     */
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProfileInfoDto> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
-        return ResponseEntity.ok(profileService.updateProfile(request));
+    public ResponseEntity<ProfileInfoDto> updateProfile(
+            @RequestPart("data") @Valid UpdateProfileRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.ok(profileService.updateProfile(request, image));
     }
 }

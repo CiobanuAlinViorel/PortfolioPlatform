@@ -36,6 +36,10 @@ export interface ResendVerificationRequest {
     email: string;
 }
 
+export interface GoogleAuthRequest {
+    idToken: string;
+}
+
 export interface MessageResponse {
     message: string;
 }

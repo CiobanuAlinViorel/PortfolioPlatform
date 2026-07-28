@@ -4,6 +4,7 @@ import { Observable, tap } from "rxjs";
 import {
     AuthResponse,
     ForgotPasswordRequest,
+    GoogleAuthRequest,
     LoginRequest,
     MessageResponse,
     RegisterRequest,
@@ -11,8 +12,9 @@ import {
     ResendVerificationRequest,
     ResetPasswordRequest,
 } from "../types";
+import { environment } from "../../../../environments/environment";
 
-const API_URL = "http://localhost:8080/api/auth";
+const API_URL = `${environment.api.baseUrl}/auth`;
 
 @Injectable({ providedIn: "root" })
 export class AuthService {
@@ -24,6 +26,11 @@ export class AuthService {
 
     register(req: RegisterRequest): Observable<RegisterResponse> {
         return this.http.post<RegisterResponse>(`${API_URL}/register`, req);
+    }
+
+    isAdmin():boolean {
+        const user = this.currentUserSignal();
+        return !!user && user.role === 'ADMIN';
     }
 
     login(req: LoginRequest): Observable<AuthResponse> {
@@ -54,6 +61,16 @@ export class AuthService {
 
     resendVerification(req: ResendVerificationRequest): Observable<MessageResponse> {
         return this.http.post<MessageResponse>(`${API_URL}/resend-verification`, req);
+    }
+
+    verifyEmail(token: string): Observable<MessageResponse> {
+        return this.http.get<MessageResponse>(`${API_URL}/verify-email`, { params: { token } });
+    }
+
+    googleAuth(req: GoogleAuthRequest): Observable<AuthResponse> {
+        return this.http
+            .post<AuthResponse>(`${API_URL}/google`, req, { withCredentials: true })
+            .pipe(tap((res) => this.currentUserSignal.set(res)));
     }
 
     getToken(): string | null {

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +27,14 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.getProjectsList());
     }
 
+    /**
+     * Public listing: excludes projects already embedded in a job, volunteer, or course experience.
+     */
+    @GetMapping("/public")
+    public ResponseEntity<List<ProjectListItemDto>> getPublicProjects() {
+        return ResponseEntity.ok(projectService.getPublicProjectsList());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProjectDetailDto> getProject(@PathVariable Long id) {
         return ResponseEntity.ok(projectService.getProjectById(id));
@@ -36,6 +45,7 @@ public class ProjectController {
      * Files are matched in order to image slots whose imageUrl is null/blank.
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProjectDetailDto> createProject(
             @RequestPart("data") @Valid CreateProjectRequest request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
@@ -48,6 +58,7 @@ public class ProjectController {
      * Existing image slots that already carry a URL are not re-uploaded.
      */
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProjectDetailDto> updateProject(
             @PathVariable Long id,
             @RequestPart("data") UpdateProjectRequest request,
@@ -56,6 +67,7 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
@@ -74,12 +86,14 @@ public class ProjectController {
     }
 
     @PostMapping("/categories")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProjectCategoryDto> createCategory(
             @Valid @RequestBody CreateProjectCategoryRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createCategory(request));
     }
 
     @PutMapping("/categories/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProjectCategoryDto> updateCategory(
             @PathVariable Long id,
             @RequestBody UpdateProjectCategoryRequest request) {
@@ -87,6 +101,7 @@ public class ProjectController {
     }
 
     @DeleteMapping("/categories/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         projectService.deleteCategory(id);
         return ResponseEntity.noContent().build();

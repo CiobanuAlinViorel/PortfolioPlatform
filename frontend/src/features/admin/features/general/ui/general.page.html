@@ -1,0 +1,254 @@
+<div class="flex h-full flex-col p-6 md:overflow-hidden md:p-8">
+    <div class="shrink-0">
+        <h1 class="text-2xl font-bold text-emerald-900 dark:text-beige-light">General</h1>
+        <p class="mt-2 text-emerald-900/70 dark:text-beige-light/70">Manage general site settings and profile information.</p>
+
+        @if (errorMessage()) {
+        <div class="mt-4 flex items-center gap-2 rounded-lg border border-red-400/40 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+            <svg lucideCircleAlert class="h-5 w-5 shrink-0"></svg>
+            <span>{{ errorMessage() }}</span>
+        </div>
+        }
+    </div>
+
+    <div class="mt-6 min-h-0 flex-1 md:overflow-y-auto">
+        @switch (mode()) { @case ('loading') {
+        <div class="flex h-full items-center justify-center gap-2 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideLoaderCircle class="h-6 w-6 animate-spin"></svg>
+            <span>Loading profile...</span>
+        </div>
+        } @case ('view') {
+        <div class="mx-auto grid max-w-6xl gap-6 rounded-xl border border-emerald-900/10 bg-beige-light p-6 shadow-sm lg:grid-cols-[300px_1fr] dark:border-beige-light/10 dark:bg-green-900">
+            <div class="flex flex-col items-center gap-4 border-b border-emerald-900/10 pb-6 text-center lg:items-start lg:border-b-0 lg:border-r lg:pb-0 lg:pr-6 lg:text-left dark:border-beige-light/10">
+                @if (profile()?.imageLink) {
+                <img [src]="profile()!.imageLink" alt="Profile photo" class="h-28 w-28 rounded-full object-cover" />
+                } @else {
+                <div class="flex h-28 w-28 items-center justify-center rounded-full bg-emerald-900/10 text-emerald-900 dark:bg-beige-light/10 dark:text-beige-light">
+                    <svg lucideUser class="h-12 w-12"></svg>
+                </div>
+                }
+                <div>
+                    <h2 class="text-xl font-semibold text-emerald-900 dark:text-beige-light">
+                        {{ profile()?.firstName }} {{ profile()?.lastName }}
+                    </h2>
+                    @if (profile()?.age) {
+                    <p class="text-sm text-emerald-900/70 dark:text-beige-light/70">{{ profile()?.age }} years old</p>
+                    }
+                </div>
+                <button
+                    type="button"
+                    (click)="startEdit()"
+                    class="flex items-center gap-2 rounded-lg bg-emerald-900 px-4 py-2 text-sm font-medium text-beige-light transition hover:bg-emerald-800 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+                >
+                    <svg lucidePencil class="h-4 w-4"></svg>
+                    Edit
+                </button>
+            </div>
+
+            <div class="flex flex-col gap-6">
+                @if (profile()?.description) {
+                <p class="whitespace-pre-line text-emerald-900/80 dark:text-beige-light/80">{{ profile()?.description }}</p>
+                }
+
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    @if (contact()?.email) {
+                    <div class="flex items-center gap-2 text-sm text-emerald-900 dark:text-beige-light">
+                        <svg lucideMail class="h-4 w-4 shrink-0 text-emerald-900/60 dark:text-beige-light/60"></svg>
+                        {{ contact()?.email }}
+                    </div>
+                    }
+                    @if (contact()?.phone) {
+                    <div class="flex items-center gap-2 text-sm text-emerald-900 dark:text-beige-light">
+                        <svg lucidePhone class="h-4 w-4 shrink-0 text-emerald-900/60 dark:text-beige-light/60"></svg>
+                        {{ contact()?.phone }}
+                    </div>
+                    }
+                    @if (contact()?.github) {
+                    <div class="flex items-center gap-2 text-sm text-emerald-900 dark:text-beige-light">
+                        <svg lucideLink class="h-4 w-4 shrink-0 text-emerald-900/60 dark:text-beige-light/60"></svg>
+                        {{ contact()?.github }}
+                    </div>
+                    }
+                    @if (contact()?.linkedin) {
+                    <div class="flex items-center gap-2 text-sm text-emerald-900 dark:text-beige-light">
+                        <svg lucideLink class="h-4 w-4 shrink-0 text-emerald-900/60 dark:text-beige-light/60"></svg>
+                        {{ contact()?.linkedin }}
+                    </div>
+                    }
+                    @if (contact()?.city || contact()?.country) {
+                    <div class="flex items-center gap-2 text-sm text-emerald-900 dark:text-beige-light">
+                        <svg lucideMapPin class="h-4 w-4 shrink-0 text-emerald-900/60 dark:text-beige-light/60"></svg>
+                        {{ contact()?.city }}{{ contact()?.city && contact()?.country ? ', ' : '' }}{{ contact()?.country }}
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+        } @case ('create') {
+        <ng-container [ngTemplateOutlet]="profileForm"></ng-container>
+        } @case ('edit') {
+        <ng-container [ngTemplateOutlet]="profileForm"></ng-container>
+        } }
+    </div>
+</div>
+
+@if (cropperFile()) {
+<app-image-cropper [file]="cropperFile()!" (cropped)="onImageCropped($event)" (cancelled)="onCropCancelled()"></app-image-cropper>
+}
+
+<ng-template #profileForm>
+    <form
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        class="mx-auto grid max-w-6xl gap-6 rounded-xl border border-emerald-900/10 bg-beige-light p-6 shadow-sm lg:grid-cols-[280px_1fr] dark:border-beige-light/10 dark:bg-green-900"
+    >
+        <div class="flex flex-col items-center gap-3 border-b border-emerald-900/10 pb-6 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-6 dark:border-beige-light/10">
+            @if (mode() === 'create') {
+            <p class="text-center text-sm text-emerald-900/70 lg:text-left dark:text-beige-light/70">
+                No profile exists yet. Fill in the form to create one.
+            </p>
+            }
+
+            <div
+                class="flex w-full flex-col items-center gap-3 rounded-lg border-2 border-dashed p-4 text-center transition"
+                [class.border-emerald-900]="isDraggingOver()"
+                [class.bg-emerald-900/5]="isDraggingOver()"
+                [class.border-emerald-900/20]="!isDraggingOver()"
+                [class.dark:border-beige-light]="isDraggingOver()"
+                [class.dark:border-beige-light/20]="!isDraggingOver()"
+                (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)"
+                (drop)="onImageDrop($event)"
+            >
+                @if (imagePreview()) {
+                <img [src]="imagePreview()" alt="Profile photo preview" class="h-24 w-24 rounded-full object-cover" />
+                } @else {
+                <div class="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-900/10 text-emerald-900 dark:bg-beige-light/10 dark:text-beige-light">
+                    <svg lucideUser class="h-10 w-10"></svg>
+                </div>
+                }
+                <label
+                    class="flex cursor-pointer items-center gap-2 rounded-lg border border-emerald-900/20 px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                >
+                    <svg lucideUpload class="h-4 w-4"></svg>
+                    Upload photo
+                    <input type="file" accept="image/*" class="hidden" (change)="onImageSelected($event)" />
+                </label>
+                <p class="text-xs text-emerald-900/60 dark:text-beige-light/60">or drag &amp; drop an image here</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">First name *</label>
+                    <input
+                        type="text"
+                        formControlName="firstName"
+                        class="w-full rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm text-emerald-900 outline-none focus:border-emerald-900 dark:border-beige-light/20 dark:bg-green-900 dark:text-beige-light dark:focus:border-beige-light"
+                    />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Last name *</label>
+                    <input
+                        type="text"
+                        formControlName="lastName"
+                        class="w-full rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm text-emerald-900 outline-none focus:border-emerald-900 dark:border-beige-light/20 dark:bg-green-900 dark:text-beige-light dark:focus:border-beige-light"
+                    />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Age</label>
+                    <input
+                        type="number"
+                        formControlName="age"
+                        class="w-full rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm text-emerald-900 outline-none focus:border-emerald-900 dark:border-beige-light/20 dark:bg-green-900 dark:text-beige-light dark:focus:border-beige-light"
+                    />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Email *</label>
+                    <input
+                        type="email"
+                        formControlName="email"
+                        class="w-full rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm text-emerald-900 outline-none focus:border-emerald-900 dark:border-beige-light/20 dark:bg-green-900 dark:text-beige-light dark:focus:border-beige-light"
+                    />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Phone</label>
+                    <input
+                        type="text"
+                        formControlName="phone"
+                        class="w-full rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm text-emerald-900 outline-none focus:border-emerald-900 dark:border-beige-light/20 dark:bg-green-900 dark:text-beige-light dark:focus:border-beige-light"
+                    />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">GitHub</label>
+                    <input
+                        type="text"
+                        formControlName="github"
+                        class="w-full rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm text-emerald-900 outline-none focus:border-emerald-900 dark:border-beige-light/20 dark:bg-green-900 dark:text-beige-light dark:focus:border-beige-light"
+                    />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">LinkedIn</label>
+                    <input
+                        type="text"
+                        formControlName="linkedin"
+                        class="w-full rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm text-emerald-900 outline-none focus:border-emerald-900 dark:border-beige-light/20 dark:bg-green-900 dark:text-beige-light dark:focus:border-beige-light"
+                    />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">City</label>
+                    <input
+                        type="text"
+                        formControlName="city"
+                        class="w-full rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm text-emerald-900 outline-none focus:border-emerald-900 dark:border-beige-light/20 dark:bg-green-900 dark:text-beige-light dark:focus:border-beige-light"
+                    />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Country</label>
+                    <input
+                        type="text"
+                        formControlName="country"
+                        class="w-full rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm text-emerald-900 outline-none focus:border-emerald-900 dark:border-beige-light/20 dark:bg-green-900 dark:text-beige-light dark:focus:border-beige-light"
+                    />
+                </div>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Description</label>
+                <textarea
+                    formControlName="description"
+                    rows="3"
+                    class="w-full resize-y rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm text-emerald-900 outline-none focus:border-emerald-900 dark:border-beige-light/20 dark:bg-green-900 dark:text-beige-light dark:focus:border-beige-light"
+                ></textarea>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button
+                    type="submit"
+                    [disabled]="saving()"
+                    class="flex items-center gap-2 rounded-lg bg-emerald-900 px-4 py-2 text-sm font-medium text-beige-light transition hover:bg-emerald-800 disabled:opacity-60 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+                >
+                    @if (saving()) {
+                    <svg lucideLoaderCircle class="h-4 w-4 animate-spin"></svg>
+                    } @else {
+                    <svg lucideCheck class="h-4 w-4"></svg>
+                    }
+                    {{ mode() === 'create' ? 'Create profile' : 'Save changes' }}
+                </button>
+
+                @if (mode() === 'edit') {
+                <button
+                    type="button"
+                    (click)="cancelEdit()"
+                    [disabled]="saving()"
+                    class="flex items-center gap-2 rounded-lg border border-emerald-900/20 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 disabled:opacity-60 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                >
+                    <svg lucideX class="h-4 w-4"></svg>
+                    Cancel
+                </button>
+                }
+            </div>
+        </div>
+    </form>
+</ng-template>

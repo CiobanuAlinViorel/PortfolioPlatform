@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /register
+Disallow: /login
+Disallow: /confirm-email
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://alinviorelciobanu.com/sitemap.xml

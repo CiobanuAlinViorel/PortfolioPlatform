@@ -1,0 +1,32 @@
+<div class="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-beige-light px-4 py-12 dark:bg-green-950">
+    <mat-card class="w-full max-w-md p-2 text-center">
+        <mat-card-content class="flex flex-col items-center gap-3 py-6">
+            @switch (status()) {
+            @case ("ready") {
+            <mat-icon class="h-12! w-12! text-4xl! text-emerald-700 dark:text-emerald-400">mark_email_read</mat-icon>
+            <h2 class="font-brand text-xl font-semibold text-emerald-700 dark:text-emerald-400">Confirm your email</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Click below to activate your account.</p>
+            <button mat-flat-button color="primary" (click)="confirm()" class="mt-2">Confirm email</button>
+            }
+            @case ("loading") {
+            <mat-spinner diameter="40"></mat-spinner>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Confirming your email…</p>
+            }
+            @case ("success") {
+            <mat-icon class="h-12! w-12! text-4xl! text-emerald-700 dark:text-emerald-400">check_circle</mat-icon>
+            <h2 class="font-brand text-xl font-semibold text-emerald-700 dark:text-emerald-400">Email confirmed</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300">{{ message() }}</p>
+            <a mat-flat-button color="primary" routerLink="/login" class="mt-2">Log in</a>
+            }
+            @case ("error") {
+            <mat-icon class="h-12! w-12! text-4xl! text-red-600 dark:text-red-400">error</mat-icon>
+            <h2 class="font-brand text-xl font-semibold">Confirmation failed</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300">{{ message() }}</p>
+            <a routerLink="/register" class="mt-2 text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+                Back to registration
+            </a>
+            }
+            }
+        </mat-card-content>
+    </mat-card>
+</div>

@@ -1,8 +1,12 @@
-
-
-<app-header />
-
 <main class="main">
+  @if(isAdminRoute()){
+  <app-sidebar></app-sidebar>
+  <div class="flex min-h-screen flex-col bg-beige-dark pt-14 dark:bg-green-950 md:ml-64 md:h-screen md:pt-0">
+    <router-outlet />
+  </div>
+  } @else {
+  <app-header />
   <router-outlet />
+  <app-footer />
+  }
 </main>
-

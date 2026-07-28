@@ -11,6 +11,7 @@ import com.example.portfolio.profile.persistence.ProfileRepository;
 import com.example.portfolio.projects.domain.Project;
 import com.example.portfolio.projects.domain.ProjectStatus;
 import com.example.portfolio.projects.persistence.ProjectRepository;
+import com.example.portfolio.shared.service.CloudinaryService;
 import com.example.portfolio.skills.domain.ProficiencyLevel;
 import com.example.portfolio.skills.domain.Skill;
 import com.example.portfolio.skills.persistence.SkillRepository;
@@ -22,6 +23,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -43,6 +46,7 @@ class ProfileServiceTest {
     @Mock private ProjectRepository projectRepository;
     @Mock private JobExperienceRepository jobExperienceRepository;
     @Mock private ProfileMapper profileMapper;
+    @Mock private CloudinaryService cloudinaryService;
 
     @InjectMocks
     private ProfileService profileService;
@@ -256,10 +260,31 @@ class ProfileServiceTest {
         when(profileRepository.save(newProfile)).thenReturn(newProfile);
         when(profileMapper.toProfileInfoDto(newProfile)).thenReturn(expectedDto);
 
-        ProfileInfoDto result = profileService.createProfile(request);
+        ProfileInfoDto result = profileService.createProfile(request, null);
 
         assertThat(result).isEqualTo(expectedDto);
         verify(profileRepository).save(newProfile);
+        verifyNoInteractions(cloudinaryService);
+    }
+
+    @Test
+    void createProfile_shouldUploadImageAndSetImageLink_whenImageProvided() {
+        CreateProfileRequest request = CreateProfileRequest.builder()
+                .firstName("Alice").lastName("Smith")
+                .contactInfo(ContactInfoDto.builder().email("alice@test.com").build()).build();
+        MultipartFile image = new MockMultipartFile("image", "photo.png", "image/png", "content".getBytes());
+        Profile newProfile = Profile.builder().firstName("Alice").lastName("Smith").build();
+
+        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
+        when(cloudinaryService.uploadMedia(image, "profile")).thenReturn("https://cloudinary.test/profile/photo.png");
+        when(profileMapper.toProfile(request)).thenReturn(newProfile);
+        when(profileRepository.save(newProfile)).thenReturn(newProfile);
+        when(profileMapper.toProfileInfoDto(newProfile)).thenReturn(profileInfoDto);
+
+        profileService.createProfile(request, image);
+
+        assertThat(request.getImageLink()).isEqualTo("https://cloudinary.test/profile/photo.png");
+        verify(cloudinaryService).uploadMedia(image, "profile");
     }
 
     @Test
@@ -268,7 +293,7 @@ class ProfileServiceTest {
                 .firstName("Alice").lastName("Smith").build();
         when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
 
-        assertThatThrownBy(() -> profileService.createProfile(request))
+        assertThatThrownBy(() -> profileService.createProfile(request, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("A profile already exists");
 
@@ -288,7 +313,7 @@ class ProfileServiceTest {
         when(profileRepository.save(any())).thenReturn(newProfile);
         when(profileMapper.toProfileInfoDto(any())).thenReturn(profileInfoDto);
 
-        profileService.createProfile(request);
+        profileService.createProfile(request, null);
 
         verify(profileMapper).toProfile(request);
     }
@@ -306,11 +331,12 @@ class ProfileServiceTest {
         when(profileRepository.save(profile)).thenReturn(profile);
         when(profileMapper.toProfileInfoDto(profile)).thenReturn(expectedDto);
 
-        ProfileInfoDto result = profileService.updateProfile(request);
+        ProfileInfoDto result = profileService.updateProfile(request, null);
 
         assertThat(result).isEqualTo(expectedDto);
         verify(profileMapper).updateProfile(request, profile);
         verify(profileRepository).save(profile);
+        verifyNoInteractions(cloudinaryService);
     }
 
     @Test
@@ -319,7 +345,7 @@ class ProfileServiceTest {
                 .firstName("Updated").build();
         when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> profileService.updateProfile(request))
+        assertThatThrownBy(() -> profileService.updateProfile(request, null))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("Profile not found");
 
@@ -336,10 +362,28 @@ class ProfileServiceTest {
         when(profileRepository.save(profile)).thenReturn(profile);
         when(profileMapper.toProfileInfoDto(profile)).thenReturn(profileInfoDto);
 
-        profileService.updateProfile(request);
+        profileService.updateProfile(request, null);
 
         verify(profileMapper).updateProfile(request, profile);
     }
 
+    @Test
+    void updateProfile_shouldDeleteOldImageAndUploadNewOne_whenImageProvidedAndOldImageExists() {
+        profile.setImageLink("https://cloudinary.test/profile/old.png");
+        UpdateProfileRequest request = UpdateProfileRequest.builder()
+                .contactInfo(ContactInfoDto.builder().email("existing@test.com").build()).build();
+        MultipartFile image = new MockMultipartFile("image", "new.png", "image/png", "content".getBytes());
+
+        when(profileRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(profile));
+        when(cloudinaryService.uploadMedia(image, "profile")).thenReturn("https://cloudinary.test/profile/new.png");
+        when(profileRepository.save(profile)).thenReturn(profile);
+        when(profileMapper.toProfileInfoDto(profile)).thenReturn(profileInfoDto);
+
+        profileService.updateProfile(request, image);
+
+        assertThat(request.getImageLink()).isEqualTo("https://cloudinary.test/profile/new.png");
+        verify(cloudinaryService).deleteMedia("https://cloudinary.test/profile/old.png");
+        verify(cloudinaryService).uploadMedia(image, "profile");
+    }
 
 }

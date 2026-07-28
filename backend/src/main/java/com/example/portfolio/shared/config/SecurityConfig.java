@@ -3,6 +3,7 @@ package com.example.portfolio.shared.config;
 import com.example.portfolio.auth.application.JwtAuthenticationFilter;
 import com.example.portfolio.auth.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -31,6 +32,9 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    @Value("${cors.allowed.origins:http://localhost:4200}")
+    private List<String> allowedOrigins;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter) throws Exception {
         http
@@ -53,6 +57,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/profile/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/contact").permitAll()
                         .requestMatchers(HttpMethod.GET, "/skills/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/projects/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/experience/jobs", "/experience/jobs/*").permitAll()
@@ -84,7 +89,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

@@ -14,8 +14,22 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     @Query("SELECT p FROM Project p WHERE p.profile = :profile AND p.sortOrder IS NOT NULL ORDER BY p.sortOrder ASC")
     List<Project> findTopByProfile(@Param("profile") Profile profile, Pageable pageable);
 
-    @Query("SELECT p FROM Project p WHERE p.profile = :profile ORDER BY p.sortOrder ASC, p.title ASC")
+    @Query("SELECT DISTINCT p FROM Project p " +
+           "LEFT JOIN FETCH p.skills ps " +
+           "LEFT JOIN FETCH ps.skill " +
+           "WHERE p.profile = :profile " +
+           "ORDER BY p.sortOrder ASC, p.title ASC")
     List<Project> findAllByProfile(@Param("profile") Profile profile);
+
+    @Query("SELECT DISTINCT p FROM Project p " +
+           "LEFT JOIN FETCH p.skills ps " +
+           "LEFT JOIN FETCH ps.skill " +
+           "WHERE p.profile = :profile " +
+           "AND p.id NOT IN (SELECT jp.project.id FROM JobProjects jp) " +
+           "AND p.id NOT IN (SELECT vp.project.id FROM VolunteerProject vp) " +
+           "AND p.id NOT IN (SELECT cp.project.id FROM CourseProject cp) " +
+           "ORDER BY p.sortOrder ASC, p.title ASC")
+    List<Project> findStandaloneByProfile(@Param("profile") Profile profile);
 
     @Query("SELECT p FROM Project p WHERE p.profile = :profile " +
            "AND p.id NOT IN (SELECT jp.project.id FROM JobProjects jp) " +

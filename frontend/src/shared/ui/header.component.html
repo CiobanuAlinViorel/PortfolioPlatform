@@ -18,13 +18,66 @@
             @for (link of navLinks; track link.path) {
             <a [routerLink]="link.path" routerLinkActive="bg-black/10 dark:bg-white/10"
                 [routerLinkActiveOptions]="{ exact: link.path === '/' }"
-                class="rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                class="rounded-md px-3 py-2 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10 lg:text-lg">
                 {{ link.label }}
             </a>
+
+            @if (link.label === "Projects") {
+            <div class="relative">
+                <button type="button" (click)="toggleExperience()"
+                    class="flex items-center gap-1 rounded-md px-3 py-2 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10 lg:text-lg"
+                    [class.bg-black/10]="isExperienceOpen()" [class.dark:bg-white/10]="isExperienceOpen()"
+                    [attr.aria-expanded]="isExperienceOpen()">
+                    Experience
+                    <svg lucideChevronDown class="h-4 w-4 transition-transform duration-150 ease-out"
+                        [class.rotate-180]="isExperienceOpen()"></svg>
+                </button>
+
+                @if (isExperienceOpen()) {
+                <div
+                    class="absolute left-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-md bg-beige-light py-1 shadow-lg ring-1 ring-black/5 dark:bg-green-900 dark:ring-white/10">
+                    @for (sub of experienceLinks; track sub.path) {
+                    <a [routerLink]="sub.path" (click)="closeExperience()"
+                        routerLinkActive="bg-black/10 dark:bg-white/10"
+                        class="flex items-center gap-2.5 px-4 py-2.5 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                        <svg [lucideIcon]="sub.icon" class="h-5 w-5 shrink-0"></svg>
+                        {{ sub.label }}
+                    </a>
+                    }
+                </div>
+                }
+            </div>
+            }
+
+            @if (link.label === "Skills") {
+            <div class="relative">
+                <button type="button" (click)="toggleAbout()"
+                    class="flex items-center gap-1 rounded-md px-3 py-2 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10 lg:text-lg"
+                    [class.bg-black/10]="isAboutOpen()" [class.dark:bg-white/10]="isAboutOpen()"
+                    [attr.aria-expanded]="isAboutOpen()">
+                    About
+                    <svg lucideChevronDown class="h-4 w-4 transition-transform duration-150 ease-out"
+                        [class.rotate-180]="isAboutOpen()"></svg>
+                </button>
+
+                @if (isAboutOpen()) {
+                <div
+                    class="absolute left-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-md bg-beige-light py-1 shadow-lg ring-1 ring-black/5 dark:bg-green-900 dark:ring-white/10">
+                    @for (sub of aboutLinks; track sub.path) {
+                    <a [routerLink]="sub.path" (click)="closeAbout()" routerLinkActive="bg-black/10 dark:bg-white/10"
+                        class="flex items-center gap-2.5 px-4 py-2.5 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                        <svg [lucideIcon]="sub.icon" class="h-5 w-5 shrink-0"></svg>
+                        {{ sub.label }}
+                    </a>
+                    }
+                </div>
+                }
+            </div>
+            }
             }
             @if (isAdmin()) {
             <a routerLink="/admin" routerLinkActive="bg-black/10 dark:bg-white/10"
-                class="rounded-md px-3 py-2 text-sm font-medium text-emerald-800 transition-colors duration-150 ease-out hover:bg-black/5 dark:text-beige-dark dark:hover:bg-white/10">
+                class="rounded-md px-3 py-2 text-base font-medium text-emerald-800 transition-colors duration-150 ease-out hover:bg-black/5 dark:text-beige-dark dark:hover:bg-white/10 lg:text-lg">
                 Admin
             </a>
             }
@@ -32,6 +85,16 @@
 
         <!-- Auth actions + theme toggle (desktop / large tablet) -->
         <div class="hidden items-center gap-2 lg:flex">
+            <button type="button" (click)="downloadCv()" [disabled]="isDownloadingCv()"
+                class="flex items-center gap-1.5 rounded-md bg-emerald-800 px-3 py-1.5 text-sm font-medium text-beige-light shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md active:translate-y-0 disabled:pointer-events-none disabled:opacity-70">
+                @if (isDownloadingCv()) {
+                <svg lucideLoaderCircle class="h-4 w-4 animate-spin"></svg>
+                } @else {
+                <svg lucideDownload class="h-4 w-4"></svg>
+                }
+                CV
+            </button>
+
             @if (!isAuthenticated()) {
             <a routerLink="/login"
                 class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
@@ -61,6 +124,16 @@
 
         <!-- Mobile / tablet controls -->
         <div class="flex items-center gap-1 lg:hidden">
+            <button type="button" (click)="downloadCv()" [disabled]="isDownloadingCv()"
+                class="rounded-md p-1.5 transition-transform duration-200 ease-out hover:scale-110 hover:bg-black/5 disabled:pointer-events-none disabled:opacity-70 dark:hover:bg-white/10"
+                aria-label="Download CV">
+                @if (isDownloadingCv()) {
+                <svg lucideLoaderCircle class="h-5 w-5 animate-spin"></svg>
+                } @else {
+                <svg lucideDownload class="h-5 w-5"></svg>
+                }
+            </button>
+
             <button type="button" (click)="toggleTheme()"
                 class="rounded-md p-1.5 transition-transform duration-200 ease-out hover:scale-110 hover:bg-black/5 dark:hover:bg-white/10"
                 [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
@@ -82,46 +155,68 @@
             </button>
         </div>
     </div>
+</header>
 
-    <!-- Mobile / tablet navigation panel -->
-    <div id="mobile-nav"
-        class="overflow-hidden transition-[max-height,opacity] duration-300 ease-out lg:hidden"
-        [class.max-h-0]="!isMenuOpen()" [class.opacity-0]="!isMenuOpen()" [class.max-h-[32rem]]="isMenuOpen()"
-        [class.opacity-100]="isMenuOpen()">
-        <nav class="flex flex-col gap-1 border-t border-black/5 px-4 pb-4 pt-2 sm:px-6 dark:border-white/5">
-            @for (link of navLinks; track link.path) {
+<!--
+    Mobile / tablet navigation overlay: fullscreen modal, sibling of <header> (not a child).
+    <header> uses backdrop-blur, and backdrop-filter creates a new containing block for
+    `position: fixed` descendants — nesting this inside <header> would size `inset-0`
+    against the header's own box instead of the viewport.
+-->
+<div id="mobile-nav" role="dialog" aria-modal="true" aria-label="Site navigation"
+        class="fixed inset-0 z-60 flex flex-col overflow-y-auto bg-beige-light transition-transform duration-300 ease-out dark:bg-green-900 lg:hidden"
+        [class.translate-x-full]="!isMenuOpen()" [class.translate-x-0]="isMenuOpen()">
+        <div
+            class="flex shrink-0 items-center justify-between gap-4 border-b border-black/5 px-4 py-2 sm:px-6 dark:border-white/5">
+            <a routerLink="/" (click)="closeMenu()" class="flex shrink-0 items-center gap-2">
+                @if(isDarkMode()) {
+                <img src='/logo-light.svg' alt="{{ title }}" class="h-10 w-10" />
+                } @else {
+                <img src='/logo-dark.svg' alt="{{ title }}" class="h-10 w-10" />
+                }
+                <span class="font-brand text-xl font-semibold tracking-tight">{{ title }}</span>
+            </a>
+            <button type="button" (click)="closeMenu()"
+                class="flex h-10 w-10 items-center justify-center rounded-md transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10"
+                aria-label="Close navigation menu">
+                <svg lucideX class="h-6 w-6"></svg>
+            </button>
+        </div>
+
+        <nav class="flex flex-1 flex-col gap-1 px-4 py-6 sm:px-6">
+            @for (link of mobileLinks; track link.path) {
             <a [routerLink]="link.path" (click)="closeMenu()" routerLinkActive="bg-black/10 dark:bg-white/10"
                 [routerLinkActiveOptions]="{ exact: link.path === '/' }"
-                class="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                class="flex items-center gap-4 rounded-md px-3 py-3.5 text-lg font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
                 <svg [lucideIcon]="link.icon" class="h-5 w-5 shrink-0"></svg>
                 {{ link.label }}
             </a>
             }
+
             @if (isAdmin()) {
             <a routerLink="/admin" (click)="closeMenu()" routerLinkActive="bg-black/10 dark:bg-white/10"
-                class="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-emerald-800 transition-colors duration-150 ease-out hover:bg-black/5 dark:text-beige-dark dark:hover:bg-white/10">
+                class="flex items-center gap-4 rounded-md px-3 py-3.5 text-lg font-medium text-emerald-800 transition-colors duration-150 ease-out hover:bg-black/5 dark:text-beige-dark dark:hover:bg-white/10">
                 <svg lucideShieldCheck class="h-5 w-5 shrink-0"></svg>
                 Admin
             </a>
             }
 
-            <div class="mt-2 flex flex-col gap-2 border-t border-black/5 pt-3 dark:border-white/5">
+            <div class="mt-4 flex flex-col gap-2 border-t border-black/10 pt-4 dark:border-white/10">
                 @if (!isAuthenticated()) {
                 <a routerLink="/login" (click)="closeMenu()"
-                    class="rounded-md px-3 py-2.5 text-center text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                    class="rounded-md px-3 py-3 text-center text-lg font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
                     Login
                 </a>
                 <a routerLink="/register" (click)="closeMenu()"
-                    class="rounded-md bg-emerald-800 px-3 py-2.5 text-center text-base font-medium text-beige-light shadow-sm transition-all duration-150 ease-out hover:bg-emerald-700 active:translate-y-0">
+                    class="rounded-md bg-emerald-800 px-3 py-3 text-center text-lg font-medium text-beige-light shadow-sm transition-all duration-150 ease-out hover:bg-emerald-700 active:translate-y-0">
                     Register
                 </a>
                 } @else {
                 <button type="button" (click)="logout()"
-                    class="rounded-md px-3 py-2.5 text-center text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                    class="rounded-md px-3 py-3 text-center text-lg font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
                     Logout
                 </button>
                 }
             </div>
         </nav>
     </div>
-</header>

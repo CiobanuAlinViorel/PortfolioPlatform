@@ -25,7 +25,18 @@ public class CloudinaryService {
      * @return the secure Cloudinary URL to store in the DB
      */
     public String uploadMedia(MultipartFile file) {
-        String publicId = buildPublicId(file.getOriginalFilename());
+        return uploadMedia(file, "projects");
+    }
+
+    /**
+     * Uploads a file to Cloudinary under the given folder.
+     * resource_type=auto supports both images and videos.
+     * public_id = {folder}/{uuid}_{original-filename-without-extension}
+     *
+     * @return the secure Cloudinary URL to store in the DB
+     */
+    public String uploadMedia(MultipartFile file, String folder) {
+        String publicId = buildPublicId(folder, file.getOriginalFilename());
         try {
             Map<?, ?> result = cloudinary.uploader().upload(
                     file.getBytes(),
@@ -61,11 +72,11 @@ public class CloudinaryService {
 
     // ─────────────────── PRIVATE HELPERS ─────────────────────────
 
-    private String buildPublicId(String originalFilename) {
+    private String buildPublicId(String folder, String originalFilename) {
         String base = originalFilename != null
                 ? originalFilename.replaceAll("\\.[^.]+$", "").replaceAll("[^a-zA-Z0-9_\\-]", "_")
                 : "media";
-        return "projects/" + UUID.randomUUID() + "_" + base;
+        return folder + "/" + UUID.randomUUID() + "_" + base;
     }
 
     /**

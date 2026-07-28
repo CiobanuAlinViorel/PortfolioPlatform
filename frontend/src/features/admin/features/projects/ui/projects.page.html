@@ -1,0 +1,1074 @@
+<div class="flex h-full flex-col p-6 md:overflow-hidden md:p-8">
+    @if (mode() === 'list') {
+    <div class="flex shrink-0 items-start justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-emerald-900 dark:text-beige-light">Projects</h1>
+            <p class="mt-2 text-emerald-900/70 dark:text-beige-light/70">Manage your portfolio projects.</p>
+        </div>
+        <button
+            type="button"
+            (click)="startCreate()"
+            class="flex shrink-0 items-center gap-2 rounded-lg bg-emerald-900 px-4 py-2 text-sm font-medium text-beige-light transition hover:bg-emerald-800 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+        >
+            <svg lucidePlus class="h-4 w-4"></svg>
+            New Project
+        </button>
+    </div>
+
+    <div class="mt-4 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+            <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-900/40 dark:text-beige-light/40"></svg>
+            <input
+                type="text"
+                [(ngModel)]="searchQuery"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Search projects by title or description..."
+                class="w-full rounded-lg border border-emerald-900/15 bg-white py-2 pl-9 pr-3 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+            />
+        </div>
+        <button
+            type="button"
+            (click)="openFilterModal()"
+            class="flex shrink-0 items-center gap-2 rounded-lg border border-emerald-900/20 px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+        >
+            <svg lucideFilter class="h-4 w-4"></svg>
+            Filters
+            @if (activeFilterCount() > 0) {
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-900 text-xs font-semibold text-beige-light dark:bg-beige-light dark:text-green-900">
+                {{ activeFilterCount() }}
+            </span>
+            }
+        </button>
+    </div>
+    }
+
+    @if (errorMessage()) {
+    <div class="mt-4 flex shrink-0 items-center gap-2 rounded-lg border border-red-400/40 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+        <svg lucideCircleAlert class="h-5 w-5 shrink-0"></svg>
+        <span>{{ errorMessage() }}</span>
+    </div>
+    }
+
+    <div class="min-h-0 flex-1 md:overflow-y-auto" [class.mt-6]="mode() === 'list'">
+        @switch (mode()) { @case ('list') {
+        <!-- ─────────────────────────── LIST ─────────────────────────── -->
+        @if (loadingList()) {
+        <div class="flex items-center justify-center gap-2 py-10 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideLoaderCircle class="h-6 w-6 animate-spin"></svg>
+            <span>Loading projects...</span>
+        </div>
+        } @else if (projects().length === 0) {
+        <div class="rounded-xl border border-dashed border-emerald-900/20 p-10 text-center text-emerald-900/60 dark:border-beige-light/20 dark:text-beige-light/60">
+            <svg lucideFolderKanban class="mx-auto h-8 w-8"></svg>
+            <p class="mt-2">No projects yet. Create your first one.</p>
+        </div>
+        } @else if (filteredProjects().length === 0) {
+        <div class="rounded-xl border border-dashed border-emerald-900/20 p-10 text-center text-emerald-900/60 dark:border-beige-light/20 dark:text-beige-light/60">
+            <svg lucideSearch class="mx-auto h-8 w-8"></svg>
+            <p class="mt-2">No projects match your search or filters.</p>
+        </div>
+        } @else {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            @for (project of filteredProjects(); track project.id) {
+            <div class="flex flex-col overflow-hidden rounded-xl border border-emerald-900/10 bg-beige-light shadow-sm dark:border-beige-light/10 dark:bg-green-900">
+                <div class="relative h-36 bg-emerald-900/10 dark:bg-beige-light/10">
+                    @if (project.imageUrl) {
+                    <img [src]="project.imageUrl" [alt]="project.title" class="h-full w-full object-cover" />
+                    } @else {
+                    <div class="flex h-full items-center justify-center text-emerald-900/40 dark:text-beige-light/40">
+                        <svg lucideImage class="h-8 w-8"></svg>
+                    </div>
+                    }
+                    <span class="absolute right-2 top-2 rounded-full px-2 py-0.5 text-xs font-medium" [class]="statusBadgeClass(project.status)">
+                        {{ project.status }}
+                    </span>
+                </div>
+                <div class="flex flex-1 flex-col gap-2 p-4">
+                    <h3 class="font-semibold text-emerald-900 dark:text-beige-light">{{ project.title }}</h3>
+                    @if (project.categoryName) {
+                    <span class="text-xs text-emerald-900/60 dark:text-beige-light/60">{{ project.categoryName }}</span>
+                    }
+                    @if (project.description) {
+                    <p class="line-clamp-2 text-sm text-emerald-900/70 dark:text-beige-light/70">{{ project.description }}</p>
+                    }
+                    @if (project.tags.length > 0) {
+                    <div class="flex flex-wrap gap-1">
+                        @for (tag of project.tags; track tag) {
+                        <span class="rounded-full bg-emerald-900/10 px-2 py-0.5 text-xs text-emerald-900 dark:bg-beige-light/10 dark:text-beige-light">{{ tag }}</span>
+                        }
+                    </div>
+                    }
+
+                    <div class="mt-auto flex items-center justify-between pt-3">
+                        @if (deleteConfirmId() === project.id) {
+                        <div class="flex w-full items-center justify-end gap-2 text-sm">
+                            <span class="mr-auto text-red-600 dark:text-red-400">Delete this project?</span>
+                            <button
+                                type="button"
+                                (click)="deleteProject(project.id)"
+                                [disabled]="deletingId() === project.id"
+                                class="flex items-center rounded-lg bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                            >
+                                @if (deletingId() === project.id) {
+                                <svg lucideLoaderCircle class="h-3.5 w-3.5 animate-spin"></svg>
+                                } @else { Yes }
+                            </button>
+                            <button
+                                type="button"
+                                (click)="cancelDelete()"
+                                class="rounded-lg border border-emerald-900/20 px-2 py-1 text-xs font-medium text-emerald-900 hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                            >
+                                No
+                            </button>
+                        </div>
+                        } @else {
+                        <span class="text-xs text-emerald-900/50 dark:text-beige-light/50">{{ project.year }}</span>
+                        <div class="flex items-center gap-2">
+                            <button
+                                type="button"
+                                (click)="startEdit(project)"
+                                class="flex items-center gap-1 rounded-lg border border-emerald-900/20 px-2 py-1 text-xs font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                            >
+                                <svg lucidePencil class="h-3.5 w-3.5"></svg>
+                                Edit
+                            </button>
+                            <button
+                                type="button"
+                                (click)="confirmDelete(project.id)"
+                                class="flex items-center gap-1 rounded-lg border border-red-400/40 px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                            >
+                                <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                            </button>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+        } } @case ('form') {
+        <!-- ─────────────────────────── FORM ─────────────────────────── -->
+        @if (loadingForm()) {
+        <div class="flex items-center justify-center gap-2 py-10 text-emerald-900/70 dark:text-beige-light/70">
+            <svg lucideLoaderCircle class="h-6 w-6 animate-spin"></svg>
+            <span>Loading project...</span>
+        </div>
+        } @else {
+        <div class="mx-auto flex h-full max-w-5xl flex-col">
+            <!-- Slim header -->
+            <div class="flex shrink-0 items-center gap-3">
+                <button
+                    type="button"
+                    (click)="cancelForm()"
+                    title="Back to projects"
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-emerald-900/70 transition hover:bg-emerald-900/10 dark:text-beige-light/70 dark:hover:bg-beige-light/10"
+                >
+                    <svg lucideX class="h-4 w-4"></svg>
+                </button>
+                <h2 class="truncate text-base font-semibold text-emerald-900 dark:text-beige-light">
+                    {{ form.value.title || (editingId() == null ? 'New project' : 'Edit project') }}
+                </h2>
+                <div class="ml-auto flex shrink-0 items-center gap-2">
+                    <button
+                        type="button"
+                        (click)="cancelForm()"
+                        [disabled]="saving()"
+                        class="rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 disabled:opacity-60 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        (click)="submit()"
+                        [disabled]="saving()"
+                        class="flex items-center gap-2 rounded-lg bg-emerald-900 px-3 py-1.5 text-sm font-medium text-beige-light transition hover:bg-emerald-800 disabled:opacity-60 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+                    >
+                        @if (saving()) {
+                        <svg lucideLoaderCircle class="h-4 w-4 animate-spin"></svg>
+                        } @else {
+                        <svg lucideCheck class="h-4 w-4"></svg>
+                        }
+                        {{ editingId() == null ? 'Create' : 'Save' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <nav class="mt-4 flex shrink-0 gap-1 overflow-x-auto border-b border-emerald-900/10 dark:border-beige-light/10">
+                <button type="button" (click)="activeTab.set('basic')" [class]="tabButtonClass('basic')">
+                    <svg lucideFolderKanban class="h-4 w-4"></svg>
+                    Basic info
+                </button>
+                <button type="button" (click)="activeTab.set('tags')" [class]="tabButtonClass('tags')">
+                    <svg lucideTag class="h-4 w-4"></svg>
+                    Tags
+                    @if (tags.length > 0) {
+                    <span class="rounded-full bg-emerald-900/10 px-1.5 text-xs dark:bg-beige-light/10">{{ tags.length }}</span>
+                    }
+                </button>
+                <button type="button" (click)="activeTab.set('media')" [class]="tabButtonClass('media')">
+                    <svg lucideImage class="h-4 w-4"></svg>
+                    Media
+                    @if (media.length > 0) {
+                    <span class="rounded-full bg-emerald-900/10 px-1.5 text-xs dark:bg-beige-light/10">{{ media.length }}</span>
+                    }
+                </button>
+                <button type="button" (click)="activeTab.set('features')" [class]="tabButtonClass('features')">
+                    <svg lucideListChecks class="h-4 w-4"></svg>
+                    Features
+                    @if (features.length > 0) {
+                    <span class="rounded-full bg-emerald-900/10 px-1.5 text-xs dark:bg-beige-light/10">{{ features.length }}</span>
+                    }
+                </button>
+                <button type="button" (click)="activeTab.set('challenges')" [class]="tabButtonClass('challenges')">
+                    <svg lucideTriangleAlert class="h-4 w-4"></svg>
+                    Challenges
+                    @if (challenges.length > 0) {
+                    <span class="rounded-full bg-emerald-900/10 px-1.5 text-xs dark:bg-beige-light/10">{{ challenges.length }}</span>
+                    }
+                </button>
+                <button type="button" (click)="activeTab.set('skills')" [class]="tabButtonClass('skills')">
+                    <svg lucideSparkles class="h-4 w-4"></svg>
+                    Skills
+                    @if (skills.length > 0) {
+                    <span class="rounded-full bg-emerald-900/10 px-1.5 text-xs dark:bg-beige-light/10">{{ skills.length }}</span>
+                    }
+                </button>
+                <button type="button" (click)="activeTab.set('achievements')" [class]="tabButtonClass('achievements')">
+                    <svg lucideAward class="h-4 w-4"></svg>
+                    Achievements
+                    @if (achievements.length > 0) {
+                    <span class="rounded-full bg-emerald-900/10 px-1.5 text-xs dark:bg-beige-light/10">{{ achievements.length }}</span>
+                    }
+                </button>
+                <button type="button" (click)="activeTab.set('metrics')" [class]="tabButtonClass('metrics')">
+                    <svg lucideActivity class="h-4 w-4"></svg>
+                    Metrics
+                </button>
+            </nav>
+
+            <div class="min-h-0 flex-1 overflow-y-auto pb-6 pt-6">
+                <!-- Basic info -->
+                @if (activeTab() === 'basic') {
+                <div [formGroup]="form">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div class="xl:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Title *</label>
+                        <input
+                            type="text"
+                            formControlName="title"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Category</label>
+                        <input
+                            type="text"
+                            formControlName="categoryName"
+                            list="category-options"
+                            placeholder="e.g. Web App"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <datalist id="category-options">
+                            @for (name of categoryNames(); track name) {
+                            <option [value]="name"></option>
+                            }
+                        </datalist>
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Status *</label>
+                        <select
+                            formControlName="status"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            @for (s of statuses; track s) {
+                            <option [value]="s">{{ s }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Complexity *</label>
+                        <select
+                            formControlName="complexity"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            @for (c of complexityLevels; track c) {
+                            <option [value]="c">{{ c }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Year</label>
+                        <input
+                            type="number"
+                            formControlName="year"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Completion date</label>
+                        <input
+                            type="date"
+                            formControlName="completionDate"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Development time (h)</label>
+                        <input
+                            type="number"
+                            formControlName="developmentTime"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Sort order</label>
+                        <input
+                            type="number"
+                            formControlName="sortOrder"
+                            placeholder="unchanged"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="mb-1 flex items-center gap-1 text-sm font-medium text-emerald-900 dark:text-beige-light">
+                            <svg lucideGitBranch class="h-3.5 w-3.5"></svg>
+                            GitHub URL
+                        </label>
+                        <input
+                            type="text"
+                            formControlName="githubUrl"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 flex items-center gap-1 text-sm font-medium text-emerald-900 dark:text-beige-light">
+                            <svg lucideExternalLink class="h-3.5 w-3.5"></svg>
+                            Demo URL
+                        </label>
+                        <input
+                            type="text"
+                            formControlName="demoUrl"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Short description</label>
+                    <textarea
+                        formControlName="description"
+                        rows="2"
+                        class="w-full resize-y rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                    ></textarea>
+                </div>
+                <div class="mt-4">
+                    <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Long description</label>
+                    <textarea
+                        formControlName="longDescription"
+                        rows="4"
+                        class="w-full resize-y rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                    ></textarea>
+                </div>
+                </div>
+                }
+
+                <!-- Tags -->
+                @if (activeTab() === 'tags') {
+                <div>
+                    <p class="mb-4 text-sm text-emerald-900/60 dark:text-beige-light/60">Keywords used to filter and search this project.</p>
+                    <div class="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-900/20 bg-white p-2 dark:border-beige-light/20 dark:bg-emerald-950/40">
+                        @for (tag of tags; track tag) {
+                        <span class="flex items-center gap-1 rounded-full bg-emerald-900/10 px-2 py-1 text-xs text-emerald-900 dark:bg-beige-light/10 dark:text-beige-light">
+                            {{ tag }}
+                            <button type="button" (click)="removeTag(tag)" class="text-emerald-900/60 hover:text-emerald-900 dark:text-beige-light/60 dark:hover:text-beige-light">
+                                <svg lucideX class="h-3 w-3"></svg>
+                            </button>
+                        </span>
+                        }
+                        <input
+                            type="text"
+                            [(ngModel)]="newTag"
+                            [ngModelOptions]="{ standalone: true }"
+                            (keydown)="onTagKeydown($event)"
+                            (blur)="addTag()"
+                            placeholder="Add a tag and press Enter"
+                            class="min-w-40 flex-1 border-none bg-transparent px-1 py-1 text-sm text-emerald-900 outline-none dark:text-beige-light"
+                        />
+                    </div>
+                </div>
+                }
+
+                <!-- Media -->
+                @if (activeTab() === 'media') {
+                <div>
+                <div class="mb-4 flex items-center justify-between">
+                    <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">Drag files in, paste from the clipboard, or browse.</p>
+                    <label
+                        class="flex cursor-pointer items-center gap-2 rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        <svg lucideUpload class="h-4 w-4"></svg>
+                        Add media
+                        <input type="file" accept="image/*,video/*" multiple class="hidden" (change)="onMediaFilesSelected($event)" />
+                    </label>
+                </div>
+
+                <div
+                    class="rounded-xl border-2 border-dashed p-4 transition"
+                    [class.border-emerald-500]="isDraggingMedia()"
+                    [class.bg-emerald-500/5]="isDraggingMedia()"
+                    [class.border-emerald-900/15]="!isDraggingMedia()"
+                    [class.dark:border-beige-light/15]="!isDraggingMedia()"
+                >
+                    @if (media.length === 0) {
+                    <div class="flex flex-col items-center gap-2 py-10 text-center text-sm text-emerald-900/60 dark:text-beige-light/60">
+                        <svg lucideUpload class="h-6 w-6"></svg>
+                        <p>Drop images or videos here, paste from the clipboard, or use "Add media" above.</p>
+                    </div>
+                    } @else {
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        @for (slot of media; track $index) {
+                    <div class="flex flex-col gap-2 rounded-lg border border-emerald-900/10 p-3 dark:border-beige-light/10">
+                        <div class="relative h-32 overflow-hidden rounded-lg bg-emerald-900/10 dark:bg-beige-light/10">
+                            @if (slot.isVideo) {
+                            <video [src]="slot.previewUrl" class="h-full w-full object-cover" muted></video>
+                            } @else {
+                            <img [src]="slot.previewUrl" alt="" class="h-full w-full object-cover" />
+                            }
+                            <button
+                                type="button"
+                                (click)="setPrimaryMedia($index)"
+                                [class.text-amber-500]="slot.primary"
+                                [class.text-white]="!slot.primary"
+                                class="absolute right-1.5 top-1.5 rounded-full bg-black/40 p-1 transition hover:bg-black/60"
+                                title="Set as primary"
+                            >
+                                <svg lucideStar class="h-4 w-4" [attr.fill]="slot.primary ? 'currentColor' : 'none'"></svg>
+                            </button>
+                            <button
+                                type="button"
+                                (click)="removeMedia($index)"
+                                class="absolute right-1.5 bottom-1.5 rounded-full bg-black/40 p-1 text-white transition hover:bg-black/60"
+                                title="Remove"
+                            >
+                                <svg lucideX class="h-4 w-4"></svg>
+                            </button>
+                            @if (slot.isVideo) {
+                            <span class="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-black/40 px-2 py-0.5 text-xs text-white">
+                                <svg lucideVideo class="h-3 w-3"></svg>
+                                Video
+                            </span>
+                            }
+                        </div>
+                        <input
+                            type="text"
+                            [(ngModel)]="slot.title"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Title"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-2 py-1 text-xs text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <input
+                            type="text"
+                            [(ngModel)]="slot.altText"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Alt text"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-2 py-1 text-xs text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs text-emerald-900/60 dark:text-beige-light/60">Order</label>
+                            <input
+                                type="number"
+                                [(ngModel)]="slot.sortOrder"
+                                [ngModelOptions]="{ standalone: true }"
+                                class="w-16 rounded-lg border border-emerald-900/15 bg-white px-2 py-1 text-xs text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                            />
+                            @if (slot.primary) {
+                            <span class="ml-auto flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+                                <svg lucideStar class="h-3 w-3" fill="currentColor"></svg>
+                                Primary
+                            </span>
+                            }
+                        </div>
+                    </div>
+                    }
+                    </div>
+                    }
+                </div>
+                </div>
+                }
+
+                <!-- Features -->
+                @if (activeTab() === 'features') {
+                <div>
+                <div class="mb-4 flex items-center justify-between">
+                    <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">What this project does, one capability at a time.</p>
+                    <button
+                        type="button"
+                        (click)="addFeature()"
+                        class="flex items-center gap-2 rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        <svg lucidePlus class="h-4 w-4"></svg>
+                        Add feature
+                    </button>
+                </div>
+
+                @if (features.length === 0) {
+                <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">No features listed yet.</p>
+                } @else {
+                <div class="flex flex-col gap-3">
+                    @for (feature of features; track $index) {
+                    <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-900/10 p-3 sm:grid-cols-2 lg:grid-cols-4 dark:border-beige-light/10">
+                        <input
+                            type="text"
+                            [(ngModel)]="feature.title"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Feature title *"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 lg:col-span-2 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <input
+                            type="date"
+                            [(ngModel)]="feature.implementationDate"
+                            [ngModelOptions]="{ standalone: true }"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <input
+                            type="number"
+                            [(ngModel)]="feature.developmentTimeHours"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Hours"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <textarea
+                            [(ngModel)]="feature.description"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Description"
+                            rows="2"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 lg:col-span-3 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        ></textarea>
+                        <button
+                            type="button"
+                            (click)="removeFeature($index)"
+                            class="flex items-center justify-center gap-1 self-start rounded-lg border border-red-400/40 px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                        >
+                            <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                            Remove
+                        </button>
+                    </div>
+                    }
+                </div>
+                }
+                </div>
+                }
+
+                <!-- Challenges -->
+                @if (activeTab() === 'challenges') {
+                <div>
+                <div class="mb-4 flex items-center justify-between">
+                    <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">Problems you ran into and how you solved them.</p>
+                    <button
+                        type="button"
+                        (click)="addChallenge()"
+                        class="flex items-center gap-2 rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        <svg lucidePlus class="h-4 w-4"></svg>
+                        Add challenge
+                    </button>
+                </div>
+
+                @if (challenges.length === 0) {
+                <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">No challenges listed yet.</p>
+                } @else {
+                <div class="flex flex-col gap-3">
+                    @for (challenge of challenges; track $index) {
+                    <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-900/10 p-3 sm:grid-cols-2 lg:grid-cols-4 dark:border-beige-light/10">
+                        <input
+                            type="text"
+                            [(ngModel)]="challenge.title"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Challenge title *"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 lg:col-span-2 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <select
+                            [(ngModel)]="challenge.difficulty"
+                            [ngModelOptions]="{ standalone: true }"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            @for (d of difficultyLevels; track d) {
+                            <option [value]="d">{{ d }}</option>
+                            }
+                        </select>
+                        <button
+                            type="button"
+                            (click)="removeChallenge($index)"
+                            class="flex items-center justify-center gap-1 rounded-lg border border-red-400/40 px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                        >
+                            <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                            Remove
+                        </button>
+                        <textarea
+                            [(ngModel)]="challenge.description"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Description *"
+                            rows="2"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 lg:col-span-2 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        ></textarea>
+                        <textarea
+                            [(ngModel)]="challenge.solution"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Solution"
+                            rows="2"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 lg:col-span-2 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        ></textarea>
+                    </div>
+                    }
+                </div>
+                }
+                </div>
+                }
+
+                <!-- Skills -->
+                @if (activeTab() === 'skills') {
+                <div>
+                <div class="mb-4 flex items-center justify-between">
+                    <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">Pick a skill already in your database, or add a new one.</p>
+                    <button
+                        type="button"
+                        (click)="addSkill()"
+                        class="flex items-center gap-2 rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        <svg lucidePlus class="h-4 w-4"></svg>
+                        Add skill
+                    </button>
+                </div>
+
+                @if (skills.length === 0) {
+                <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">No skills linked yet.</p>
+                } @else {
+                <div class="flex flex-col gap-3">
+                    @for (skill of skills; track $index) {
+                    <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-900/10 p-3 sm:grid-cols-2 lg:grid-cols-6 dark:border-beige-light/10">
+                        <div class="relative lg:col-span-2">
+                            <input
+                                type="text"
+                                [(ngModel)]="skill.skillName"
+                                [ngModelOptions]="{ standalone: true }"
+                                (ngModelChange)="onSkillNameChange(skill)"
+                                (focus)="skill.showSuggestions = true"
+                                (blur)="skill.showSuggestions = false"
+                                placeholder="Type or select a skill *"
+                                autocomplete="off"
+                                class="w-full rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                            />
+                            @if (skill.showSuggestions && filteredSkillSuggestions(skill).length > 0) {
+                            <div
+                                class="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-emerald-900/15 bg-white py-1 shadow-lg dark:border-beige-light/15 dark:bg-emerald-950"
+                            >
+                                @for (name of filteredSkillSuggestions(skill); track name) {
+                                <button
+                                    type="button"
+                                    (mousedown)="$event.preventDefault()"
+                                    (click)="selectSkillSuggestion(skill, name)"
+                                    class="block w-full truncate px-3 py-1.5 text-left text-sm text-emerald-900 transition hover:bg-emerald-900/10 dark:text-beige-light dark:hover:bg-beige-light/10"
+                                >
+                                    {{ name }}
+                                </button>
+                                }
+                            </div>
+                            } @if (skill.skillName.trim() && !skill.linked) {
+                            <p class="mt-1 text-xs text-emerald-900/50 dark:text-beige-light/50">Will be created as a new skill.</p>
+                            }
+                        </div>
+                        <input
+                            type="number"
+                            [(ngModel)]="skill.usage"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Usage %"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <select
+                            [(ngModel)]="skill.proficiency"
+                            [ngModelOptions]="{ standalone: true }"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            @for (p of proficiencyLevels; track p) {
+                            <option [value]="p">{{ p }}</option>
+                            }
+                        </select>
+                        <input
+                            type="number"
+                            [(ngModel)]="skill.yearsOfExperience"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Years exp."
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <button
+                            type="button"
+                            (click)="removeSkill($index)"
+                            class="flex items-center justify-center gap-1 rounded-lg border border-red-400/40 px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                        >
+                            <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                            Remove
+                        </button>
+                    </div>
+                    }
+                </div>
+                }
+                </div>
+                }
+
+                <!-- Achievements -->
+                @if (activeTab() === 'achievements') {
+                <div>
+                <div class="mb-4 flex items-center justify-between">
+                    <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">Awards, milestones, and recognitions tied to this project.</p>
+                    <button
+                        type="button"
+                        (click)="addAchievement()"
+                        class="flex items-center gap-2 rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        <svg lucidePlus class="h-4 w-4"></svg>
+                        Add achievement
+                    </button>
+                </div>
+
+                @if (achievements.length === 0) {
+                <p class="text-sm text-emerald-900/60 dark:text-beige-light/60">No achievements listed yet.</p>
+                } @else {
+                <div class="flex flex-col gap-4">
+                    @for (achievement of achievements; track $index) {
+                    <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-900/10 p-3 sm:grid-cols-2 lg:grid-cols-4 dark:border-beige-light/10">
+                        <input
+                            type="text"
+                            [(ngModel)]="achievement.title"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Title *"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 lg:col-span-2 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <select
+                            [(ngModel)]="achievement.achievementType"
+                            [ngModelOptions]="{ standalone: true }"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            @for (t of achievementTypes; track t) {
+                            <option [value]="t">{{ t }}</option>
+                            }
+                        </select>
+                        <input
+                            type="date"
+                            [(ngModel)]="achievement.achievementDate"
+                            [ngModelOptions]="{ standalone: true }"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+
+                        <textarea
+                            [(ngModel)]="achievement.description"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Description *"
+                            rows="2"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 lg:col-span-2 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        ></textarea>
+                        <select
+                            [(ngModel)]="achievement.recognitionLevel"
+                            [ngModelOptions]="{ standalone: true }"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        >
+                            @for (r of recognitionLevels; track r) {
+                            <option [value]="r">{{ r }}</option>
+                            }
+                        </select>
+                        <input
+                            type="text"
+                            [(ngModel)]="achievement.recognizedBy"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Recognized by"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+
+                        <input
+                            type="text"
+                            [(ngModel)]="achievement.proofUrl"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Proof URL"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <input
+                            type="text"
+                            [(ngModel)]="achievement.demoUrl"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Demo URL"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <input
+                            type="text"
+                            [(ngModel)]="achievement.metricBefore"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Metric before"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                        <input
+                            type="text"
+                            [(ngModel)]="achievement.metricAfter"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Metric after"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+
+                        <textarea
+                            [(ngModel)]="achievement.impactSummary"
+                            [ngModelOptions]="{ standalone: true }"
+                            placeholder="Impact summary"
+                            rows="2"
+                            class="rounded-lg border border-emerald-900/15 bg-white px-2 py-1.5 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 lg:col-span-2 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        ></textarea>
+                        <label class="flex items-center gap-2 text-sm text-emerald-900 dark:text-beige-light">
+                            <input type="checkbox" [(ngModel)]="achievement.isFeatured" [ngModelOptions]="{ standalone: true }" />
+                            Featured
+                        </label>
+                        <button
+                            type="button"
+                            (click)="removeAchievement($index)"
+                            class="flex items-center justify-center gap-1 rounded-lg border border-red-400/40 px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                        >
+                            <svg lucideTrash2 class="h-3.5 w-3.5"></svg>
+                            Remove
+                        </button>
+                    </div>
+                    }
+                </div>
+                }
+                </div>
+                }
+
+                <!-- Metrics -->
+                @if (activeTab() === 'metrics') {
+                <div [formGroup]="form">
+                <p class="mb-4 text-sm text-emerald-900/60 dark:text-beige-light/60">Optional numbers to showcase this project's impact.</p>
+                <div formGroupName="metrics" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Users count</label>
+                        <input
+                            type="number"
+                            formControlName="usersCount"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Performance score</label>
+                        <input
+                            type="text"
+                            formControlName="performanceScore"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Code quality score</label>
+                        <input
+                            type="text"
+                            formControlName="codeQualityScore"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Lines of code</label>
+                        <input
+                            type="number"
+                            formControlName="linesOfCode"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Commits count</label>
+                        <input
+                            type="number"
+                            formControlName="commitsCount"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-emerald-900 dark:text-beige-light">Test coverage (%)</label>
+                        <input
+                            type="number"
+                            formControlName="testCoveragePercentage"
+                            class="w-full rounded-lg border border-emerald-900/15 bg-white px-3 py-2 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-beige-light/15 dark:bg-emerald-950/40 dark:text-beige-light dark:focus:border-emerald-400 dark:focus:ring-emerald-400/30"
+                        />
+                    </div>
+                </div>
+                </div>
+                }
+            </div>
+        </div>
+        } } }
+    </div>
+
+    <!-- ─────────────────────────── FILTER MODAL ─────────────────────────── -->
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        [class.hidden]="!showFilterModal()"
+        (click)="closeFilterModal()"
+    >
+        <div
+            (click)="$event.stopPropagation()"
+            class="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-emerald-900/10 bg-beige-light shadow-xl dark:border-beige-light/10 dark:bg-emerald-950"
+        >
+            <div class="flex shrink-0 items-center justify-between border-b border-emerald-900/10 p-5 dark:border-beige-light/10">
+                <h3 class="text-lg font-semibold text-emerald-900 dark:text-beige-light">Filter projects</h3>
+                <button
+                    type="button"
+                    (click)="closeFilterModal()"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-900/70 transition hover:bg-emerald-900/10 dark:text-beige-light/70 dark:hover:bg-beige-light/10"
+                >
+                    <svg lucideX class="h-4 w-4"></svg>
+                </button>
+            </div>
+
+            <div class="min-h-0 flex-1 overflow-y-auto p-5">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <!-- Status -->
+                    <div>
+                        <h4 class="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-900/70 dark:text-beige-light/70">Status</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @for (s of statuses; track s) {
+                            <button
+                                type="button"
+                                (click)="toggleDraftStatus(s)"
+                                class="rounded-full border px-3 py-1 text-xs font-medium transition"
+                                [class.border-emerald-900]="draftStatuses.includes(s)"
+                                [class.bg-emerald-900]="draftStatuses.includes(s)"
+                                [class.text-beige-light]="draftStatuses.includes(s)"
+                                [class.dark:border-beige-light]="draftStatuses.includes(s)"
+                                [class.dark:bg-beige-light]="draftStatuses.includes(s)"
+                                [class.dark:text-green-900]="draftStatuses.includes(s)"
+                                [class.border-emerald-900/20]="!draftStatuses.includes(s)"
+                                [class.text-emerald-900]="!draftStatuses.includes(s)"
+                                [class.dark:border-beige-light/20]="!draftStatuses.includes(s)"
+                                [class.dark:text-beige-light]="!draftStatuses.includes(s)"
+                            >
+                                {{ s }}
+                            </button>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Year -->
+                    <div>
+                        <h4 class="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-900/70 dark:text-beige-light/70">Year</h4>
+                        @if (availableYears().length === 0) {
+                        <p class="text-sm text-emerald-900/50 dark:text-beige-light/50">No years available yet.</p>
+                        } @else {
+                        <div class="flex flex-wrap gap-2">
+                            @for (y of availableYears(); track y) {
+                            <button
+                                type="button"
+                                (click)="toggleDraftYear(y)"
+                                class="rounded-full border px-3 py-1 text-xs font-medium transition"
+                                [class.border-emerald-900]="draftYears.includes(y)"
+                                [class.bg-emerald-900]="draftYears.includes(y)"
+                                [class.text-beige-light]="draftYears.includes(y)"
+                                [class.dark:border-beige-light]="draftYears.includes(y)"
+                                [class.dark:bg-beige-light]="draftYears.includes(y)"
+                                [class.dark:text-green-900]="draftYears.includes(y)"
+                                [class.border-emerald-900/20]="!draftYears.includes(y)"
+                                [class.text-emerald-900]="!draftYears.includes(y)"
+                                [class.dark:border-beige-light/20]="!draftYears.includes(y)"
+                                [class.dark:text-beige-light]="!draftYears.includes(y)"
+                            >
+                                {{ y }}
+                            </button>
+                            }
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Category -->
+                    <div>
+                        <h4 class="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-900/70 dark:text-beige-light/70">Category</h4>
+                        @if (categoryNames().length === 0) {
+                        <p class="text-sm text-emerald-900/50 dark:text-beige-light/50">No categories yet.</p>
+                        } @else {
+                        <div class="flex flex-wrap gap-2">
+                            @for (c of categoryNames(); track c) {
+                            <button
+                                type="button"
+                                (click)="toggleDraftCategory(c)"
+                                class="rounded-full border px-3 py-1 text-xs font-medium transition"
+                                [class.border-emerald-900]="draftCategories.includes(c)"
+                                [class.bg-emerald-900]="draftCategories.includes(c)"
+                                [class.text-beige-light]="draftCategories.includes(c)"
+                                [class.dark:border-beige-light]="draftCategories.includes(c)"
+                                [class.dark:bg-beige-light]="draftCategories.includes(c)"
+                                [class.dark:text-green-900]="draftCategories.includes(c)"
+                                [class.border-emerald-900/20]="!draftCategories.includes(c)"
+                                [class.text-emerald-900]="!draftCategories.includes(c)"
+                                [class.dark:border-beige-light/20]="!draftCategories.includes(c)"
+                                [class.dark:text-beige-light]="!draftCategories.includes(c)"
+                            >
+                                {{ c }}
+                            </button>
+                            }
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Skills -->
+                    <div>
+                        <h4 class="mb-2 text-sm font-semibold uppercase tracking-wide text-emerald-900/70 dark:text-beige-light/70">Skills used</h4>
+                        @if (skillNames().length === 0) {
+                        <p class="text-sm text-emerald-900/50 dark:text-beige-light/50">No skills yet.</p>
+                        } @else {
+                        <div class="flex max-h-40 flex-wrap gap-2 overflow-y-auto">
+                            @for (sk of skillNames(); track sk) {
+                            <button
+                                type="button"
+                                (click)="toggleDraftSkill(sk)"
+                                class="rounded-full border px-3 py-1 text-xs font-medium transition"
+                                [class.border-emerald-900]="draftSkills.includes(sk)"
+                                [class.bg-emerald-900]="draftSkills.includes(sk)"
+                                [class.text-beige-light]="draftSkills.includes(sk)"
+                                [class.dark:border-beige-light]="draftSkills.includes(sk)"
+                                [class.dark:bg-beige-light]="draftSkills.includes(sk)"
+                                [class.dark:text-green-900]="draftSkills.includes(sk)"
+                                [class.border-emerald-900/20]="!draftSkills.includes(sk)"
+                                [class.text-emerald-900]="!draftSkills.includes(sk)"
+                                [class.dark:border-beige-light/20]="!draftSkills.includes(sk)"
+                                [class.dark:text-beige-light]="!draftSkills.includes(sk)"
+                            >
+                                {{ sk }}
+                            </button>
+                            }
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex shrink-0 items-center justify-between gap-3 border-t border-emerald-900/10 p-5 dark:border-beige-light/10">
+                <button
+                    type="button"
+                    (click)="clearDraftFilters()"
+                    class="text-sm font-medium text-emerald-900/60 underline-offset-2 hover:text-emerald-900 hover:underline dark:text-beige-light/60 dark:hover:text-beige-light"
+                >
+                    Clear all
+                </button>
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        (click)="closeFilterModal()"
+                        class="rounded-lg border border-emerald-900/20 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        (click)="applyFilters()"
+                        class="rounded-lg bg-emerald-900 px-4 py-2 text-sm font-medium text-beige-light transition hover:bg-emerald-800 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+                    >
+                        Apply filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

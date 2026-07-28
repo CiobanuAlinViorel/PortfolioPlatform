@@ -1,6 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -14,4 +15,64 @@
 html,
 body {
     @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 font-sans;
+}
+
+/* Brand color (emerald) instead of Angular Material's default indigo, in both themes */
+.mat-mdc-button.mat-primary,
+.mat-mdc-unelevated-button.mat-primary,
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-outlined-button.mat-primary,
+.mat-tonal-button.mat-primary {
+    --mat-button-filled-container-color: #065f46;
+    --mat-button-filled-label-text-color: #FBF5DD;
+    --mat-button-protected-container-color: #065f46;
+    --mat-button-protected-label-text-color: #FBF5DD;
+    --mat-button-text-label-text-color: #065f46;
+    --mat-button-outlined-label-text-color: #065f46;
+    --mat-button-outlined-outline-color: rgba(6, 95, 70, 0.4);
+}
+
+html {
+    --mat-progress-spinner-active-indicator-color: #065f46;
+}
+
+/* mat-spinner sitting inside a solid emerald button needs a light stroke to stay visible */
+.button-spinner {
+    --mat-progress-spinner-active-indicator-color: #FBF5DD;
+}
+
+/* Dark mode: Material surfaces don't follow our .dark class by default, so re-theme them */
+.dark {
+    --mat-progress-spinner-active-indicator-color: #34d399;
+}
+
+.dark .mat-mdc-button.mat-primary,
+.dark .mat-mdc-unelevated-button.mat-primary,
+.dark .mat-mdc-raised-button.mat-primary,
+.dark .mat-mdc-outlined-button.mat-primary,
+.dark .mat-tonal-button.mat-primary {
+    --mat-button-filled-container-color: #047857;
+    --mat-button-text-label-text-color: #34d399;
+    --mat-button-outlined-label-text-color: #34d399;
+    --mat-button-outlined-outline-color: rgba(52, 211, 153, 0.4);
+}
+
+.dark .mat-mdc-card {
+    --mat-card-elevated-container-color: #0f3d2a;
+    --mat-card-subtitle-text-color: rgba(251, 245, 221, 0.7);
+    color: #FBF5DD;
+}
+
+.dark .mat-mdc-form-field {
+    --mat-form-field-outlined-label-text-color: rgba(251, 245, 221, 0.7);
+    --mat-form-field-outlined-hover-label-text-color: rgba(251, 245, 221, 0.9);
+    --mat-form-field-outlined-input-text-color: #FBF5DD;
+    --mat-form-field-outlined-input-text-placeholder-color: rgba(251, 245, 221, 0.5);
+    --mat-form-field-outlined-outline-color: rgba(251, 245, 221, 0.3);
+    --mat-form-field-outlined-hover-outline-color: rgba(251, 245, 221, 0.5);
+    --mat-form-field-outlined-focus-outline-color: #34d399;
+    --mat-form-field-outlined-focus-label-text-color: #34d399;
+    --mat-form-field-error-text-color: #f87171;
+    --mat-form-field-outlined-error-outline-color: #f87171;
+    --mat-form-field-outlined-error-label-text-color: #f87171;
 }

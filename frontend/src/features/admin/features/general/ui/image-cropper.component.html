@@ -1,0 +1,60 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div class="w-full max-w-sm rounded-xl bg-beige-light p-6 shadow-xl dark:bg-green-900">
+        <h2 class="text-lg font-semibold text-emerald-900 dark:text-beige-light">Adjust photo</h2>
+        <p class="mt-1 text-sm text-emerald-900/70 dark:text-beige-light/70">Drag to reposition, use the slider to zoom.</p>
+
+        <div
+            class="relative mx-auto mt-4 touch-none overflow-hidden rounded-full bg-black/20"
+            [style.width.px]="viewportSize"
+            [style.height.px]="viewportSize"
+            (pointerdown)="onPointerDown($event)"
+        >
+            @if (imageSrc()) {
+            <img
+                #imageEl
+                [src]="imageSrc()"
+                (load)="onImageLoad()"
+                draggable="false"
+                class="absolute left-0 top-0 max-w-none cursor-grab select-none active:cursor-grabbing"
+                [style.width.px]="displayedWidth"
+                [style.height.px]="displayedHeight"
+                [style.transform]="'translate(' + translateX + 'px, ' + translateY + 'px)'"
+            />
+            }
+            <div class="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]"></div>
+        </div>
+
+        <div class="mt-4 flex items-center gap-3">
+            <svg lucideZoomOut class="h-4 w-4 shrink-0 text-emerald-900/60 dark:text-beige-light/60"></svg>
+            <input
+                type="range"
+                [min]="minZoom"
+                [max]="maxZoom"
+                step="0.01"
+                [value]="zoom()"
+                (input)="onZoomChange($any($event.target).valueAsNumber)"
+                class="w-full accent-emerald-900 dark:accent-beige-light"
+            />
+            <svg lucideZoomIn class="h-4 w-4 shrink-0 text-emerald-900/60 dark:text-beige-light/60"></svg>
+        </div>
+
+        <div class="mt-6 flex items-center justify-end gap-3">
+            <button
+                type="button"
+                (click)="cancel()"
+                class="flex items-center gap-2 rounded-lg border border-emerald-900/20 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-900/10 dark:border-beige-light/20 dark:text-beige-light dark:hover:bg-beige-light/10"
+            >
+                <svg lucideX class="h-4 w-4"></svg>
+                Cancel
+            </button>
+            <button
+                type="button"
+                (click)="confirm()"
+                class="flex items-center gap-2 rounded-lg bg-emerald-900 px-4 py-2 text-sm font-medium text-beige-light transition hover:bg-emerald-800 dark:bg-beige-light dark:text-green-900 dark:hover:bg-beige-light/90"
+            >
+                <svg lucideCheck class="h-4 w-4"></svg>
+                Use photo
+            </button>
+        </div>
+    </div>
+</div>

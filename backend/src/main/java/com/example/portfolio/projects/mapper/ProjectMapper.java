@@ -5,11 +5,14 @@ import com.example.portfolio.projects.dto.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface ProjectMapper {
 
     @Mapping(source = "projectCategory.name", target = "categoryName")
     @Mapping(target = "imageUrl", expression = "java(primaryImageUrl(project))")
+    @Mapping(target = "skills", expression = "java(skillNames(project))")
     ProjectListItemDto toProjectListItemDto(Project project);
 
     default String primaryImageUrl(Project project) {
@@ -18,6 +21,12 @@ public interface ProjectMapper {
                 .findFirst()
                 .map(ProjectMedia::getImageUrl)
                 .orElse(null);
+    }
+
+    default List<String> skillNames(Project project) {
+        return project.getSkills().stream()
+                .map(projectSkill -> projectSkill.getSkill().getName())
+                .toList();
     }
 
     @Mapping(source = "projectCategory.name", target = "categoryName")
