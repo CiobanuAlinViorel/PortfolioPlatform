@@ -1,6 +1,6 @@
 export const environment = {
     production: true,
     api: {
-        baseUrl: 'https://alin-s-portofolio-production.up.railway.app/api'
+        baseUrl: 'https://portfolioplatform-ymjc.onrender.com'
     }
 };
