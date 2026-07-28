@@ -205,9 +205,9 @@ spring:
       on-profile: prod
 
   datasource:
-    url: jdbc:postgresql://${PGHOST:${DB_HOST}}:${PGPORT:${DB_PORT:5432}}/${PGDATABASE:${DB_NAME}}
-    username: ${PGUSER:${DB_USER}}
-    password: ${PGPASSWORD:${DB_PASSWORD}}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}?sslmode=${DB_SSLMODE:require}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     hikari:
       maximum-pool-size: 50
       minimum-idle: 10
