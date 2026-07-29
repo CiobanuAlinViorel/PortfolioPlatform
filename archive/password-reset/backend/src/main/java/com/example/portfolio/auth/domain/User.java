@@ -42,6 +42,12 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "email_verified")
     private boolean emailVerified = false;
 
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_token_expiry")
+    private LocalDateTime passwordResetTokenExpiry;
+
     @Column(name = "refresh_token")
     private String refreshToken;
 

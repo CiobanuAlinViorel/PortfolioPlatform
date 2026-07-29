@@ -66,6 +66,33 @@ public class UserRepositoryTest {
         assertThat(exists).isFalse();
     }
 
+    // ── findByPasswordResetToken ──────────────────────────────────────────────
+
+    @Test
+    void findByPasswordResetToken_shouldReturnUser_whenTokenExists() {
+        User user = User.builder()
+                .email("reset@test.com")
+                .password("encoded-password")
+                .role(UserRole.USER)
+                .passwordResetToken("xyz-reset-token")
+                .passwordResetTokenExpiry(LocalDateTime.now().plusHours(1))
+                .build();
+        userRepository.save(user);
+
+        Optional<User> result = userRepository.findByPasswordResetToken("xyz-reset-token");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getEmail()).isEqualTo("reset@test.com");
+        assertThat(result.get().getPasswordResetToken()).isEqualTo("xyz-reset-token");
+    }
+
+    @Test
+    void findByPasswordResetToken_shouldReturnEmpty_whenTokenDoesNotExist() {
+        Optional<User> result = userRepository.findByPasswordResetToken("unknown-token");
+
+        assertThat(result).isEmpty();
+    }
+
     // ── findByRefreshToken ────────────────────────────────────────────────────
 
     @Test

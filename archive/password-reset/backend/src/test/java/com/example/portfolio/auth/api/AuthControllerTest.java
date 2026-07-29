@@ -20,6 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -222,4 +223,83 @@ class AuthControllerTest {
         verify(authService, never()).logout(anyString());
     }
 
+    // ── POST /auth/forgot-password ────────────────────────────────────────────
+
+    @Test
+    void forgotPassword_shouldReturn200_whenEmailExists() throws Exception {
+        ForgotPasswordRequest req = new ForgotPasswordRequest("user@test.com");
+        doNothing().when(authService).forgotPassword(any(ForgotPasswordRequest.class));
+
+        mockMvc.perform(post("/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("If this email is registered, a reset link has been sent"));
+    }
+
+    @Test
+    void forgotPassword_shouldReturn200_whenEmailDoesNotExist() throws Exception {
+        // Service silently does nothing for unknown emails — same response to avoid enumeration
+        ForgotPasswordRequest req = new ForgotPasswordRequest("missing@test.com");
+        doNothing().when(authService).forgotPassword(any(ForgotPasswordRequest.class));
+
+        mockMvc.perform(post("/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("If this email is registered, a reset link has been sent"));
+    }
+
+    @Test
+    void forgotPassword_shouldReturn400_whenEmailIsInvalid() throws Exception {
+        ForgotPasswordRequest req = new ForgotPasswordRequest("not-an-email");
+
+        mockMvc.perform(post("/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.email").exists());
+
+        verifyNoInteractions(authService);
+    }
+
+    // ── POST /auth/reset-password ─────────────────────────────────────────────
+
+    @Test
+    void resetPassword_shouldReturn200_whenTokenAndPasswordAreValid() throws Exception {
+        ResetPasswordRequest req = new ResetPasswordRequest("valid-token", "newpassword");
+        doNothing().when(authService).resetPassword(any(ResetPasswordRequest.class));
+
+        mockMvc.perform(post("/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password reset successfully"));
+    }
+
+    @Test
+    void resetPassword_shouldReturn400_whenTokenIsExpired() throws Exception {
+        ResetPasswordRequest req = new ResetPasswordRequest("expired-token", "newpassword");
+        doThrow(new IllegalArgumentException("Reset token has expired"))
+                .when(authService).resetPassword(any(ResetPasswordRequest.class));
+
+        mockMvc.perform(post("/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Reset token has expired"));
+    }
+
+    @Test
+    void resetPassword_shouldReturn400_whenNewPasswordIsTooShort() throws Exception {
+        ResetPasswordRequest req = new ResetPasswordRequest("valid-token", "abc");
+
+        mockMvc.perform(post("/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.newPassword").exists());
+
+        verifyNoInteractions(authService);
+    }
 }

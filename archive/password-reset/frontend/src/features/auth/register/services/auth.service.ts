@@ -3,11 +3,13 @@ import { Injectable, computed, signal } from "@angular/core";
 import { Observable, tap } from "rxjs";
 import {
     AuthResponse,
+    ForgotPasswordRequest,
     GoogleAuthRequest,
     LoginRequest,
     MessageResponse,
     RegisterRequest,
     RegisterResponse,
+    ResetPasswordRequest,
 } from "../types";
 import { environment } from "../../../../environments/environment";
 
@@ -46,6 +48,14 @@ export class AuthService {
         return this.http
             .post<AuthResponse>(`${API_URL}/refresh`, {}, { withCredentials: true })
             .pipe(tap((res) => this.currentUserSignal.set(res)));
+    }
+
+    forgotPassword(req: ForgotPasswordRequest): Observable<MessageResponse> {
+        return this.http.post<MessageResponse>(`${API_URL}/forgot-password`, req);
+    }
+
+    resetPassword(req: ResetPasswordRequest): Observable<MessageResponse> {
+        return this.http.post<MessageResponse>(`${API_URL}/reset-password`, req);
     }
 
     googleAuth(req: GoogleAuthRequest): Observable<AuthResponse> {

@@ -39,6 +39,7 @@ class EmailServiceTest {
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(emailService, "frontendUrl", "http://localhost:4200");
         ReflectionTestUtils.setField(emailService, "mailFrom", "noreply@portfolio.dev");
         ReflectionTestUtils.setField(emailService, "resendApiKey", "test-api-key");
     }
@@ -53,59 +54,74 @@ class EmailServiceTest {
         lenient().when(responseSpec.toBodilessEntity()).thenReturn(ResponseEntity.ok().build());
     }
 
-    // ── sendContactMessage — mail disabled ────────────────────────────────────
+    // ── sendPasswordResetEmail — mail disabled ────────────────────────────────
 
     @Test
-    void sendContactMessage_shouldNotSendEmail_whenMailIsDisabled() {
+    void sendPasswordResetEmail_shouldNotSendEmail_whenMailIsDisabled() {
         ReflectionTestUtils.setField(emailService, "mailEnabled", false);
 
-        emailService.sendContactMessage("owner@test.com", "Jane", "jane@test.com", "Hello there");
+        emailService.sendPasswordResetEmail("user@test.com", "xyz-token");
 
         verifyNoInteractions(restClient);
     }
 
-    // ── sendContactMessage — mail enabled ─────────────────────────────────────
+    // ── sendPasswordResetEmail — mail enabled ─────────────────────────────────
 
     @Test
-    void sendContactMessage_shouldCallResendApiWithCorrectDetails_whenMailIsEnabled() {
+    void sendPasswordResetEmail_shouldCallResendApiWithCorrectDetails_whenMailIsEnabled() {
         ReflectionTestUtils.setField(emailService, "mailEnabled", true);
         stubRestClientChain();
 
-        emailService.sendContactMessage("owner@test.com", "Jane", "jane@test.com", "Hello there");
+        emailService.sendPasswordResetEmail("user@test.com", "xyz-token");
 
         ArgumentCaptor<Map<String, Object>> payloadCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(requestBodyUriSpec).uri("https://api.resend.com/emails");
-        verify(requestBodySpec).header("Authorization", "Bearer test-api-key");
         verify(requestBodySpec).body(payloadCaptor.capture());
 
         Map<String, Object> payload = payloadCaptor.getValue();
-        assertThat(payload.get("to")).isEqualTo("owner@test.com");
+        assertThat(payload.get("to")).isEqualTo("user@test.com");
         assertThat(payload.get("from")).isEqualTo("noreply@portfolio.dev");
-        assertThat(payload.get("reply_to")).isEqualTo("jane@test.com");
-        assertThat(payload.get("subject")).isEqualTo("New portfolio contact message from Jane");
-        assertThat((String) payload.get("text")).contains("Hello there");
-        assertThat((String) payload.get("html")).contains("Hello there");
+        assertThat(payload.get("subject")).isEqualTo("Reset your password");
+        assertThat((String) payload.get("text")).contains("http://localhost:4200/reset-password?token=xyz-token");
+        assertThat((String) payload.get("html")).contains("http://localhost:4200/reset-password?token=xyz-token");
     }
 
     @Test
-    void sendContactMessage_shouldNotPropagateException_whenRestClientThrows() {
+    void sendPasswordResetEmail_shouldNotPropagateException_whenRestClientThrows() {
         ReflectionTestUtils.setField(emailService, "mailEnabled", true);
         when(restClient.post()).thenThrow(new RuntimeException("Connection refused"));
 
-        assertThatCode(() -> emailService.sendContactMessage("owner@test.com", "Jane", "jane@test.com", "Hello there"))
+        assertThatCode(() -> emailService.sendPasswordResetEmail("user@test.com", "xyz-token"))
                 .doesNotThrowAnyException();
     }
 
     // ── resendApiKey is blank (not configured) ────────────────────────────────
 
     @Test
-    void sendContactMessage_shouldNotThrow_whenApiKeyIsBlank() {
+    void sendPasswordResetEmail_shouldNotThrow_whenApiKeyIsBlank() {
         ReflectionTestUtils.setField(emailService, "resendApiKey", "");
         ReflectionTestUtils.setField(emailService, "mailEnabled", true);
 
-        assertThatCode(() -> emailService.sendContactMessage("owner@test.com", "Jane", "jane@test.com", "Hello there"))
+        assertThatCode(() -> emailService.sendPasswordResetEmail("user@test.com", "token"))
                 .doesNotThrowAnyException();
 
         verifyNoInteractions(restClient);
+    }
+
+    // ── sendContactMessage — reply-to ─────────────────────────────────────────
+
+    @Test
+    void sendContactMessage_shouldSetReplyToSenderEmail() {
+        ReflectionTestUtils.setField(emailService, "mailEnabled", true);
+        stubRestClientChain();
+
+        emailService.sendContactMessage("owner@test.com", "Jane", "jane@test.com", "Hello there");
+
+        ArgumentCaptor<Map<String, Object>> payloadCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(requestBodySpec).body(payloadCaptor.capture());
+
+        Map<String, Object> payload = payloadCaptor.getValue();
+        assertThat(payload.get("to")).isEqualTo("owner@test.com");
+        assertThat(payload.get("reply_to")).isEqualTo("jane@test.com");
+        assertThat(payload.get("subject")).isEqualTo("New portfolio contact message from Jane");
     }
 }

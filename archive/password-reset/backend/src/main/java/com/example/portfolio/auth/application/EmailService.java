@@ -32,6 +32,9 @@ public class EmailService {
         this.restClient = restClient;
     }
 
+    @Value("${app.frontend-url:http://localhost:4200}")
+    private String frontendUrl;
+
     @Value("${app.mail.from:alinviorelciobanu@gmail.com}")
     private String mailFrom;
 
@@ -40,6 +43,17 @@ public class EmailService {
 
     @Value("${app.mail.resend-api-key:}")
     private String resendApiKey;
+
+    public void sendPasswordResetEmail(String to, String token) {
+        String link = frontendUrl + "/reset-password?token=" + token;
+        String html = loadTemplate("email-templates/reset-password-email.html")
+                .replace("{{LOGO}}", LOGO_URL)
+                .replace("{{EMAIL}}", to)
+                .replace("{{LINK}}", link);
+        String plainText = "Click the link below to reset your password:\n\n" + link
+                + "\n\nThis link expires in 1 hour. If you did not request a reset, ignore this email.";
+        send(to, "Reset your password", plainText, html);
+    }
 
     public void sendContactMessage(String toOwner, String senderName, String senderEmail, String message) {
         String html = loadTemplate("email-templates/contact-message-email.html")
@@ -57,6 +71,10 @@ public class EmailService {
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;");
+    }
+
+    private void send(String to, String subject, String plainText, String html) {
+        send(to, subject, plainText, html, null);
     }
 
     private void send(String to, String subject, String plainText, String html, String replyTo) {

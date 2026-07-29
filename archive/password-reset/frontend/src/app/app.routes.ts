@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { RegisterPage } from '../features/auth/register/components/register.page';
 import { LoginPage } from '../features/auth/login/components/login.page';
+import { ForgotPasswordPage } from '../features/auth/forgot-password/components/forgot-password.page';
+import { ResetPasswordPage } from '../features/auth/reset-password/components/reset-password.page';
 import { HomePage } from '../features/home/components/home.component';
 import { ProjectsListPage } from '../features/projects/components/projects-list.page';
 import { ProjectDetailPage } from '../features/projects/components/project-detail.page';
@@ -151,6 +153,20 @@ export const routes: Routes = [
         component: LoginPage,
         data: {
             seo: { title: 'Sign In', description: 'Sign in to your account on Alin-Viorel Ciobanu’s portfolio site.', ...AUTH_SEO_BASE } satisfies SeoData,
+        },
+    },
+    {
+        path: 'forgot-password',
+        component: ForgotPasswordPage,
+        data: {
+            seo: { title: 'Forgot Password', description: 'Reset the password for your account.', ...AUTH_SEO_BASE } satisfies SeoData,
+        },
+    },
+    {
+        path: 'reset-password',
+        component: ResetPasswordPage,
+        data: {
+            seo: { title: 'Reset Password', description: 'Set a new password for your account.', ...AUTH_SEO_BASE } satisfies SeoData,
         },
     },
     {

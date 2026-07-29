@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +35,9 @@ class AuthServiceTest {
 
     @Mock
     private JwtService jwtService;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private AuthService authService;
@@ -64,6 +68,8 @@ class AuthServiceTest {
         assertThat(savedUser.getPassword()).isEqualTo("encoded-password");
         assertThat(savedUser.getRole()).isEqualTo(UserRole.USER);
         assertThat(savedUser.isEmailVerified()).isTrue();
+
+        verifyNoInteractions(emailService);
     }
 
     @Test
@@ -98,6 +104,7 @@ class AuthServiceTest {
         verify(userRepository, never()).save(any(User.class));
         verifyNoInteractions(passwordEncoder);
         verifyNoInteractions(jwtService);
+        verifyNoInteractions(emailService);
     }
 
     // ── authenticate ─────────────────────────────────────────────────────────
@@ -185,6 +192,135 @@ class AuthServiceTest {
         verify(userRepository).findByEmail("user@test.com");
         verify(passwordEncoder).matches("wrong-password", "encoded-password");
         verifyNoInteractions(jwtService);
+    }
+
+    // ── forgotPassword ───────────────────────────────────────────────────────
+
+    @Test
+    void forgotPassword_shouldSetResetTokenAndSendEmail_whenEmailExists() {
+        ForgotPasswordRequest request = new ForgotPasswordRequest("user@test.com");
+
+        User user = User.builder()
+                .email("user@test.com")
+                .role(UserRole.USER)
+                .build();
+
+        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        doNothing().when(emailService).sendPasswordResetEmail(anyString(), anyString());
+
+        authService.forgotPassword(request);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertThat(savedUser.getPasswordResetToken()).isNotBlank();
+        assertThat(savedUser.getPasswordResetTokenExpiry()).isAfter(LocalDateTime.now());
+
+        verify(emailService).sendPasswordResetEmail(eq("user@test.com"), anyString());
+    }
+
+    @Test
+    void forgotPassword_shouldDoNothing_whenEmailDoesNotExist() {
+        ForgotPasswordRequest request = new ForgotPasswordRequest("missing@test.com");
+
+        when(userRepository.findByEmail("missing@test.com")).thenReturn(Optional.empty());
+
+        authService.forgotPassword(request);
+
+        verify(userRepository).findByEmail("missing@test.com");
+        verify(userRepository, never()).save(any(User.class));
+        verifyNoInteractions(emailService);
+    }
+
+    // ── resetPassword ────────────────────────────────────────────────────────
+
+    @Test
+    void resetPassword_shouldUpdatePassword_whenTokenIsValidAndNotExpired() {
+        String resetToken = "valid-reset-token";
+        ResetPasswordRequest request = new ResetPasswordRequest(resetToken, "new-password");
+
+        User user = User.builder()
+                .email("user@test.com")
+                .role(UserRole.USER)
+                .passwordResetToken(resetToken)
+                .passwordResetTokenExpiry(LocalDateTime.now().plusMinutes(30))
+                .build();
+
+        when(userRepository.findByPasswordResetToken(resetToken)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("new-password")).thenReturn("encoded-new-password");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        authService.resetPassword(request);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertThat(savedUser.getPassword()).isEqualTo("encoded-new-password");
+        assertThat(savedUser.getPasswordResetToken()).isNull();
+        assertThat(savedUser.getPasswordResetTokenExpiry()).isNull();
+    }
+
+    @Test
+    void resetPassword_shouldThrowException_whenTokenNotFound() {
+        ResetPasswordRequest request = new ResetPasswordRequest("unknown-token", "new-password");
+
+        when(userRepository.findByPasswordResetToken("unknown-token")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.resetPassword(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Invalid or expired reset token");
+
+        verify(userRepository).findByPasswordResetToken("unknown-token");
+        verify(userRepository, never()).save(any(User.class));
+        verifyNoInteractions(passwordEncoder);
+    }
+
+    @Test
+    void resetPassword_shouldThrowException_whenTokenIsExpired() {
+        String resetToken = "expired-reset-token";
+        ResetPasswordRequest request = new ResetPasswordRequest(resetToken, "new-password");
+
+        User user = User.builder()
+                .email("user@test.com")
+                .role(UserRole.USER)
+                .passwordResetToken(resetToken)
+                .passwordResetTokenExpiry(LocalDateTime.now().minusMinutes(1))
+                .build();
+
+        when(userRepository.findByPasswordResetToken(resetToken)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authService.resetPassword(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Reset token has expired");
+
+        verify(userRepository).findByPasswordResetToken(resetToken);
+        verify(userRepository, never()).save(any(User.class));
+        verifyNoInteractions(passwordEncoder);
+    }
+
+    @Test
+    void resetPassword_shouldThrowException_whenTokenExpiryIsNull() {
+        String resetToken = "token-without-expiry";
+        ResetPasswordRequest request = new ResetPasswordRequest(resetToken, "new-password");
+
+        User user = User.builder()
+                .email("user@test.com")
+                .role(UserRole.USER)
+                .passwordResetToken(resetToken)
+                .passwordResetTokenExpiry(null)
+                .build();
+
+        when(userRepository.findByPasswordResetToken(resetToken)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authService.resetPassword(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Reset token has expired");
+
+        verify(userRepository, never()).save(any(User.class));
+        verifyNoInteractions(passwordEncoder);
     }
 
     // ── refreshTokens ────────────────────────────────────────────────────────

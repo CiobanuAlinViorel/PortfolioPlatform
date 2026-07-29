@@ -31,6 +31,12 @@
                     }
                 </mat-form-field>
 
+                <div class="-mt-1 text-right">
+                    <a routerLink="/forgot-password" class="text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+                        Forgot password?
+                    </a>
+                </div>
+
                 @if (errorMessage()) {
                 <p class="text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
                 }

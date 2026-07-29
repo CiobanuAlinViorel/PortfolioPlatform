@@ -2,10 +2,12 @@ package com.example.portfolio.auth.api;
 
 import com.example.portfolio.auth.application.AuthService;
 import com.example.portfolio.auth.dto.AuthResponse;
+import com.example.portfolio.auth.dto.ForgotPasswordRequest;
 import com.example.portfolio.auth.dto.GoogleAuthRequest;
 import com.example.portfolio.auth.dto.LoginRequest;
 import com.example.portfolio.auth.dto.RegisterRequest;
 import com.example.portfolio.auth.dto.RegisterResponse;
+import com.example.portfolio.auth.dto.ResetPasswordRequest;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -74,6 +76,18 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
                 .body(Map.of("message", "Logged out successfully"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
+        authService.forgotPassword(req);
+        return ResponseEntity.ok(Map.of("message", "If this email is registered, a reset link has been sent"));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
+        authService.resetPassword(req);
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
     }
 
     private ResponseCookie buildRefreshCookie(String value) {

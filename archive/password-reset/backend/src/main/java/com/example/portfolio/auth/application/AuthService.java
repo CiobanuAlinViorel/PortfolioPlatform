@@ -3,9 +3,11 @@ package com.example.portfolio.auth.application;
 import com.example.portfolio.auth.domain.User;
 import com.example.portfolio.auth.domain.UserRole;
 import com.example.portfolio.auth.dto.AuthResponse;
+import com.example.portfolio.auth.dto.ForgotPasswordRequest;
 import com.example.portfolio.auth.dto.LoginRequest;
 import com.example.portfolio.auth.dto.RegisterRequest;
 import com.example.portfolio.auth.dto.RegisterResponse;
+import com.example.portfolio.auth.dto.ResetPasswordRequest;
 import com.example.portfolio.auth.persistence.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -29,6 +31,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailService emailService;
     private final GoogleIdTokenVerifier googleIdTokenVerifier;
 
     @Value("${spring.security.jwt.refresh-token-expiration-days:7}")
@@ -120,6 +123,34 @@ public class AuthService {
                 .emailVerified(user.isEmailVerified())
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        // Always return without error to avoid leaking whether the email exists
+        userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
+            String resetToken = UUID.randomUUID().toString();
+            user.setPasswordResetToken(resetToken);
+            user.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(1));
+            userRepository.save(user);
+            emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+        });
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        User user = userRepository.findByPasswordResetToken(request.getToken())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired reset token"));
+
+        if (user.getPasswordResetTokenExpiry() == null
+                || LocalDateTime.now().isAfter(user.getPasswordResetTokenExpiry())) {
+            throw new IllegalArgumentException("Reset token has expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiry(null);
+        userRepository.save(user);
     }
 
     @Transactional
