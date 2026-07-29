@@ -36,12 +36,10 @@ services:
       - key: CLOUDINARY_API_SECRET
         sync: false
       - key: MAIL_ENABLED
-        value: true
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
-        sync: false
+        value: "true"
       - key: MAIL_FROM
+        sync: false
+      - key: RESEND_API_KEY
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false

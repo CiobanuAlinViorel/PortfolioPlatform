@@ -9,7 +9,6 @@ import {
     MessageResponse,
     RegisterRequest,
     RegisterResponse,
-    ResendVerificationRequest,
     ResetPasswordRequest,
 } from "../types";
 import { environment } from "../../../../environments/environment";
@@ -57,14 +56,6 @@ export class AuthService {
 
     resetPassword(req: ResetPasswordRequest): Observable<MessageResponse> {
         return this.http.post<MessageResponse>(`${API_URL}/reset-password`, req);
-    }
-
-    resendVerification(req: ResendVerificationRequest): Observable<MessageResponse> {
-        return this.http.post<MessageResponse>(`${API_URL}/resend-verification`, req);
-    }
-
-    verifyEmail(token: string): Observable<MessageResponse> {
-        return this.http.get<MessageResponse>(`${API_URL}/verify-email`, { params: { token } });
     }
 
     googleAuth(req: GoogleAuthRequest): Observable<AuthResponse> {

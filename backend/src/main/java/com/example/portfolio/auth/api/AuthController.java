@@ -7,7 +7,6 @@ import com.example.portfolio.auth.dto.GoogleAuthRequest;
 import com.example.portfolio.auth.dto.LoginRequest;
 import com.example.portfolio.auth.dto.RegisterRequest;
 import com.example.portfolio.auth.dto.RegisterResponse;
-import com.example.portfolio.auth.dto.ResendVerificationRequest;
 import com.example.portfolio.auth.dto.ResetPasswordRequest;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,12 +37,6 @@ public class AuthController {
         RegisterResponse res = authService.register(req);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(res);
-    }
-
-    @PostMapping("/resend-verification")
-    public ResponseEntity<Map<String, String>> resendVerification(@Valid @RequestBody ResendVerificationRequest req) {
-        authService.resendVerification(req);
-        return ResponseEntity.ok(Map.of("message", "If this email is registered and not yet verified, a new verification link has been sent"));
     }
 
     @PostMapping("/google")
@@ -83,12 +76,6 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
                 .body(Map.of("message", "Logged out successfully"));
-    }
-
-    @GetMapping("/verify-email")
-    public ResponseEntity<Map<String, String>> verifyEmail(@RequestParam String token) {
-        authService.verifyEmail(token);
-        return ResponseEntity.ok(Map.of("message", "Email verified successfully"));
     }
 
     @PostMapping("/forgot-password")

@@ -64,23 +64,22 @@ class AuthControllerTest {
                 .build();
     }
 
-    private RegisterResponse buildRegisterRes(String link) {
-        return new RegisterResponse(link, "user@test.com");
+    private RegisterResponse buildRegisterRes() {
+        return new RegisterResponse("user@test.com");
     }
 
 
     // ── POST /auth/register ───────────────────────────────────────────────────
 
     @Test
-    void register_shouldReturn201WithVerificationLinkAndNoCookie_whenRequestIsValid() throws Exception {
+    void register_shouldReturn201WithEmailAndNoCookie_whenRequestIsValid() throws Exception {
         RegisterRequest req = new RegisterRequest("user@test.com", "password123");
-        when(authService.register(any(RegisterRequest.class))).thenReturn(buildRegisterRes("https://app.test/verify?token=abc"));
+        when(authService.register(any(RegisterRequest.class))).thenReturn(buildRegisterRes());
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.link").value("https://app.test/verify?token=abc"))
                 .andExpect(jsonPath("$.email").value("user@test.com"))
                 .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
     }
@@ -222,27 +221,6 @@ class AuthControllerTest {
                 .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")));
 
         verify(authService, never()).logout(anyString());
-    }
-
-    // ── GET /auth/verify-email ────────────────────────────────────────────────
-
-    @Test
-    void verifyEmail_shouldReturn200_whenTokenIsValid() throws Exception {
-        doNothing().when(authService).verifyEmail("valid-token");
-
-        mockMvc.perform(get("/auth/verify-email").param("token", "valid-token"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Email verified successfully"));
-    }
-
-    @Test
-    void verifyEmail_shouldReturn400_whenTokenIsInvalidOrExpired() throws Exception {
-        doThrow(new IllegalArgumentException("Verification token has expired"))
-                .when(authService).verifyEmail("expired-token");
-
-        mockMvc.perform(get("/auth/verify-email").param("token", "expired-token"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Verification token has expired"));
     }
 
     // ── POST /auth/forgot-password ────────────────────────────────────────────

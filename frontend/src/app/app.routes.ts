@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { RegisterPage } from '../features/auth/register/components/register.page';
 import { LoginPage } from '../features/auth/login/components/login.page';
-import { ConfirmEmailPage } from '../features/auth/confirm-email/components/confirm-email.page';
 import { ForgotPasswordPage } from '../features/auth/forgot-password/components/forgot-password.page';
 import { ResetPasswordPage } from '../features/auth/reset-password/components/reset-password.page';
 import { HomePage } from '../features/home/components/home.component';
@@ -154,13 +153,6 @@ export const routes: Routes = [
         component: LoginPage,
         data: {
             seo: { title: 'Sign In', description: 'Sign in to your account on Alin-Viorel Ciobanu’s portfolio site.', ...AUTH_SEO_BASE } satisfies SeoData,
-        },
-    },
-    {
-        path: 'confirm-email',
-        component: ConfirmEmailPage,
-        data: {
-            seo: { title: 'Confirm Email', description: 'Confirm your email address to activate your account.', ...AUTH_SEO_BASE } satisfies SeoData,
         },
     },
     {

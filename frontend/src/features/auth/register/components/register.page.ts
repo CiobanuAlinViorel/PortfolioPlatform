@@ -55,8 +55,6 @@ export class RegisterPage implements AfterViewInit {
 
     readonly submitting = signal(false);
     readonly errorMessage = signal<string | null>(null);
-    readonly registeredEmail = signal<string | null>(null);
-    readonly resendSent = signal(false);
 
     readonly hidePassword = signal(true);
     readonly hideConfirmPassword = signal(true);
@@ -88,23 +86,14 @@ export class RegisterPage implements AfterViewInit {
         const { email, password } = this.form.getRawValue();
 
         this.authService.register({ email: email!, password: password! }).subscribe({
-            next: (res) => {
+            next: () => {
                 this.submitting.set(false);
-                this.registeredEmail.set(res.email);
+                this.router.navigate(["/login"]);
             },
             error: (err) => {
                 this.submitting.set(false);
                 this.errorMessage.set(this.extractErrorMessage(err));
             },
-        });
-    }
-
-    resendVerification(): void {
-        const email = this.registeredEmail();
-        if (!email) return;
-
-        this.authService.resendVerification({ email }).subscribe({
-            next: () => this.resendSent.set(true),
         });
     }
 

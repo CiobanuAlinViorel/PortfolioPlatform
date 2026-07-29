@@ -66,34 +66,6 @@ public class UserRepositoryTest {
         assertThat(exists).isFalse();
     }
 
-    // ── findByVerificationToken ───────────────────────────────────────────────
-
-    @Test
-    void findByVerificationToken_shouldReturnUser_whenTokenExists() {
-        User user = User.builder()
-                .email("verify@test.com")
-                .password("encoded-password")
-                .role(UserRole.USER)
-                .emailVerified(false)
-                .verificationToken("abc-verification-token")
-                .verificationTokenExpiry(LocalDateTime.now().plusHours(24))
-                .build();
-        userRepository.save(user);
-
-        Optional<User> result = userRepository.findByVerificationToken("abc-verification-token");
-
-        assertThat(result).isPresent();
-        assertThat(result.get().getEmail()).isEqualTo("verify@test.com");
-        assertThat(result.get().getVerificationToken()).isEqualTo("abc-verification-token");
-    }
-
-    @Test
-    void findByVerificationToken_shouldReturnEmpty_whenTokenDoesNotExist() {
-        Optional<User> result = userRepository.findByVerificationToken("unknown-token");
-
-        assertThat(result).isEmpty();
-    }
-
     // ── findByPasswordResetToken ──────────────────────────────────────────────
 
     @Test

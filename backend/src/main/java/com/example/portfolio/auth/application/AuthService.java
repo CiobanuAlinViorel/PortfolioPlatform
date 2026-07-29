@@ -7,7 +7,6 @@ import com.example.portfolio.auth.dto.ForgotPasswordRequest;
 import com.example.portfolio.auth.dto.LoginRequest;
 import com.example.portfolio.auth.dto.RegisterRequest;
 import com.example.portfolio.auth.dto.RegisterResponse;
-import com.example.portfolio.auth.dto.ResendVerificationRequest;
 import com.example.portfolio.auth.dto.ResetPasswordRequest;
 import com.example.portfolio.auth.persistence.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -16,7 +15,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -45,38 +43,20 @@ public class AuthService {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        String verificationToken = UUID.randomUUID().toString();
         String refreshToken = UUID.randomUUID().toString();
 
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(UserRole.USER)
-                .emailVerified(false)
-                .verificationToken(verificationToken)
-                .verificationTokenExpiry(LocalDateTime.now().plusDays(1))
+                .emailVerified(true)
                 .refreshToken(refreshToken)
                 .refreshTokenExpiry(LocalDateTime.now().plusDays(refreshTokenExpirationDays))
                 .build();
 
         User saved = userRepository.save(user);
-        String verificationLink = emailService.sendVerificationEmail(saved.getEmail(), verificationToken);
 
-        return new RegisterResponse(verificationLink, saved.getEmail());
-    }
-
-    @Transactional
-    public void resendVerification(ResendVerificationRequest request) {
-        // Always return without error to avoid leaking whether the email exists
-        userRepository.findByEmail(request.getEmail())
-                .filter(user -> !user.isEmailVerified())
-                .ifPresent(user -> {
-                    String verificationToken = UUID.randomUUID().toString();
-                    user.setVerificationToken(verificationToken);
-                    user.setVerificationTokenExpiry(LocalDateTime.now().plusDays(1));
-                    userRepository.save(user);
-                    emailService.sendVerificationEmail(user.getEmail(), verificationToken);
-                });
+        return new RegisterResponse(saved.getEmail());
     }
 
     @Transactional
@@ -121,15 +101,6 @@ public class AuthService {
                 .build();
     }
 
-    @Scheduled(fixedRateString = "${app.auth.unverified-purge-interval-ms:3600000}")
-    @Transactional
-    public void purgeExpiredUnverifiedUsers() {
-        long deleted = userRepository.deleteByEmailVerifiedFalseAndVerificationTokenExpiryBefore(LocalDateTime.now());
-        if (deleted > 0) {
-            log.info("Purged {} unverified user(s) with expired verification tokens", deleted);
-        }
-    }
-
     @Transactional
     public AuthResponse authenticate(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -152,22 +123,6 @@ public class AuthService {
                 .emailVerified(user.isEmailVerified())
                 .refreshToken(refreshToken)
                 .build();
-    }
-
-    @Transactional
-    public void verifyEmail(String token) {
-        User user = userRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired verification token"));
-
-        if (user.getVerificationTokenExpiry() == null
-                || LocalDateTime.now().isAfter(user.getVerificationTokenExpiry())) {
-            throw new IllegalArgumentException("Verification token has expired");
-        }
-
-        user.setEmailVerified(true);
-        user.setVerificationToken(null);
-        user.setVerificationTokenExpiry(null);
-        userRepository.save(user);
     }
 
     @Transactional

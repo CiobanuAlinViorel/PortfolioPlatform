@@ -1,17 +1,17 @@
 package com.example.portfolio.auth.application;
 
-import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
+import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -22,8 +22,15 @@ public class EmailService {
     // and inline CID attachments show up as a distracting "1 attachment" in Gmail.
     private static final String LOGO_URL = "https://res.cloudinary.com/detjbuy4n/image/upload/v1784374141/email/logo.png";
 
-    @Autowired(required = false)
-    private JavaMailSender mailSender;
+    // Resend is an HTTP API (port 443), unlike SMTP (port 587) which Render's free
+    // plan blocks outbound - see the connection timeout this replaced.
+    private static final String RESEND_API_URL = "https://api.resend.com/emails";
+
+    private final RestClient restClient;
+
+    public EmailService(RestClient restClient) {
+        this.restClient = restClient;
+    }
 
     @Value("${app.frontend-url:http://localhost:4200}")
     private String frontendUrl;
@@ -34,17 +41,8 @@ public class EmailService {
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
 
-    public String sendVerificationEmail(String to, String token) {
-        String link = frontendUrl + "/confirm-email?token=" + token;
-        String html = loadTemplate("email-templates/verification-email.html")
-                .replace("{{LOGO}}", LOGO_URL)
-                .replace("{{EMAIL}}", to)
-                .replace("{{LINK}}", link);
-        String plainText = "Please verify your email by clicking the link below:\n\n" + link
-                + "\n\nThis link expires in 24 hours.";
-        send(to, "Verify your email", plainText, html);
-        return link;
-    }
+    @Value("${app.mail.resend-api-key:}")
+    private String resendApiKey;
 
     public void sendPasswordResetEmail(String to, String token) {
         String link = frontendUrl + "/reset-password?token=" + token;
@@ -80,21 +78,28 @@ public class EmailService {
     }
 
     private void send(String to, String subject, String plainText, String html, String replyTo) {
-        if (!mailEnabled || mailSender == null) {
+        if (!mailEnabled || resendApiKey == null || resendApiKey.isBlank()) {
             log.info("[EMAIL SIMULATION] To: {} | Subject: {} | Body: {}", to, subject, plainText);
             return;
         }
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(mailFrom);
-            helper.setTo(to);
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("from", mailFrom);
+            payload.put("to", to);
+            payload.put("subject", subject);
+            payload.put("text", plainText);
+            payload.put("html", html);
             if (replyTo != null && !replyTo.isBlank()) {
-                helper.setReplyTo(replyTo);
+                payload.put("reply_to", replyTo);
             }
-            helper.setSubject(subject);
-            helper.setText(plainText, html);
-            mailSender.send(message);
+
+            restClient.post()
+                    .uri(RESEND_API_URL)
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(payload)
+                    .retrieve()
+                    .toBodilessEntity();
         } catch (Exception e) {
             log.warn("Failed to send email to {}: {}. Logging content instead.", to, e.getMessage());
             log.info("[EMAIL FALLBACK] To: {} | Subject: {} | Body: {}", to, subject, plainText);

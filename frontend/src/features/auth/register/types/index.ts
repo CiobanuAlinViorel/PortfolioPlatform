@@ -6,7 +6,6 @@ export interface RegisterRequest {
 }
 
 export interface RegisterResponse {
-    link: string;
     email: string;
 }
 
@@ -30,10 +29,6 @@ export interface ForgotPasswordRequest {
 export interface ResetPasswordRequest {
     token: string;
     newPassword: string;
-}
-
-export interface ResendVerificationRequest {
-    email: string;
 }
 
 export interface GoogleAuthRequest {

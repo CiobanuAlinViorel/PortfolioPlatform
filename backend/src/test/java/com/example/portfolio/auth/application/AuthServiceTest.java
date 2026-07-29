@@ -56,12 +56,10 @@ class AuthServiceTest {
         when(userRepository.existsByEmail("user@test.com")).thenReturn(false);
         when(passwordEncoder.encode("raw-password")).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(emailService.sendVerificationEmail(anyString(), anyString())).thenReturn("https://app.test/verify?token=abc");
 
         RegisterResponse result = authService.register(request);
 
         assertThat(result.email()).isEqualTo("user@test.com");
-
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
@@ -69,20 +67,18 @@ class AuthServiceTest {
         assertThat(savedUser.getEmail()).isEqualTo("user@test.com");
         assertThat(savedUser.getPassword()).isEqualTo("encoded-password");
         assertThat(savedUser.getRole()).isEqualTo(UserRole.USER);
-        assertThat(savedUser.isEmailVerified()).isFalse();
-        assertThat(savedUser.getVerificationToken()).isNotBlank();
+        assertThat(savedUser.isEmailVerified()).isTrue();
 
-        verify(emailService).sendVerificationEmail(eq("user@test.com"), anyString());
+        verifyNoInteractions(emailService);
     }
 
     @Test
-    void register_shouldSetFutureExpiryForVerificationAndRefreshTokens() {
+    void register_shouldSetFutureExpiryForRefreshToken() {
         RegisterRequest request = registerRequest("user@test.com", "raw-password");
 
         when(userRepository.existsByEmail("user@test.com")).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(emailService.sendVerificationEmail(anyString(), anyString())).thenReturn("https://app.test/verify?token=abc");
 
         authService.register(request);
 
@@ -90,7 +86,6 @@ class AuthServiceTest {
         verify(userRepository).save(userCaptor.capture());
         User savedUser = userCaptor.getValue();
 
-        assertThat(savedUser.getVerificationTokenExpiry()).isAfter(LocalDateTime.now());
         assertThat(savedUser.getRefreshTokenExpiry()).isAfter(LocalDateTime.now());
         assertThat(savedUser.getRefreshToken()).isNotBlank();
     }
@@ -197,87 +192,6 @@ class AuthServiceTest {
         verify(userRepository).findByEmail("user@test.com");
         verify(passwordEncoder).matches("wrong-password", "encoded-password");
         verifyNoInteractions(jwtService);
-    }
-
-    // ── verifyEmail ──────────────────────────────────────────────────────────
-
-    @Test
-    void verifyEmail_shouldMarkEmailVerified_whenTokenIsValidAndNotExpired() {
-        String token = "valid-verification-token";
-
-        User user = User.builder()
-                .email("user@test.com")
-                .role(UserRole.USER)
-                .emailVerified(false)
-                .verificationToken(token)
-                .verificationTokenExpiry(LocalDateTime.now().plusHours(12))
-                .build();
-
-        when(userRepository.findByVerificationToken(token)).thenReturn(Optional.of(user));
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        authService.verifyEmail(token);
-
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
-        User savedUser = userCaptor.getValue();
-
-        assertThat(savedUser.isEmailVerified()).isTrue();
-        assertThat(savedUser.getVerificationToken()).isNull();
-        assertThat(savedUser.getVerificationTokenExpiry()).isNull();
-    }
-
-    @Test
-    void verifyEmail_shouldThrowException_whenTokenNotFound() {
-        when(userRepository.findByVerificationToken("unknown-token")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> authService.verifyEmail("unknown-token"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid or expired verification token");
-
-        verify(userRepository).findByVerificationToken("unknown-token");
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    void verifyEmail_shouldThrowException_whenTokenIsExpired() {
-        String token = "expired-token";
-
-        User user = User.builder()
-                .email("user@test.com")
-                .role(UserRole.USER)
-                .verificationToken(token)
-                .verificationTokenExpiry(LocalDateTime.now().minusHours(1))
-                .build();
-
-        when(userRepository.findByVerificationToken(token)).thenReturn(Optional.of(user));
-
-        assertThatThrownBy(() -> authService.verifyEmail(token))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Verification token has expired");
-
-        verify(userRepository).findByVerificationToken(token);
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    void verifyEmail_shouldThrowException_whenTokenExpiryIsNull() {
-        String token = "token-without-expiry";
-
-        User user = User.builder()
-                .email("user@test.com")
-                .role(UserRole.USER)
-                .verificationToken(token)
-                .verificationTokenExpiry(null)
-                .build();
-
-        when(userRepository.findByVerificationToken(token)).thenReturn(Optional.of(user));
-
-        assertThatThrownBy(() -> authService.verifyEmail(token))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Verification token has expired");
-
-        verify(userRepository, never()).save(any(User.class));
     }
 
     // ── forgotPassword ───────────────────────────────────────────────────────
