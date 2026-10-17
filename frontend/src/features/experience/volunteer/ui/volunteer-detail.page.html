@@ -1,152 +1,167 @@
-<section class="min-h-[calc(100vh-3.5rem)] bg-beige-dark px-4 py-6 dark:bg-green-950 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-5xl">
-        <a routerLink="/experience/volunteer"
-            class="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-900 hover:underline dark:text-beige-light">
-            <svg lucideArrowLeft class="h-4 w-4"></svg>
-            Back to Volunteer Experience
-        </a>
-
-        @if (loading()) {
-        <div class="flex justify-center py-24 text-emerald-900 dark:text-beige-light">Loading...</div>
-        } @else if (errorMessage()) {
-        <div class="flex justify-center py-24 text-red-700 dark:text-red-300">{{ errorMessage() }}</div>
-        } @else if (item(); as v) {
-
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:items-start">
-            <div class="flex flex-col gap-4 lg:sticky lg:top-20 lg:col-span-1">
-                <div class="rounded-lg bg-beige-light p-4 shadow-sm dark:bg-green-900">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-emerald-900/10 text-emerald-800 dark:bg-beige-light/10 dark:text-beige-light">
-                            <svg lucideHeartHandshake class="h-5 w-5"></svg>
-                        </div>
-                        <div>
-                            <h1 class="text-lg font-bold text-emerald-900 dark:text-beige-light">{{ v.organization }}</h1>
-                            <p class="text-sm text-emerald-900/70 dark:text-beige-light/70">{{ v.role }}</p>
-                        </div>
-                    </div>
-
-                    <span class="mt-3 inline-block rounded-full bg-emerald-800/10 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-beige-light/10 dark:text-beige-light">
-                        {{ v.status }}
-                    </span>
-
-                    @if (v.description) {
-                    <p class="mt-3 text-xs leading-relaxed text-emerald-900/90 dark:text-beige-light/90">{{ v.description }}</p>
-                    }
-
-                    <div class="mt-3 flex flex-col gap-1.5 text-xs text-emerald-900/70 dark:text-beige-light/70">
-                        <span class="flex items-center gap-1.5">
-                            <svg lucideCalendar class="h-3.5 w-3.5"></svg>
-                            {{ v.startDate | date:"MMM y" }} - {{ v.endDate ? (v.endDate | date:"MMM y") : "Present" }}
-                        </span>
-                        <span class="flex items-center gap-1.5">
-                            <span class="rounded-full bg-emerald-900/10 px-2 py-0.5 text-xs font-medium text-emerald-900 dark:bg-beige-light/10 dark:text-beige-light">
-                                {{ v.type }}
-                            </span>
-                        </span>
-                        @if (v.location) {
-                        <span class="flex items-center gap-1.5">
-                            <svg lucideMapPin class="h-3.5 w-3.5"></svg>
-                            {{ v.location }}
-                        </span>
-                        }
-                        @if (v.hoursPerWeek) {
-                        <span class="flex items-center gap-1.5">
-                            <svg lucideClock class="h-3.5 w-3.5"></svg>
-                            {{ v.hoursPerWeek }}h/week
-                        </span>
-                        }
-                        @if (v.totalHours) {
-                        <span class="flex items-center gap-1.5">{{ v.totalHours }}h total</span>
-                        }
-                    </div>
-
-                    @if (v.website) {
-                    <a [href]="v.website" target="_blank" rel="noopener"
-                        class="mt-3 inline-flex items-center gap-1.5 rounded-md bg-black/5 px-3 py-1.5 text-xs font-medium text-emerald-900 transition-colors duration-150 ease-out hover:bg-black/10 dark:bg-white/10 dark:text-beige-light dark:hover:bg-white/20">
-                        <svg lucideGlobe class="h-3.5 w-3.5"></svg>
-                        Visit Website
-                    </a>
-                    }
-
-                    @if (v.impactDescription) {
-                    <div class="mt-3 rounded-md bg-emerald-900/5 p-3 dark:bg-beige-light/5">
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-emerald-900/60 dark:text-beige-light/60">Impact</h3>
-                        <p class="mt-1 text-xs text-emerald-900/90 dark:text-beige-light/90">{{ v.impactDescription }}</p>
-                    </div>
-                    }
-                </div>
-
-                @if (v.responsibilities.length > 0) {
-                <div class="rounded-lg bg-beige-light p-4 shadow-sm dark:bg-green-900">
-                    <h2 class="mb-2 text-sm font-semibold text-emerald-900 dark:text-beige-light">Responsibilities</h2>
-                    <div class="flex flex-col gap-2">
-                        @for (resp of v.responsibilities; track resp.id) {
-                        <div class="flex items-start justify-between gap-2 border-t border-black/5 pt-2 first:border-t-0 first:pt-0 dark:border-white/5">
-                            <p class="text-xs text-emerald-900/90 dark:text-beige-light/90">{{ resp.description }}</p>
-                            <span class="shrink-0 rounded-full bg-emerald-800/10 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-beige-light/10 dark:text-beige-light">
-                                {{ resp.impactLevel }}
-                            </span>
-                        </div>
-                        }
-                    </div>
-                </div>
-                }
-            </div>
-
-            <div class="lg:col-span-2">
-                @if (v.projects.length > 0) {
-                <h2 class="mb-2 text-sm font-semibold text-emerald-900 dark:text-beige-light">Projects</h2>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    @for (vp of v.projects; track vp.project.id) {
-                    <div class="flex flex-col gap-2 rounded-lg bg-beige-light p-4 shadow-sm dark:bg-green-900">
-                        <div class="flex items-start justify-between gap-2">
-                            <h3 class="text-sm font-medium text-emerald-900 dark:text-beige-light">{{ vp.project.title }}</h3>
-                            <span class="shrink-0 text-xs font-medium text-emerald-900/60 dark:text-beige-light/60">{{ vp.contributionPercentage }}%</span>
-                        </div>
-                        @if (vp.project.description) {
-                        <p class="text-xs text-emerald-900/70 dark:text-beige-light/70">{{ vp.project.description }}</p>
-                        }
-                        @if (vp.project.tags.length > 0) {
-                        <div class="flex flex-wrap gap-1.5">
-                            @for (tag of vp.project.tags; track tag) {
-                            <span class="rounded-full bg-emerald-900/10 px-2 py-0.5 text-xs font-medium text-emerald-900 dark:bg-beige-light/10 dark:text-beige-light">
-                                {{ tag }}
-                            </span>
-                            }
-                        </div>
-                        }
-                        <div class="flex items-center gap-3 text-xs">
-                            @if (vp.project.demoUrl) {
-                            <a [href]="vp.project.demoUrl" target="_blank" rel="noopener"
-                                class="flex items-center gap-1 font-medium text-emerald-800 hover:underline dark:text-beige-light">
-                                <svg lucideExternalLink class="h-3.5 w-3.5"></svg>
-                                Demo
-                            </a>
-                            }
-                            @if (vp.project.githubUrl) {
-                            <a [href]="vp.project.githubUrl" target="_blank" rel="noopener"
-                                class="flex items-center gap-1 font-medium text-emerald-800 hover:underline dark:text-beige-light">
-                                <svg lucideCode class="h-3.5 w-3.5"></svg>
-                                Source
-                            </a>
-                            }
-                        </div>
-
-                        <a [routerLink]="['/projects', vp.project.id]"
-                            class="flex items-center justify-center gap-1.5 rounded-md bg-emerald-800/10 px-3 py-1.5 text-xs font-medium text-emerald-800 transition-colors duration-150 ease-out hover:bg-emerald-800/20 dark:bg-beige-light/10 dark:text-beige-light dark:hover:bg-beige-light/20">
-                            View project details
-                            <svg lucideExternalLink class="h-3.5 w-3.5"></svg>
-                        </a>
-                    </div>
-                    }
-                </div>
-                } @else {
-                <div class="flex flex-col items-center justify-center gap-2 rounded-lg bg-beige-light p-8 text-center text-sm text-emerald-900/60 shadow-sm dark:bg-green-900 dark:text-beige-light/60">
-                    No linked projects yet.
-                </div>
-                }
-            </div>
+<section class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+  @if (loading()) {
+    <div class="space-y-8" aria-busy="true">
+      <app-skeleton class="h-4 w-56" />
+      <div class="flex flex-col gap-5 rounded-panel border border-border bg-surface-raised p-6 sm:flex-row sm:items-start sm:p-8">
+        <app-skeleton class="h-16 w-16 rounded-2xl" />
+        <div class="flex-1 space-y-3">
+          <app-skeleton class="h-10 w-2/3" />
+          <app-skeleton class="h-5 w-1/3" />
+          <app-skeleton class="h-4 w-1/2" />
         </div>
-        }
+      </div>
+      <div class="grid gap-5 lg:grid-cols-[1fr_2fr]"><app-skeleton class="h-48 rounded-card" /><app-skeleton class="h-48 rounded-card" /></div>
     </div>
+  } @else if (notFound()) {
+    <app-error-state title="Role not found" message="This volunteer experience doesn't exist or was removed." [showRetry]="false">
+      <app-button variant="primary" size="sm" link="/experience/volunteer">
+        <svg lucideArrowLeft class="h-4 w-4"></svg>
+        Back to volunteer experience
+      </app-button>
+    </app-error-state>
+  } @else if (item(); as v) {
+    <app-breadcrumb [items]="breadcrumb()" class="mb-8" />
+
+    <header class="relative overflow-hidden rounded-panel border border-border bg-surface-raised p-6 shadow-elev-1 sm:p-8">
+      <div class="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-info/10 blur-3xl" aria-hidden="true"></div>
+      <div class="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div class="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+          <span class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-info-soft text-info">
+            <svg lucideHeartHandshake class="h-7 w-7"></svg>
+          </span>
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <app-badge variant="neutral" size="md">{{ v.type | enumLabel }}</app-badge>
+              <app-badge [variant]="statusVariant(v.status)" [dot]="true" size="md">{{ v.status | enumLabel }}</app-badge>
+            </div>
+            <h1 class="mt-3 text-title font-semibold text-fg">{{ v.organization }}</h1>
+            <p class="mt-1 text-lg text-fg-muted">{{ v.role }}</p>
+            <dl class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-fg-muted">
+              <div class="inline-flex items-center gap-2">
+                <svg lucideCalendar class="h-4 w-4 text-accent"></svg>
+                <dt class="sr-only">Period</dt>
+                <dd>{{ v.startDate | date: 'MMM y' }} – {{ v.endDate ? (v.endDate | date: 'MMM y') : 'Present' }} <span class="text-fg-subtle">· {{ durationLabel() }}</span></dd>
+              </div>
+              @if (v.location) {
+                <div class="inline-flex items-center gap-2">
+                  <svg lucideMapPin class="h-4 w-4 text-accent"></svg>
+                  <dt class="sr-only">Location</dt>
+                  <dd>{{ v.location }}</dd>
+                </div>
+              }
+              <div class="inline-flex items-center gap-2">
+                <svg lucideFolderKanban class="h-4 w-4 text-accent"></svg>
+                <dt class="sr-only">Projects</dt>
+                <dd>{{ v.projects.length }} project{{ v.projects.length === 1 ? '' : 's' }}</dd>
+              </div>
+            </dl>
+            @if (v.website) {
+              <div class="mt-5">
+                <app-button variant="secondary" size="sm" [href]="v.website" target="_blank">
+                  <svg lucideGlobe class="h-4 w-4"></svg>
+                  Website
+                  <svg lucideExternalLink class="h-3.5 w-3.5"></svg>
+                </app-button>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (v.hoursPerWeek || v.totalHours) {
+          <div class="grid shrink-0 grid-cols-2 gap-3">
+            @if (v.hoursPerWeek) {
+              <div class="rounded-card border border-border bg-surface px-5 py-4 text-center">
+                <app-stat [value]="v.hoursPerWeek" label="h / week" />
+              </div>
+            }
+            @if (v.totalHours) {
+              <div class="rounded-card border border-border bg-surface px-5 py-4 text-center">
+                <app-stat [value]="v.totalHours" label="Total hours" />
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </header>
+
+    <div class="mt-12 grid gap-10 lg:grid-cols-[1fr_1.6fr]">
+      <div class="flex flex-col gap-8">
+        @if (v.description) {
+          <section aria-labelledby="vol-about">
+            <h2 id="vol-about" class="mb-3 font-brand text-2xl font-semibold text-fg">About</h2>
+            <p class="prose-like text-base text-fg-muted">{{ v.description }}</p>
+          </section>
+        }
+
+        @if (v.impactDescription) {
+          <section appReveal aria-labelledby="vol-impact" class="flex gap-3 rounded-card border-l-4 border-accent bg-accent-soft/40 p-5">
+            <svg lucideSparkles class="mt-1 h-5 w-5 shrink-0 text-accent"></svg>
+            <div>
+              <h2 id="vol-impact" class="text-xs font-semibold uppercase tracking-wide text-accent">Impact</h2>
+              <p class="mt-1.5 text-base leading-relaxed text-fg">{{ v.impactDescription }}</p>
+            </div>
+          </section>
+        }
+
+        @if (responsibilities().length) {
+          <section aria-labelledby="vol-responsibilities">
+            <h2 id="vol-responsibilities" class="mb-4 font-brand text-2xl font-semibold text-fg">Responsibilities</h2>
+            <ul class="flex flex-col gap-2.5">
+              @for (r of responsibilities(); track $index; let i = $index) {
+                <li appReveal [appRevealIndex]="i % 6" class="flex items-start justify-between gap-3 rounded-xl border border-border bg-surface-raised p-4 text-sm leading-relaxed text-fg">
+                  <span>{{ r.description }}</span>
+                  <app-badge [variant]="statusVariant(r.impactLevel)" [dot]="true">{{ r.impactLevel | enumLabel }} impact</app-badge>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+
+      <section aria-labelledby="vol-projects">
+        <h2 id="vol-projects" class="mb-4 font-brand text-2xl font-semibold text-fg">Projects</h2>
+        @if (v.projects.length) {
+          <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            @for (vp of v.projects; track vp.project.id; let i = $index) {
+              <div appReveal [appRevealIndex]="i % 4" class="flex flex-col gap-3">
+                <app-project-card [project]="vp.project" [compact]="true" />
+                <div class="flex items-center gap-3 px-1 text-xs text-fg-muted">
+                  <span class="shrink-0">Contribution</span>
+                  <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-muted" role="progressbar" [attr.aria-valuenow]="vp.contributionPercentage" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Contribution to ' + vp.project.title">
+                    <div class="h-full rounded-full bg-gradient-to-r from-accent to-accent-hover" [style.width.%]="vp.contributionPercentage"></div>
+                  </div>
+                  <span class="shrink-0 font-semibold tabular-nums text-fg">{{ vp.contributionPercentage }}%</span>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="rounded-card border border-dashed border-border p-6 text-center text-sm text-fg-muted">No projects linked to this role yet.</p>
+        }
+      </section>
+    </div>
+
+    @if (neighbours().prev || neighbours().next) {
+      <nav class="mt-16 grid gap-4 border-t border-border pt-10 sm:grid-cols-2" aria-label="Other volunteer roles">
+        @if (neighbours().prev; as prev) {
+          <a [routerLink]="['/experience/volunteer', prev.id]" class="group flex items-center gap-4 rounded-card border border-border bg-surface-raised p-5 shadow-elev-1 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-elev-2">
+            <svg lucideArrowLeft class="h-5 w-5 shrink-0 text-fg-subtle transition-transform motion-safe:group-hover:-translate-x-0.5"></svg>
+            <div class="min-w-0">
+              <p class="text-xs font-semibold uppercase tracking-wide text-fg-subtle">More recent</p>
+              <p class="truncate font-semibold text-fg group-hover:text-accent">{{ prev.role }} · {{ prev.organization }}</p>
+            </div>
+          </a>
+        } @else { <span></span> }
+        @if (neighbours().next; as next) {
+          <a [routerLink]="['/experience/volunteer', next.id]" class="group flex items-center justify-end gap-4 rounded-card border border-border bg-surface-raised p-5 text-right shadow-elev-1 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-elev-2">
+            <div class="min-w-0">
+              <p class="text-xs font-semibold uppercase tracking-wide text-fg-subtle">Earlier</p>
+              <p class="truncate font-semibold text-fg group-hover:text-accent">{{ next.role }} · {{ next.organization }}</p>
+            </div>
+            <svg lucideArrowRight class="h-5 w-5 shrink-0 text-fg-subtle transition-transform motion-safe:group-hover:translate-x-0.5"></svg>
+          </a>
+        }
+      </nav>
+    }
+  }
 </section>

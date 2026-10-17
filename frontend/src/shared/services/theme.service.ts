@@ -19,13 +19,17 @@ export class ThemeService {
     setTheme(): void {
         if (!this.isBrowser) return;
 
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        this.applyTheme(prefersDark ? 'dark' : 'light');
+        const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null;
+        const theme = stored ? (stored as 'light' | 'dark') : 
+            (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        this.applyTheme(theme);
     }
 
     toggleTheme(): void {
         if (!this.isBrowser) return;
-        this.applyTheme(this.themeSignal() === 'light' ? 'dark' : 'light');
+        const newTheme = this.themeSignal() === 'light' ? 'dark' : 'light';
+        if (typeof localStorage !== 'undefined') localStorage.setItem('theme', newTheme);
+        this.applyTheme(newTheme);
     }
 
     private applyTheme(theme: 'light' | 'dark'): void {

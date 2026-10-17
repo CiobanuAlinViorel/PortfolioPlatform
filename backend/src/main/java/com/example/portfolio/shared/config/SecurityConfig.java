@@ -42,25 +42,32 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Public auth endpoints
                         .requestMatchers(
                                 "/auth/register",
                                 "/auth/login",
                                 "/auth/refresh",
                                 "/auth/logout",
-                                "/auth/google",
+                                "/auth/google"
+                        ).permitAll()
+                        // API documentation
+                        .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        // PUBLIC PORTFOLIO CONTENT - All GET requests are public
                         .requestMatchers(HttpMethod.GET, "/profile/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/contact").permitAll()
                         .requestMatchers(HttpMethod.GET, "/skills/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/projects/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/experience/jobs", "/experience/jobs/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/experience/volunteers", "/experience/volunteers/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/experience/jobs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/experience/volunteers/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/certificates/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/hobbies/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/education/**").permitAll()
+                        // Public contact form
+                        .requestMatchers(HttpMethod.POST, "/contact").permitAll()
+                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e

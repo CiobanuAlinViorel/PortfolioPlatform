@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
@@ -7,16 +7,16 @@ import { FooterComponent } from '../shared/components/footer.component';
 import { ThemeService } from '../shared/services/theme.service';
 import { SeoData, SeoService } from '../shared/services/seo.service';
 import { SidebarComponent } from '../features/admin/components/sidebar.component';
+import { SlowRequestBannerComponent } from '../shared/components/slow-request-banner.component';
+import { ToastHostComponent } from '../shared/components/toast-host.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent, FooterComponent, SidebarComponent],
+  imports: [RouterOutlet, HeaderComponent, FooterComponent, SidebarComponent, SlowRequestBannerComponent, ToastHostComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App implements OnInit, OnDestroy {
-  protected readonly title = signal('Portfolio');
-
+export class App implements OnInit {
   private readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
@@ -25,7 +25,6 @@ export class App implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.themeService.setTheme();
-    console.log('Initial theme set to', this.themeService.getTheme());
 
     this.router.events
       .pipe(
@@ -49,9 +48,7 @@ export class App implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    this.themeService.toggleTheme();
-  }
+  ngOnDestroy(): void {}
 
   isAdminRoute(): boolean {
     return this.router.url.startsWith('/admin');

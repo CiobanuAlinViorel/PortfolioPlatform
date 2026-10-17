@@ -41,8 +41,14 @@ built with Java Spring Boot (backend) and Angular (frontend).
 PortfolioPlatform/
 ├── backend/ # Spring Boot REST API
 ├── frontend/ # Angular application
-├── docs/ # Architecture and API notes
+├── docs/ # Plans and diagrams
 └── render.yaml # Render deployment config
+
+## Docs
+
+- `docs/MODERN_UI_PLAN.md` — visual/interaction modernization plan for the public site
+- `docs/UI_UX_IMPROVEMENT_PLAN.md` — structural UI/UX rules (a11y, data, component APIs)
+- `docs/db-schema.png` — database diagram
 
 
 ## Running Locally

@@ -1,237 +1,327 @@
-<section class="min-h-[calc(100vh-3.5rem)] bg-beige-dark px-4 py-10 dark:bg-green-950 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-6xl">
-        <a routerLink="/projects"
-            class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-emerald-900 hover:underline dark:text-beige-light">
-            <svg lucideArrowLeft class="h-4 w-4"></svg>
-            Back to Projects
-        </a>
-
-        @if (loading()) {
-        <div class="flex justify-center py-24 text-emerald-900 dark:text-beige-light">Loading...</div>
-        } @else if (errorMessage()) {
-        <div class="flex justify-center py-24 text-red-700 dark:text-red-300">{{ errorMessage() }}</div>
-        } @else if (project(); as p) {
-
-        <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <!-- Gallery -->
-            <div class="flex flex-col gap-3">
-                <div class="aspect-video w-full overflow-hidden rounded-xl bg-black/5 shadow-sm dark:bg-white/5">
-                    @if (mainImage(); as img) {
-                    <img [src]="img.imageUrl" [alt]="img.altText || p.title" class="h-full w-full object-cover" />
-                    } @else {
-                    <div class="flex h-full w-full items-center justify-center text-emerald-900/30 dark:text-beige-light/30">
-                        <svg lucideCode class="h-12 w-12"></svg>
-                    </div>
-                    }
-                </div>
-
-                @if (orderedMedia().length > 1) {
-                <div class="flex gap-2 overflow-x-auto pb-1">
-                    @for (media of orderedMedia(); track media.id; let i = $index) {
-                    <button type="button" (click)="selectImage(i)"
-                        class="h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 transition-colors duration-150 ease-out"
-                        [class.border-emerald-800]="selectedImageIndex() === i"
-                        [class.dark:border-beige-light]="selectedImageIndex() === i"
-                        [class.border-transparent]="selectedImageIndex() !== i">
-                        <img [src]="media.imageUrl" [alt]="media.altText || p.title" class="h-full w-full object-cover" />
-                    </button>
-                    }
-                </div>
-                }
-            </div>
-
-            <!-- Header info -->
-            <div class="flex flex-col justify-center gap-4">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <h1 class="text-3xl font-bold text-emerald-900 dark:text-beige-light sm:text-4xl">{{ p.title }}</h1>
-                    <span class="shrink-0 rounded-full bg-emerald-800/10 px-3 py-1 text-sm font-medium text-emerald-800 dark:bg-beige-light/10 dark:text-beige-light">
-                        {{ p.status }}
-                    </span>
-                </div>
-
-                @if (p.description) {
-                <p class="text-base text-emerald-900/80 dark:text-beige-light/80">{{ p.description }}</p>
-                }
-
-                <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-emerald-900/70 dark:text-beige-light/70">
-                    @if (p.year) {
-                    <span class="flex items-center gap-1.5"><svg lucideCalendar class="h-4 w-4"></svg>{{ p.year }}</span>
-                    }
-                    <span class="flex items-center gap-1.5"><svg lucideLayers class="h-4 w-4"></svg>{{ p.complexity }}</span>
-                    @if (p.categoryName) {
-                    <span class="flex items-center gap-1.5"><svg lucideTag class="h-4 w-4"></svg>{{ p.categoryName }}</span>
-                    }
-                    @if (p.developmentTime) {
-                    <span class="flex items-center gap-1.5">{{ p.developmentTime }}h development</span>
-                    }
-                </div>
-
-                <div class="flex flex-wrap gap-3">
-                    @if (p.demoUrl) {
-                    <a [href]="p.demoUrl" target="_blank" rel="noopener"
-                        class="flex items-center gap-2 rounded-md bg-emerald-800 px-4 py-2 text-sm font-medium text-beige-light shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md">
-                        <svg lucideExternalLink class="h-4 w-4"></svg>
-                        Live Demo
-                    </a>
-                    }
-                    @if (p.githubUrl) {
-                    <a [href]="p.githubUrl" target="_blank" rel="noopener"
-                        class="flex items-center gap-2 rounded-md bg-black/5 px-4 py-2 text-sm font-medium text-emerald-900 transition-colors duration-150 ease-out hover:bg-black/10 dark:bg-white/10 dark:text-beige-light dark:hover:bg-white/20">
-                        <svg lucideCode class="h-4 w-4"></svg>
-                        Source Code
-                    </a>
-                    }
-                </div>
-            </div>
+<section class="mx-auto max-w-6xl px-4 py-10 pb-28 sm:px-6 sm:py-14 md:pb-14 lg:px-8">
+  @if (loading()) {
+    <div class="space-y-10" aria-busy="true">
+      <app-skeleton class="h-4 w-48" />
+      <div class="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <app-skeleton class="aspect-video w-full rounded-panel" />
+        <div class="space-y-5">
+          <div class="flex gap-2"><app-skeleton class="h-6 w-24 rounded-full" /><app-skeleton class="h-6 w-28 rounded-full" /></div>
+          <app-skeleton class="h-12 w-4/5" />
+          <app-skeleton class="h-4 w-full" />
+          <app-skeleton class="h-4 w-11/12" />
+          <app-skeleton class="h-4 w-2/3" />
+          <div class="flex gap-3 pt-2"><app-skeleton class="h-11 w-36" /><app-skeleton class="h-11 w-36" /></div>
         </div>
-
-        <!-- Tabs -->
-        @if (tabs().length > 0) {
-        <div class="mt-10 rounded-xl bg-beige-light shadow-sm dark:bg-green-900">
-            <div class="flex gap-1 overflow-x-auto border-b border-black/5 px-4 dark:border-white/5">
-                @for (tab of tabs(); track tab.id) {
-                <button type="button" (click)="selectTab(tab.id)"
-                    class="shrink-0 border-b-2 px-4 py-3 text-sm font-medium transition-colors duration-150 ease-out"
-                    [class.border-emerald-800]="activeTab() === tab.id"
-                    [class.text-emerald-900]="activeTab() === tab.id"
-                    [class.dark:border-beige-light]="activeTab() === tab.id"
-                    [class.dark:text-beige-light]="activeTab() === tab.id"
-                    [class.border-transparent]="activeTab() !== tab.id"
-                    [class.text-emerald-900/50]="activeTab() !== tab.id"
-                    [class.dark:text-beige-light/50]="activeTab() !== tab.id"
-                    [class.hover:text-emerald-800]="activeTab() !== tab.id"
-                    [class.dark:hover:text-beige-light]="activeTab() !== tab.id">
-                    {{ tab.label }}
-                </button>
-                }
-            </div>
-
-            <div class="p-6 sm:p-8">
-                @switch (activeTab()) {
-                    @case ("overview") {
-                    <div class="flex flex-col gap-4">
-                        @if (p.longDescription) {
-                        <p class="whitespace-pre-line text-sm leading-relaxed text-emerald-900/90 dark:text-beige-light/90">
-                            {{ p.longDescription }}
-                        </p>
-                        } @else if (p.description) {
-                        <p class="text-sm leading-relaxed text-emerald-900/90 dark:text-beige-light/90">{{ p.description }}</p>
-                        }
-                    </div>
-                    }
-
-                    @case ("features") {
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        @for (feature of p.features; track feature.id) {
-                        <div class="rounded-lg bg-black/5 p-4 dark:bg-white/5">
-                            <h3 class="font-medium text-emerald-900 dark:text-beige-light">{{ feature.title }}</h3>
-                            @if (feature.description) {
-                            <p class="mt-1 text-sm text-emerald-900/70 dark:text-beige-light/70">{{ feature.description }}</p>
-                            }
-                        </div>
-                        }
-                    </div>
-                    }
-
-                    @case ("challenges") {
-                    <div class="flex flex-col gap-3">
-                        @for (challenge of p.challenges; track challenge.id) {
-                        <div class="rounded-lg bg-black/5 p-4 dark:bg-white/5">
-                            <div class="flex items-center justify-between gap-2">
-                                <h3 class="font-medium text-emerald-900 dark:text-beige-light">{{ challenge.title }}</h3>
-                                <span class="shrink-0 rounded-full bg-emerald-800/10 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-beige-light/10 dark:text-beige-light">
-                                    {{ challenge.difficulty }}
-                                </span>
-                            </div>
-                            <p class="mt-1 text-sm text-emerald-900/70 dark:text-beige-light/70">{{ challenge.description }}</p>
-                            @if (challenge.solution) {
-                            <p class="mt-2 text-sm text-emerald-800 dark:text-beige-light/90"><strong>Solution:</strong> {{ challenge.solution }}</p>
-                            }
-                        </div>
-                        }
-                    </div>
-                    }
-
-                    @case ("tech") {
-                    <div class="flex flex-wrap gap-2">
-                        @for (skill of p.skills; track skill.id) {
-                        <span class="rounded-full bg-emerald-900/10 px-3 py-1 text-sm font-medium text-emerald-900 dark:bg-beige-light/10 dark:text-beige-light">
-                            {{ skill.name }}
-                        </span>
-                        }
-                    </div>
-                    }
-
-                    @case ("metrics") {
-                    @if (p.metrics; as metrics) {
-                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                        @if (metrics.usersCount) {
-                        <div class="rounded-lg bg-black/5 p-4 text-center dark:bg-white/5">
-                            <div class="text-xl font-bold text-emerald-900 dark:text-beige-light">{{ metrics.usersCount }}</div>
-                            <div class="text-xs text-emerald-900/60 dark:text-beige-light/60">Users</div>
-                        </div>
-                        }
-                        @if (metrics.linesOfCode) {
-                        <div class="rounded-lg bg-black/5 p-4 text-center dark:bg-white/5">
-                            <div class="text-xl font-bold text-emerald-900 dark:text-beige-light">{{ metrics.linesOfCode }}</div>
-                            <div class="text-xs text-emerald-900/60 dark:text-beige-light/60">Lines of Code</div>
-                        </div>
-                        }
-                        @if (metrics.commitsCount) {
-                        <div class="rounded-lg bg-black/5 p-4 text-center dark:bg-white/5">
-                            <div class="text-xl font-bold text-emerald-900 dark:text-beige-light">{{ metrics.commitsCount }}</div>
-                            <div class="text-xs text-emerald-900/60 dark:text-beige-light/60">Commits</div>
-                        </div>
-                        }
-                        @if (metrics.testCoveragePercentage) {
-                        <div class="rounded-lg bg-black/5 p-4 text-center dark:bg-white/5">
-                            <div class="text-xl font-bold text-emerald-900 dark:text-beige-light">{{ metrics.testCoveragePercentage }}%</div>
-                            <div class="text-xs text-emerald-900/60 dark:text-beige-light/60">Test Coverage</div>
-                        </div>
-                        }
-                        @if (metrics.performanceScore) {
-                        <div class="rounded-lg bg-black/5 p-4 text-center dark:bg-white/5">
-                            <div class="text-xl font-bold text-emerald-900 dark:text-beige-light">{{ metrics.performanceScore }}</div>
-                            <div class="text-xs text-emerald-900/60 dark:text-beige-light/60">Performance</div>
-                        </div>
-                        }
-                        @if (metrics.codeQualityScore) {
-                        <div class="rounded-lg bg-black/5 p-4 text-center dark:bg-white/5">
-                            <div class="text-xl font-bold text-emerald-900 dark:text-beige-light">{{ metrics.codeQualityScore }}</div>
-                            <div class="text-xs text-emerald-900/60 dark:text-beige-light/60">Code Quality</div>
-                        </div>
-                        }
-                    </div>
-                    }
-                    }
-
-                    @case ("achievements") {
-                    <div class="flex flex-col gap-3">
-                        @for (achievement of p.achievements; track achievement.title) {
-                        <div class="rounded-lg bg-black/5 p-4 dark:bg-white/5">
-                            <h3 class="font-medium text-emerald-900 dark:text-beige-light">{{ achievement.title }}</h3>
-                            <p class="mt-1 text-sm text-emerald-900/70 dark:text-beige-light/70">{{ achievement.description }}</p>
-                            @if (achievement.impactSummary) {
-                            <p class="mt-2 text-sm text-emerald-800 dark:text-beige-light/90">{{ achievement.impactSummary }}</p>
-                            }
-                        </div>
-                        }
-                    </div>
-                    }
-
-                    @case ("tags") {
-                    <div class="flex flex-wrap gap-2">
-                        @for (tag of p.tags; track tag) {
-                        <span class="rounded-full border border-emerald-900/20 px-3 py-1 text-xs font-medium text-emerald-900/70 dark:border-beige-light/20 dark:text-beige-light/70">
-                            #{{ tag }}
-                        </span>
-                        }
-                    </div>
-                    }
-                }
-            </div>
-        </div>
-        }
-        }
+      </div>
+      <div class="flex gap-2"><app-skeleton class="h-10 w-28 rounded-full" /><app-skeleton class="h-10 w-28 rounded-full" /><app-skeleton class="h-10 w-28 rounded-full" /></div>
+      <app-skeleton class="h-40 w-full rounded-card" />
     </div>
+  } @else if (notFound()) {
+    <app-error-state title="Project not found" message="This project doesn't exist or is no longer public." [showRetry]="false">
+      <app-button variant="primary" size="sm" link="/projects">
+        <svg lucideArrowLeft class="h-4 w-4"></svg>
+        Back to projects
+      </app-button>
+    </app-error-state>
+  } @else if (project(); as p) {
+    <app-breadcrumb [items]="breadcrumb()" class="mb-8" />
+
+    <!-- Header -->
+    <div class="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+      <!-- Gallery -->
+      <div class="flex flex-col gap-3" (keydown)="onGalleryKeydown($event)" tabindex="0" role="group" aria-label="Project gallery" [attr.aria-roledescription]="orderedMedia().length > 1 ? 'carousel' : null">
+        <div class="group relative aspect-video overflow-hidden rounded-panel border border-border bg-surface-muted shadow-elev-2">
+          @if (mainImage(); as img) {
+            <button type="button" class="block h-full w-full cursor-zoom-in" (click)="lightboxOpen.set(true)" aria-label="Open image in full size">
+              <img [src]="img.imageUrl" [alt]="img.altText || img.title || p.title" fetchpriority="high" decoding="async" class="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.02]" />
+            </button>
+            @if (orderedMedia().length > 1) {
+              <button type="button" (click)="stepImage(-1)" aria-label="Previous image"
+                class="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface-overlay/85 text-fg shadow-elev-2 backdrop-blur transition-opacity hover:bg-surface-overlay md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100">
+                <svg lucideChevronLeft class="h-5 w-5"></svg>
+              </button>
+              <button type="button" (click)="stepImage(1)" aria-label="Next image"
+                class="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface-overlay/85 text-fg shadow-elev-2 backdrop-blur transition-opacity hover:bg-surface-overlay md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100">
+                <svg lucideChevronRight class="h-5 w-5"></svg>
+              </button>
+              <span class="absolute bottom-3 right-3 rounded-full bg-black/50 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur" aria-live="polite">{{ selectedImageIndex() + 1 }} / {{ orderedMedia().length }}</span>
+            }
+          } @else {
+            <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-fg-subtle">
+              <svg lucideImage class="h-12 w-12 opacity-60"></svg>
+              <span class="text-sm">No preview available</span>
+            </div>
+          }
+        </div>
+        @if (mainImage()?.title) {
+          <p class="text-sm text-fg-muted">{{ mainImage()!.title }}</p>
+        }
+        @if (orderedMedia().length > 1) {
+          <div class="scrollbar-none flex gap-2 overflow-x-auto pb-1">
+            @for (m of orderedMedia(); track $index; let i = $index) {
+              <button type="button" (click)="selectImage(i)" [attr.aria-label]="'Show image ' + (i + 1) + ' of ' + orderedMedia().length" [attr.aria-pressed]="i === selectedImageIndex()"
+                class="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg border-2 transition-[border-color,opacity] duration-200"
+                [class]="i === selectedImageIndex() ? 'border-accent' : 'border-transparent opacity-70 hover:opacity-100'">
+                <img [src]="m.imageUrl" [alt]="" loading="lazy" decoding="async" class="h-full w-full object-cover" />
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Meta -->
+      <div class="flex flex-col gap-5">
+        <div class="flex flex-wrap gap-2">
+          <app-badge [variant]="statusVariant(p.status)" [dot]="true" size="md">{{ p.status | enumLabel }}</app-badge>
+          <app-badge variant="neutral" size="md">{{ p.complexity | enumLabel }}</app-badge>
+        </div>
+        <h1 class="text-title font-semibold text-fg">{{ p.title }}</h1>
+        @if (p.description) {
+          <p class="text-base leading-relaxed text-fg-muted sm:text-lg">{{ p.description }}</p>
+        }
+
+        <dl class="grid grid-cols-2 gap-3 text-sm">
+          @if (p.year) {
+            <div class="flex items-center gap-2.5 rounded-xl border border-border bg-surface-raised px-3.5 py-2.5">
+              <svg lucideCalendar class="h-4 w-4 shrink-0 text-accent"></svg>
+              <div><dt class="text-xs text-fg-subtle">Year</dt><dd class="font-medium text-fg">{{ p.year }}</dd></div>
+            </div>
+          }
+          @if (p.categoryName) {
+            <div class="flex items-center gap-2.5 rounded-xl border border-border bg-surface-raised px-3.5 py-2.5">
+              <svg lucideTag class="h-4 w-4 shrink-0 text-accent"></svg>
+              <div><dt class="text-xs text-fg-subtle">Category</dt><dd class="font-medium text-fg">{{ p.categoryName }}</dd></div>
+            </div>
+          }
+          @if (p.developmentTime) {
+            <div class="flex items-center gap-2.5 rounded-xl border border-border bg-surface-raised px-3.5 py-2.5">
+              <svg lucideClock class="h-4 w-4 shrink-0 text-accent"></svg>
+              <div><dt class="text-xs text-fg-subtle">Development</dt><dd class="font-medium text-fg">{{ p.developmentTime }} h</dd></div>
+            </div>
+          }
+          @if (p.completionDate) {
+            <div class="flex items-center gap-2.5 rounded-xl border border-border bg-surface-raised px-3.5 py-2.5">
+              <svg lucideLayers class="h-4 w-4 shrink-0 text-accent"></svg>
+              <div><dt class="text-xs text-fg-subtle">Completed</dt><dd class="font-medium text-fg">{{ p.completionDate | date: 'MMM y' }}</dd></div>
+            </div>
+          }
+        </dl>
+
+        @if (p.tags.length) {
+          <div class="flex flex-wrap gap-1.5">
+            @for (tag of p.tags; track tag) {
+              <span class="rounded-full border border-border bg-surface px-2.5 py-0.5 text-xs font-medium text-fg-muted">#{{ tag }}</span>
+            }
+          </div>
+        }
+
+        @if (p.demoUrl || p.githubUrl) {
+          <div class="hidden flex-wrap gap-3 md:flex">
+            @if (p.demoUrl) {
+              <app-button variant="primary" [href]="p.demoUrl" target="_blank">
+                Live demo
+                <svg lucideExternalLink class="h-4 w-4"></svg>
+              </app-button>
+            }
+            @if (p.githubUrl) {
+              <app-button variant="secondary" [href]="p.githubUrl" target="_blank">
+                <app-brand-icon name="github" class="h-4 w-4" />
+                Source code
+              </app-button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    @if (tabs().length) {
+      <div class="mt-12">
+        <div class="scrollbar-none fade-x -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <div role="tablist" aria-label="Project sections" (keydown)="onTabKeydown($event)" class="inline-flex gap-1 rounded-full border border-border bg-surface-raised p-1 shadow-elev-1">
+            @for (t of tabs(); track t.id) {
+              <button type="button" role="tab" [id]="'tab-' + t.id" [attr.aria-selected]="activeTab() === t.id" [attr.aria-controls]="'panel-' + t.id" [tabindex]="activeTab() === t.id ? 0 : -1"
+                (click)="selectTab(t.id)"
+                class="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-sm font-medium transition-[color,background-color] duration-200"
+                [class]="activeTab() === t.id ? 'bg-accent text-accent-fg shadow-elev-1' : 'text-fg-muted hover:bg-surface-muted hover:text-fg'">
+                {{ t.label }}
+                @if (t.count) {
+                  <span class="text-xs tabular-nums opacity-80">{{ t.count }}</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="mt-8" [id]="'panel-' + activeTab()" role="tabpanel" [attr.aria-labelledby]="'tab-' + activeTab()">
+          @switch (activeTab()) {
+            @case ('overview') {
+              <div class="prose-like text-base text-fg-muted">{{ p.longDescription || p.description }}</div>
+            }
+            @case ('features') {
+              <div class="grid gap-5 md:grid-cols-2">
+                @for (f of sortedFeatures(); track $index; let i = $index) {
+                  <article appReveal [appRevealIndex]="i % 4" class="flex flex-col gap-2 rounded-card border border-border bg-surface-raised p-5 shadow-elev-1">
+                    <h3 class="text-base font-semibold text-fg">{{ f.title }}</h3>
+                    @if (f.description) {
+                      <p class="text-sm leading-relaxed text-fg-muted">{{ f.description }}</p>
+                    }
+                    @if (f.implementationDate || f.developmentTimeHours) {
+                      <p class="mt-auto flex flex-wrap gap-3 pt-2 text-xs text-fg-subtle">
+                        @if (f.implementationDate) { <span>{{ f.implementationDate | date: 'MMM y' }}</span> }
+                        @if (f.developmentTimeHours) { <span>{{ f.developmentTimeHours }} h</span> }
+                      </p>
+                    }
+                  </article>
+                }
+              </div>
+            }
+            @case ('challenges') {
+              <div class="flex flex-col gap-5">
+                @for (c of p.challenges; track $index; let i = $index) {
+                  <article appReveal [appRevealIndex]="i % 4" class="rounded-card border border-border bg-surface-raised p-5 shadow-elev-1 sm:p-6">
+                    <div class="flex items-start justify-between gap-3">
+                      <h3 class="text-base font-semibold text-fg">{{ c.title }}</h3>
+                      <app-badge [variant]="statusVariant(c.difficulty)" [dot]="true">{{ c.difficulty | enumLabel }}</app-badge>
+                    </div>
+                    <p class="mt-2 text-sm leading-relaxed text-fg-muted">{{ c.description }}</p>
+                    @if (c.solution) {
+                      <div class="mt-4 flex gap-3 rounded-xl border-l-4 border-accent bg-accent-soft/50 p-4">
+                        <svg lucideLightbulb class="mt-0.5 h-4 w-4 shrink-0 text-accent"></svg>
+                        <div>
+                          <p class="text-xs font-semibold uppercase tracking-wide text-accent">Solution</p>
+                          <p class="mt-1 text-sm leading-relaxed text-fg">{{ c.solution }}</p>
+                        </div>
+                      </div>
+                    }
+                  </article>
+                }
+              </div>
+            }
+            @case ('tech') {
+              <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                @for (s of p.skills; track s.id; let i = $index) {
+                  <div appReveal [appRevealIndex]="i % 6" class="flex flex-col gap-3 rounded-card border border-border bg-surface-raised p-4 shadow-elev-1">
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="text-sm font-semibold text-fg">{{ s.name }}</span>
+                      <app-badge [variant]="statusVariant(s.proficiency)" [dot]="true">{{ s.proficiency | enumLabel }}</app-badge>
+                    </div>
+                    @if (s.usage !== null && s.usage !== undefined) {
+                      <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-muted" role="progressbar" [attr.aria-valuenow]="s.usage" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="s.name + ' usage'">
+                        <div class="h-full rounded-full bg-gradient-to-r from-accent to-accent-hover" [style.width.%]="s.usage"></div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+            @case ('metrics') {
+              @if (p.metrics; as m) {
+                <div appReveal class="grid grid-cols-2 gap-6 rounded-panel border border-border bg-surface-raised p-6 shadow-elev-1 sm:p-8 lg:grid-cols-3">
+                  @if (m.usersCount !== null && m.usersCount !== undefined) { <app-stat [value]="m.usersCount | compactNumber" label="Users" /> }
+                  @if (m.linesOfCode !== null && m.linesOfCode !== undefined) { <app-stat [value]="m.linesOfCode | compactNumber" label="Lines of code" /> }
+                  @if (m.commitsCount !== null && m.commitsCount !== undefined) { <app-stat [value]="m.commitsCount | compactNumber" label="Commits" /> }
+                  @if (m.testCoveragePercentage !== null && m.testCoveragePercentage !== undefined) { <app-stat [value]="m.testCoveragePercentage" suffix="%" label="Test coverage" /> }
+                  @if (m.performanceScore) { <app-stat [value]="m.performanceScore" label="Performance" /> }
+                  @if (m.codeQualityScore) { <app-stat [value]="m.codeQualityScore" label="Code quality" /> }
+                </div>
+              }
+            }
+            @case ('achievements') {
+              <div class="grid gap-5 md:grid-cols-2">
+                @for (a of p.achievements; track $index; let i = $index) {
+                  <article appReveal [appRevealIndex]="i % 4" class="relative flex flex-col gap-3 rounded-card border bg-surface-raised p-5 shadow-elev-1 sm:p-6" [class]="a.isFeatured ? 'border-accent/50' : 'border-border'">
+                    @if (a.isFeatured) {
+                      <svg lucideStar class="absolute right-5 top-5 h-4 w-4 fill-accent text-accent" aria-label="Featured"></svg>
+                    }
+                    <div class="flex flex-wrap gap-1.5 pr-8">
+                      <app-badge variant="accent">{{ a.achievementType | enumLabel }}</app-badge>
+                      <app-badge variant="neutral">{{ a.recognitionLevel | enumLabel }}</app-badge>
+                    </div>
+                    <h3 class="text-base font-semibold text-fg">{{ a.title }}</h3>
+                    <p class="text-sm leading-relaxed text-fg-muted">{{ a.description }}</p>
+                    @if (a.impactSummary) {
+                      <p class="text-sm italic text-fg-muted">{{ a.impactSummary }}</p>
+                    }
+                    @if (a.metricBefore && a.metricAfter) {
+                      <p class="inline-flex items-center gap-2 self-start rounded-full bg-surface-muted px-3 py-1 text-xs font-medium text-fg">
+                        <span class="text-fg-subtle line-through">{{ a.metricBefore }}</span>
+                        <svg lucideArrowRight class="h-3 w-3 text-accent"></svg>
+                        <span class="text-accent">{{ a.metricAfter }}</span>
+                      </p>
+                    }
+                    <div class="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-fg-subtle">
+                      <span>{{ a.achievementDate | date: 'MMM y' }}@if (a.recognizedBy) { · Recognised by {{ a.recognizedBy }} }</span>
+                      @if (a.proofUrl) {
+                        <a [href]="a.proofUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-semibold text-accent hover:underline">
+                          View proof <svg lucideExternalLink class="h-3 w-3"></svg><span class="sr-only">(opens in new tab)</span>
+                        </a>
+                      }
+                    </div>
+                  </article>
+                }
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Prev / next -->
+    @if (neighbours().prev || neighbours().next) {
+      <nav class="mt-16 grid gap-4 border-t border-border pt-10 sm:grid-cols-2" aria-label="Other projects">
+        @if (neighbours().prev; as prev) {
+          <a [routerLink]="['/projects', prev.id]" class="group flex items-center gap-4 rounded-card border border-border bg-surface-raised p-5 shadow-elev-1 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-elev-2">
+            <svg lucideArrowLeft class="h-5 w-5 shrink-0 text-fg-subtle transition-transform motion-safe:group-hover:-translate-x-0.5"></svg>
+            <div class="min-w-0">
+              <p class="text-xs font-semibold uppercase tracking-wide text-fg-subtle">Previous</p>
+              <p class="truncate font-semibold text-fg group-hover:text-accent">{{ prev.title }}</p>
+            </div>
+          </a>
+        } @else { <span></span> }
+        @if (neighbours().next; as next) {
+          <a [routerLink]="['/projects', next.id]" class="group flex items-center justify-end gap-4 rounded-card border border-border bg-surface-raised p-5 text-right shadow-elev-1 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-elev-2">
+            <div class="min-w-0">
+              <p class="text-xs font-semibold uppercase tracking-wide text-fg-subtle">Next</p>
+              <p class="truncate font-semibold text-fg group-hover:text-accent">{{ next.title }}</p>
+            </div>
+            <svg lucideArrowRight class="h-5 w-5 shrink-0 text-fg-subtle transition-transform motion-safe:group-hover:translate-x-0.5"></svg>
+          </a>
+        }
+      </nav>
+    }
+
+    <!-- Mobile sticky CTA -->
+    @if (p.demoUrl || p.githubUrl) {
+      <div class="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/85 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
+        <div class="mx-auto flex max-w-6xl gap-2">
+          @if (p.demoUrl) {
+            <app-button variant="primary" [href]="p.demoUrl" target="_blank" [block]="true" extraClass="flex-1">Live demo <svg lucideExternalLink class="h-4 w-4"></svg></app-button>
+          }
+          @if (p.githubUrl) {
+            <app-button variant="secondary" [href]="p.githubUrl" target="_blank" [block]="true" extraClass="flex-1"><app-brand-icon name="github" class="h-4 w-4" /> Source</app-button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Lightbox -->
+    <app-dialog [(open)]="lightboxOpen" mode="dialog" maxWidth="max-w-5xl" [title]="mainImage()?.title || p.title">
+      @if (mainImage(); as img) {
+        <div class="relative" (keydown)="onGalleryKeydown($event)">
+          <img [src]="img.imageUrl" [alt]="img.altText || img.title || p.title" class="max-h-[70dvh] w-full rounded-xl object-contain" />
+          @if (orderedMedia().length > 1) {
+            <div class="mt-3 flex items-center justify-between">
+              <app-button variant="secondary" size="sm" (click)="stepImage(-1)"><svg lucideChevronLeft class="h-4 w-4"></svg> Previous</app-button>
+              <span class="text-sm text-fg-muted">{{ selectedImageIndex() + 1 }} / {{ orderedMedia().length }}</span>
+              <app-button variant="secondary" size="sm" (click)="stepImage(1)">Next <svg lucideChevronRight class="h-4 w-4"></svg></app-button>
+            </div>
+          }
+          @if (img.description) {
+            <p class="mt-3 text-sm text-fg-muted">{{ img.description }}</p>
+          }
+        </div>
+      }
+    </app-dialog>
+  }
 </section>

@@ -1,62 +1,67 @@
-<div class="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-beige-light px-4 py-12 dark:bg-green-950">
-    <mat-card class="w-full max-w-md p-2">
-        <mat-card-header>
-            <mat-card-title class="font-brand text-2xl text-emerald-700 dark:text-emerald-400">Welcome back</mat-card-title>
-            <mat-card-subtitle>Log in to your account</mat-card-subtitle>
-        </mat-card-header>
+<section class="flex min-h-[calc(100dvh-var(--header-h))] items-center justify-center px-4 py-12 sm:px-6">
+    <div class="w-full max-w-md">
+        <div class="rounded-panel border border-border bg-surface-raised p-7 shadow-elev-2 sm:p-9">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Sign in</p>
+            <h1 class="mt-2 font-brand text-3xl font-semibold text-fg">Welcome back</h1>
+            <p class="mt-2 text-sm text-fg-muted">Accounts are only needed to manage this portfolio.</p>
 
-        <mat-card-content>
-            <form [formGroup]="form" (ngSubmit)="submit()" class="mt-4 flex flex-col gap-2">
-                <mat-form-field appearance="outline">
-                    <mat-label>Email</mat-label>
-                    <input matInput type="email" formControlName="email" autocomplete="email" />
+            <form [formGroup]="form" (ngSubmit)="submit()" class="mt-8 flex flex-col gap-5" novalidate>
+                <div class="flex flex-col gap-1.5">
+                    <label for="login-email" class="text-xs font-semibold uppercase tracking-wide text-fg-subtle">Email</label>
+                    <input id="login-email" type="email" formControlName="email" autocomplete="email" required
+                        [attr.aria-invalid]="form.controls.email.invalid && form.controls.email.touched"
+                        class="h-11 rounded-control border bg-surface px-3.5 text-sm text-fg outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-fg-subtle focus:border-accent focus:ring-2 focus:ring-accent/30"
+                        [class]="form.controls.email.invalid && form.controls.email.touched ? 'border-danger' : 'border-border'" placeholder="you@example.com" />
                     @if (form.controls.email.hasError('required') && form.controls.email.touched) {
-                    <mat-error>Email is required</mat-error>
+                        <p class="text-xs text-danger">Email is required.</p>
                     } @else if (form.controls.email.hasError('email') && form.controls.email.touched) {
-                    <mat-error>Enter a valid email</mat-error>
+                        <p class="text-xs text-danger">Enter a valid email address.</p>
                     }
-                </mat-form-field>
+                </div>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>Password</mat-label>
-                    <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password"
-                        autocomplete="current-password" />
-                    <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()"
-                        [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
-                        [attr.aria-pressed]="!hidePassword()">
-                        <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-                    </button>
+                <div class="flex flex-col gap-1.5">
+                    <label for="login-password" class="text-xs font-semibold uppercase tracking-wide text-fg-subtle">Password</label>
+                    <div class="relative">
+                        <input id="login-password" [type]="hidePassword() ? 'password' : 'text'" formControlName="password" autocomplete="current-password" required
+                            [attr.aria-invalid]="form.controls.password.invalid && form.controls.password.touched"
+                            class="h-11 w-full rounded-control border bg-surface pl-3.5 pr-12 text-sm text-fg outline-none transition-[border-color,box-shadow] duration-200 focus:border-accent focus:ring-2 focus:ring-accent/30"
+                            [class]="form.controls.password.invalid && form.controls.password.touched ? 'border-danger' : 'border-border'" />
+                        <button type="button" (click)="togglePasswordVisibility()" [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'" [attr.aria-pressed]="!hidePassword()"
+                            class="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg">
+                            @if (hidePassword()) {
+                                <svg lucideEye class="h-4 w-4"></svg>
+                            } @else {
+                                <svg lucideEyeOff class="h-4 w-4"></svg>
+                            }
+                        </button>
+                    </div>
                     @if (form.controls.password.hasError('required') && form.controls.password.touched) {
-                    <mat-error>Password is required</mat-error>
+                        <p class="text-xs text-danger">Password is required.</p>
                     }
-                </mat-form-field>
+                </div>
 
                 @if (errorMessage()) {
-                <p class="text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
+                    <p class="rounded-control border border-danger/30 bg-danger-soft px-3.5 py-2.5 text-sm text-danger" role="alert">{{ errorMessage() }}</p>
                 }
 
-                <button mat-flat-button color="primary" type="submit" [disabled]="submitting()" class="mt-2 h-11">
-                    @if (submitting()) {
-                    <mat-spinner diameter="20" class="button-spinner mx-auto"></mat-spinner>
-                    } @else {
-                    Log in
-                    }
-                </button>
+                <app-button type="submit" variant="primary" size="lg" [block]="true" [loading]="submitting()" [disabled]="submitting()">
+                    {{ submitting() ? 'Signing in…' : 'Sign in' }}
+                </app-button>
             </form>
 
             @if (isGoogleConfigured) {
-            <div class="my-4 flex items-center gap-3 text-xs uppercase text-gray-400">
-                <span class="h-px flex-1 bg-black/10 dark:bg-white/10"></span>
-                or
-                <span class="h-px flex-1 bg-black/10 dark:bg-white/10"></span>
-            </div>
-            <div class="flex justify-center" #googleButton></div>
+                <div class="my-6 flex items-center gap-3 text-xs uppercase tracking-wide text-fg-subtle">
+                    <span class="h-px flex-1 bg-border"></span>
+                    or
+                    <span class="h-px flex-1 bg-border"></span>
+                </div>
+                <div class="flex justify-center" #googleButton></div>
             }
 
-            <p class="mt-6 text-center text-sm">
+            <p class="mt-8 text-center text-sm text-fg-muted">
                 Don't have an account?
-                <a routerLink="/register" class="font-medium text-emerald-700 hover:underline dark:text-emerald-400">Register</a>
+                <a routerLink="/register" class="font-semibold text-accent hover:underline">Create one</a>
             </p>
-        </mat-card-content>
-    </mat-card>
-</div>
+        </div>
+    </div>
+</section>

@@ -1,121 +1,137 @@
 import { Component, OnInit, computed, inject, signal } from "@angular/core";
-import { RouterLink } from "@angular/router";
-import {
-    LucideCode,
-    LucideExternalLink,
-    LucideListFilter,
-    LucideFolderOpen,
-    LucideSearch,
-    LucideX,
-} from "@lucide/angular";
+import { LucideFolderKanban } from "@lucide/angular";
 import { ProjectListItem } from "../../admin/features/projects/types";
 import { ProjectsPublicService } from "../services/projects.service";
+import { PageHeaderComponent } from "../../../shared/components/page-header.component";
+import { ProjectCardComponent } from "../../../shared/components/project-card.component";
+import { FilterBarComponent, FilterGroup, FilterSelection } from "../../../shared/components/filter-bar.component";
+import { SearchInputComponent } from "../../../shared/components/search-input.component";
+import { CardSkeletonComponent } from "../../../shared/components/skeleton.component";
+import { ErrorStateComponent } from "../../../shared/components/error-state.component";
+import { EmptyStateComponent } from "../../../shared/components/empty-state.component";
+import { ButtonComponent } from "../../../shared/components/button.component";
+import { ChipComponent } from "../../../shared/components/chip.component";
+import { RevealDirective } from "../../../shared/directives/reveal.directive";
+import { EnumLabelPipe } from "../../../shared/pipes/enum-label.pipe";
+import { countBy, syncQueryParams } from "../../../shared/utils/query-state";
 
-const ALL = "All";
+const SORTS = [
+    { id: "", label: "Featured" },
+    { id: "newest", label: "Newest" },
+    { id: "oldest", label: "Oldest" },
+    { id: "az", label: "A – Z" },
+];
 
 @Component({
     selector: "app-projects-list",
-    imports: [RouterLink, LucideCode, LucideExternalLink, LucideListFilter, LucideFolderOpen, LucideSearch, LucideX],
+    imports: [
+        PageHeaderComponent,
+        ProjectCardComponent,
+        FilterBarComponent,
+        SearchInputComponent,
+        CardSkeletonComponent,
+        ErrorStateComponent,
+        EmptyStateComponent,
+        ButtonComponent,
+        ChipComponent,
+        RevealDirective,
+    ],
     templateUrl: "../ui/projects-list.page.html",
 })
 export class ProjectsListPage implements OnInit {
     private readonly projectsService = inject(ProjectsPublicService);
+    private readonly enumLabel = new EnumLabelPipe();
 
     readonly loading = signal(true);
-    readonly errorMessage = signal<string | null>(null);
+    readonly error = signal(false);
     readonly projects = signal<ProjectListItem[]>([]);
 
     readonly searchTerm = signal("");
-    readonly activeCategory = signal(ALL);
-    readonly activeStatus = signal(ALL);
-    readonly activeComplexity = signal(ALL);
-    readonly filtersOpen = signal(false);
+    readonly filters = signal<FilterSelection>({});
+    readonly sort = signal("");
+    readonly sortOptions = SORTS;
+    readonly emptyIcon = LucideFolderKanban;
 
-    readonly categories = computed(() => {
-        const names = new Set(this.projects().map((p) => p.categoryName).filter((n): n is string => !!n));
-        return [ALL, ...Array.from(names)];
-    });
+    readonly categories = computed(() => countBy(this.projects(), (p) => p.categoryName));
+    readonly showCategoryTabs = computed(() => this.categories().length >= 2 && this.categories().length <= 6);
 
-    readonly statuses = computed(() => {
-        const names = new Set(this.projects().map((p) => p.status));
-        return [ALL, ...Array.from(names)];
+    readonly filterGroups = computed((): FilterGroup[] => {
+        const all = this.projects();
+        const groups: FilterGroup[] = [
+            { id: "status", label: "Status", options: countBy(all, (p) => p.status).map((o) => ({ ...o, label: this.enumLabel.transform(o.id) })) },
+            { id: "complexity", label: "Complexity", options: countBy(all, (p) => p.complexity).map((o) => ({ ...o, label: this.enumLabel.transform(o.id) })) },
+        ];
+        if (!this.showCategoryTabs()) {
+            groups.unshift({ id: "category", label: "Category", options: this.categories().map((o) => ({ ...o, label: o.id })) });
+        }
+        return groups;
     });
-
-    readonly complexities = computed(() => {
-        const names = new Set(this.projects().map((p) => p.complexity));
-        return [ALL, ...Array.from(names)];
-    });
-
-    readonly activeFilterCount = computed(() => {
-        let count = 0;
-        if (this.activeCategory() !== ALL) count++;
-        if (this.activeStatus() !== ALL) count++;
-        if (this.activeComplexity() !== ALL) count++;
-        return count;
-    });
+    readonly showSearch = computed(() => this.projects().length >= 6);
 
     readonly visibleProjects = computed(() => {
-        const category = this.activeCategory();
-        const status = this.activeStatus();
-        const complexity = this.activeComplexity();
+        const f = this.filters();
         const term = this.searchTerm().trim().toLowerCase();
-
-        return this.projects().filter((p) => {
-            if (category !== ALL && p.categoryName !== category) return false;
-            if (status !== ALL && p.status !== status) return false;
-            if (complexity !== ALL && p.complexity !== complexity) return false;
+        const list = this.projects().filter((p) => {
+            if (f["category"] && p.categoryName !== f["category"]) return false;
+            if (f["status"] && p.status !== f["status"]) return false;
+            if (f["complexity"] && p.complexity !== f["complexity"]) return false;
             if (term) {
                 const haystack = [p.title, p.description ?? "", ...p.tags, ...p.skills].join(" ").toLowerCase();
                 if (!haystack.includes(term)) return false;
             }
             return true;
         });
+        return this.sorted(list);
     });
 
+    readonly hasActiveQuery = computed(() => !!this.searchTerm() || Object.keys(this.filters()).length > 0);
+
+    constructor() {
+        syncQueryParams({ q: this.searchTerm, sort: this.sort }, this.filters, ["category", "status", "complexity"]);
+    }
+
     ngOnInit(): void {
+        this.load();
+    }
+
+    load(): void {
+        this.loading.set(true);
+        this.error.set(false);
         this.projectsService.list().subscribe({
             next: (projects) => {
                 this.projects.set(projects);
                 this.loading.set(false);
             },
             error: () => {
-                this.errorMessage.set("Failed to load projects.");
+                this.error.set(true);
                 this.loading.set(false);
             },
         });
     }
 
-    setCategory(category: string): void {
-        this.activeCategory.set(category);
+    selectCategory(category: string | null): void {
+        const next = { ...this.filters() };
+        if (category) next["category"] = category;
+        else delete next["category"];
+        this.filters.set(next);
     }
 
-    setStatus(status: string): void {
-        this.activeStatus.set(status);
-    }
-
-    setComplexity(complexity: string): void {
-        this.activeComplexity.set(complexity);
-    }
-
-    openFilters(): void {
-        this.filtersOpen.set(true);
-    }
-
-    closeFilters(): void {
-        this.filtersOpen.set(false);
-    }
-
-    clearFilters(): void {
-        this.activeCategory.set(ALL);
-        this.activeStatus.set(ALL);
-        this.activeComplexity.set(ALL);
-    }
-
-    clearSearch(): void {
+    clearAll(): void {
         this.searchTerm.set("");
+        this.filters.set({});
     }
 
-    onSearchInput(event: Event): void {
-        this.searchTerm.set((event.target as HTMLInputElement).value);
+    private sorted(list: ProjectListItem[]): ProjectListItem[] {
+        const copy = [...list];
+        switch (this.sort()) {
+            case "newest":
+                return copy.sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || a.title.localeCompare(b.title));
+            case "oldest":
+                return copy.sort((a, b) => (a.year ?? 9999) - (b.year ?? 9999) || a.title.localeCompare(b.title));
+            case "az":
+                return copy.sort((a, b) => a.title.localeCompare(b.title));
+            default:
+                return copy.sort((a, b) => (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999) || (b.year ?? 0) - (a.year ?? 0) || a.title.localeCompare(b.title));
+        }
     }
 }

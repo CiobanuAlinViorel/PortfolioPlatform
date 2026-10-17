@@ -1,12 +1,8 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, inject, signal } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
-import { MatCardModule } from "@angular/material/card";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { MatButtonModule } from "@angular/material/button";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatIconModule } from "@angular/material/icon";
+import { LucideEye, LucideEyeOff } from "@lucide/angular";
+import { ButtonComponent } from "../../../../shared/components/button.component";
 import { AuthService } from "../../register/services/auth.service";
 import { GoogleIdentityService } from "../../register/services/google-identity.service";
 
@@ -15,12 +11,9 @@ import { GoogleIdentityService } from "../../register/services/google-identity.s
     imports: [
         ReactiveFormsModule,
         RouterLink,
-        MatCardModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatProgressSpinnerModule,
-        MatIconModule,
+        LucideEye,
+        LucideEyeOff,
+        ButtonComponent,
     ],
     templateUrl: "../ui/login.page.html",
 })

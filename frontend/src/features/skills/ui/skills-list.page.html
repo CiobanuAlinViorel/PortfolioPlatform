@@ -1,172 +1,104 @@
-<section class="min-h-[calc(100vh-3.5rem)] bg-beige-dark px-4 py-12 dark:bg-green-950 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-7xl">
-        <div class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-emerald-900 dark:text-beige-light sm:text-4xl">Skills</h1>
-            <p class="mt-2 text-sm text-emerald-900/70 dark:text-beige-light/70">Technologies and tools I work with.</p>
-        </div>
-
-        @if (loading()) {
-        <div class="flex justify-center py-24 text-emerald-900 dark:text-beige-light">Loading...</div>
-        } @else if (errorMessage()) {
-        <div class="flex justify-center py-24 text-red-700 dark:text-red-300">{{ errorMessage() }}</div>
-        } @else if (skills().length === 0) {
-        <div class="flex flex-col items-center gap-3 py-24 text-emerald-900/70 dark:text-beige-light/70">
-            <svg lucideLayers class="h-10 w-10"></svg>
-            <p>No skills to show yet.</p>
-        </div>
-        } @else {
-
-        <!-- Search -->
-        <div class="relative mb-6">
-            <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-900/50 dark:text-beige-light/50"></svg>
-            <input type="text" placeholder="Search skills..." [value]="searchTerm()" (input)="onSearchInput($event)"
-                class="w-full rounded-lg bg-beige-light py-2.5 pl-10 pr-9 text-sm text-emerald-900 placeholder-emerald-900/40 shadow-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-emerald-800 dark:bg-green-900 dark:text-beige-light dark:placeholder-beige-light/40 dark:ring-white/5 dark:focus:ring-beige-light" />
-            @if (searchTerm()) {
-            <button type="button" (click)="clearSearch()"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-900/50 hover:text-emerald-900 dark:text-beige-light/50 dark:hover:text-beige-light">
-                <svg lucideX class="h-4 w-4"></svg>
-            </button>
-            }
-        </div>
-
-        <!-- Floating filter button -->
-        <button type="button" (click)="openFilters()"
-            class="fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-800 text-beige-light shadow-lg transition-transform duration-150 ease-out hover:scale-105 hover:bg-emerald-700">
-            <svg lucideListFilter class="h-6 w-6"></svg>
-            @if (activeFilterCount() > 0) {
-            <span class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-semibold text-white">
-                {{ activeFilterCount() }}
+<section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+  <app-page-header eyebrow="Toolbox" title="Skills" subtitle="Technologies I work with, grouped by area, with proficiency and hands-on experience.">
+    <div toolbar class="flex flex-col gap-4">
+      @if (!loading() && !error() && skills().length) {
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-fg-muted" aria-label="Proficiency legend">
+          @for (item of legend; track item.level) {
+            <span class="inline-flex items-center gap-1.5">
+              <app-badge [variant]="item.variant" [dot]="true">{{ item.level | enumLabel }}</app-badge>
             </span>
-            }
-        </button>
-
-        <!-- Filter modal -->
-        @if (filtersOpen()) {
-        <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4" (click)="closeFilters()">
-            <div (click)="$event.stopPropagation()"
-                class="w-full max-h-[85vh] max-w-md overflow-y-auto rounded-2xl bg-beige-light p-6 shadow-xl dark:bg-green-900">
-                <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-emerald-900 dark:text-beige-light">Filters</h2>
-                    <button type="button" (click)="closeFilters()"
-                        class="text-emerald-900/60 hover:text-emerald-900 dark:text-beige-light/60 dark:hover:text-beige-light">
-                        <svg lucideX class="h-5 w-5"></svg>
-                    </button>
-                </div>
-
-                <div class="flex flex-col gap-4">
-                    @if (categories().length > 1) {
-                    <div>
-                        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-900/60 dark:text-beige-light/60">Category</h3>
-                        <div class="flex flex-wrap gap-2">
-                            @for (category of categories(); track category) {
-                            <button type="button" (click)="setCategory(category)"
-                                class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-out"
-                                [class.bg-emerald-800]="activeCategory() === category"
-                                [class.text-beige-light]="activeCategory() === category"
-                                [class.bg-black/5]="activeCategory() !== category"
-                                [class.text-emerald-900]="activeCategory() !== category"
-                                [class.dark:bg-white/10]="activeCategory() !== category"
-                                [class.dark:text-beige-light]="activeCategory() !== category">
-                                {{ category }}
-                            </button>
-                            }
-                        </div>
-                    </div>
-                    }
-
-                    @if (proficiencies().length > 1) {
-                    <div>
-                        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-900/60 dark:text-beige-light/60">Proficiency</h3>
-                        <div class="flex flex-wrap gap-2">
-                            @for (proficiency of proficiencies(); track proficiency) {
-                            <button type="button" (click)="setProficiency(proficiency)"
-                                class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-out"
-                                [class.bg-emerald-800]="activeProficiency() === proficiency"
-                                [class.text-beige-light]="activeProficiency() === proficiency"
-                                [class.bg-black/5]="activeProficiency() !== proficiency"
-                                [class.text-emerald-900]="activeProficiency() !== proficiency"
-                                [class.dark:bg-white/10]="activeProficiency() !== proficiency"
-                                [class.dark:text-beige-light]="activeProficiency() !== proficiency">
-                                {{ proficiency === "All" ? "All" : formatLabel(proficiency) }}
-                            </button>
-                            }
-                        </div>
-                    </div>
-                    }
-                </div>
-
-                <div class="mt-6 flex items-center justify-between gap-3 border-t border-black/5 pt-4 dark:border-white/5">
-                    <button type="button" (click)="clearFilters()"
-                        class="text-sm font-medium text-emerald-800 hover:underline dark:text-beige-light"
-                        [class.opacity-40]="activeFilterCount() === 0"
-                        [disabled]="activeFilterCount() === 0">
-                        Clear filters
-                    </button>
-                    <button type="button" (click)="closeFilters()"
-                        class="rounded-md bg-emerald-800 px-4 py-2 text-sm font-medium text-beige-light shadow-sm transition-colors duration-150 ease-out hover:bg-emerald-700">
-                        Show results
-                    </button>
-                </div>
-            </div>
+          }
         </div>
-        }
 
-        @if (visibleSkills().length === 0) {
-        <div class="flex flex-col items-center gap-3 py-24 text-emerald-900/70 dark:text-beige-light/70">
-            <svg lucideSearch class="h-10 w-10"></svg>
-            <p>No skills match your search or filters.</p>
-            <button type="button" (click)="clearFilters(); clearSearch()"
-                class="text-sm font-medium text-emerald-800 hover:underline dark:text-beige-light">
-                Clear all
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+          @if (showSearch()) {
+            <app-search-input [(value)]="searchTerm" placeholder="Search skills…" class="flex-1 sm:max-w-md" />
+          }
+          @if (hasLearning()) {
+            <app-chip [selected]="learningOnly() === '1'" (toggled)="toggleLearning()">
+              <svg lucideGraduationCap class="h-3.5 w-3.5"></svg>
+              Learning now
+            </app-chip>
+          }
+        </div>
+
+        <app-filter-bar [groups]="filterGroups()" [(selected)]="filters" [sortOptions]="sortOptions" [(sort)]="sort"
+          [resultCount]="visibleSkills().length" [totalCount]="skills().length" noun="skills" />
+      }
+    </div>
+  </app-page-header>
+
+  @if (loading()) {
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <app-card-skeleton [image]="false" />
+      }
+    </div>
+  } @else if (error()) {
+    <app-error-state title="We couldn't load the skills" message="Check your connection and try again." (retry)="load()" />
+  } @else if (visibleSkills().length === 0) {
+    <app-empty-state [icon]="emptyIcon" [title]="hasActiveQuery() ? 'No skills match' : 'No skills yet'"
+      [message]="hasActiveQuery() ? 'Try a different search or clear the filters.' : 'Skills will appear here once they are added.'">
+      @if (hasActiveQuery()) {
+        <button type="button" (click)="clearAll()" class="text-sm font-semibold text-accent hover:underline">Clear search and filters</button>
+      }
+    </app-empty-state>
+  } @else {
+    <div class="flex flex-col gap-12">
+      @for (group of groups(); track group.name; let gi = $index) {
+        <section [attr.aria-labelledby]="'skills-group-' + gi">
+          <div class="mb-5 flex items-center justify-between gap-3">
+            <h2 [id]="'skills-group-' + gi" class="font-brand text-2xl font-semibold text-fg">
+              {{ group.name }}
+              <span class="ml-2 align-middle text-sm font-medium text-fg-subtle">{{ group.skills.length }}</span>
+            </h2>
+            <button type="button" (click)="toggleGroup(group.name, gi)" [attr.aria-expanded]="!isCollapsed(group.name, gi)" [attr.aria-controls]="'skills-grid-' + gi"
+              class="flex h-9 w-9 items-center justify-center rounded-full border border-border text-fg-muted transition-[transform,color] duration-200 hover:text-fg md:hidden"
+              [class.rotate-180]="!isCollapsed(group.name, gi)" [attr.aria-label]="(isCollapsed(group.name, gi) ? 'Expand ' : 'Collapse ') + group.name">
+              <svg lucideChevronDown class="h-4 w-4"></svg>
             </button>
-        </div>
-        } @else {
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            @for (skill of visibleSkills(); track skill.id) {
-            <div class="flex flex-col gap-3 rounded-xl bg-beige-light p-5 shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg dark:bg-green-900">
-                <div class="flex items-start justify-between gap-2">
+          </div>
+          <div [id]="'skills-grid-' + gi" class="gap-5 sm:grid-cols-2 lg:grid-cols-3 md:grid" [class]="isCollapsed(group.name, gi) ? 'hidden' : 'grid'">
+              @for (skill of group.skills; track skill.id; let i = $index) {
+                <article appReveal [appRevealIndex]="i % 6"
+                  class="flex flex-col gap-4 rounded-card border border-border bg-surface-raised p-5 shadow-elev-1 transition-[border-color,box-shadow,transform] duration-200 hover:border-accent/30 hover:shadow-elev-2 motion-safe:hover:-translate-y-0.5">
+                  <div class="flex items-start justify-between gap-3">
+                    <h3 class="text-base font-semibold text-fg">{{ skill.name }}</h3>
+                    <app-badge [variant]="statusVariant(skill.proficiency)" [dot]="true">{{ skill.proficiency | enumLabel }}</app-badge>
+                  </div>
+
+                  @if (skill.level !== undefined && skill.level !== null) {
                     <div>
-                        <h2 class="text-lg font-semibold text-emerald-900 dark:text-beige-light">{{ skill.name }}</h2>
-                        @if (skill.categoryName) {
-                        <p class="text-xs font-medium text-emerald-900/60 dark:text-beige-light/60">{{ skill.categoryName }}</p>
-                        }
+                      <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-muted" role="progressbar" [attr.aria-valuenow]="skill.level" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="skill.name + ' level'">
+                        <div class="h-full rounded-full bg-gradient-to-r from-accent to-accent-hover transition-[width] duration-700 ease-out" [style.width.%]="skill.level"></div>
+                      </div>
+                      <span class="sr-only">{{ skill.level }}%</span>
                     </div>
-                    <span class="shrink-0 rounded-full bg-emerald-800/10 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-beige-light/10 dark:text-beige-light">
-                        {{ formatLabel(skill.proficiency) }}
-                    </span>
-                </div>
+                  }
 
-                @if (skill.level) {
-                <div class="h-1.5 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
-                    <div class="h-full rounded-full bg-emerald-800 dark:bg-beige-light" [style.width.%]="skill.level"></div>
-                </div>
-                }
+                  @if (skill.description) {
+                    <p class="line-clamp-2 text-sm leading-relaxed text-fg-muted">{{ skill.description }}</p>
+                  }
 
-                @if (skill.description) {
-                <p class="line-clamp-3 text-sm text-emerald-900/80 dark:text-beige-light/80">{{ skill.description }}</p>
-                }
-
-                <div class="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-black/5 pt-3 text-xs text-emerald-900/60 dark:border-white/5 dark:text-beige-light/60">
+                  <div class="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-fg-subtle">
                     @if (skill.yearsOfExperience) {
-                    <span>{{ skill.yearsOfExperience }} yrs experience</span>
+                      <span>{{ skill.yearsOfExperience }} year{{ skill.yearsOfExperience === 1 ? '' : 's' }}</span>
+                    }
+                    @if (skill.lastUsedDate) {
+                      <span>Last used {{ skill.lastUsedDate | date: 'MMM y' }}</span>
                     }
                     @if (skill.hasCertification) {
-                    <span class="flex items-center gap-1">
-                        <svg lucideAward class="h-3.5 w-3.5"></svg>
-                        Certified
-                    </span>
+                      <app-badge variant="success"><svg lucideAward class="h-3 w-3"></svg>Certified</app-badge>
                     }
                     @if (skill.learning) {
-                    <span class="flex items-center gap-1">
-                        <svg lucideGraduationCap class="h-3.5 w-3.5"></svg>
-                        Learning
-                    </span>
+                      <app-badge variant="info"><svg lucideGraduationCap class="h-3 w-3"></svg>Learning</app-badge>
                     }
-                </div>
+                  </div>
+                </article>
+              }
             </div>
-            }
-        </div>
-        }
-        }
+        </section>
+      }
     </div>
+  }
 </section>

@@ -1,70 +1,273 @@
-<section class="min-h-[calc(100vh-3.5rem)] bg-beige-dark px-4 py-12 dark:bg-green-950 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-4xl">
-        @if (loading()) {
-        <div class="flex justify-center py-24 text-emerald-900 dark:text-beige-light">Loading...</div>
-        } @else if (profile(); as p) {
-        <div class="flex flex-col items-center gap-6 text-center">
-            @if (p.imageLink) {
-            <img [src]="p.imageLink" [alt]="p.firstName + ' ' + p.lastName"
-                class="h-40 w-40 rounded-full object-cover shadow-md" />
-            }
+<!-- Hero -->
+<section class="relative overflow-hidden" aria-labelledby="hero-heading">
+  <div class="mx-auto flex min-h-[calc(100dvh-var(--header-h))] max-w-6xl flex-col justify-center px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+    @if (profileLoading()) {
+      <div class="grid items-center gap-12 lg:grid-cols-[1.2fr_0.8fr]" aria-busy="true">
+        <div class="space-y-6">
+          <app-skeleton class="h-4 w-24" />
+          <app-skeleton class="h-16 w-4/5" />
+          <app-skeleton class="h-16 w-3/5" />
+          <div class="space-y-2.5 pt-2">
+            <app-skeleton class="h-4 w-full" />
+            <app-skeleton class="h-4 w-11/12" />
+            <app-skeleton class="h-4 w-2/3" />
+          </div>
+          <div class="flex gap-3 pt-2">
+            <app-skeleton class="h-12 w-40" />
+            <app-skeleton class="h-12 w-40" />
+          </div>
+        </div>
+        <div class="flex justify-center lg:justify-end">
+          <app-skeleton class="h-64 w-64 sm:h-72 sm:w-72" [round]="true" />
+        </div>
+      </div>
+    } @else if (profileError()) {
+      <app-error-state title="We couldn't load the profile" message="The server may still be waking up. Please try again in a moment." (retry)="loadProfile()" />
+    } @else if (profile(); as p) {
+      <div class="grid items-center gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:gap-16">
+        <div class="order-2 text-center lg:order-1 lg:text-left">
+          <p class="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-surface-raised/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent shadow-elev-1 motion-safe:animate-fade-up">
+            <span class="relative flex h-2 w-2">
+              <span class="absolute inline-flex h-full w-full rounded-full bg-accent opacity-75 motion-safe:animate-ping"></span>
+              <span class="relative inline-flex h-2 w-2 rounded-full bg-accent"></span>
+            </span>
+            Hi, I'm
+          </p>
+          <h1 id="hero-heading" class="text-display font-semibold text-fg motion-safe:animate-fade-up motion-safe:[animation-delay:60ms]">
+            {{ fullName() }}
+          </h1>
 
-            <div>
-                <h1 class="text-3xl font-bold text-emerald-900 dark:text-beige-light sm:text-4xl">
-                    {{ p.firstName }} {{ p.lastName }}
-                </h1>
-                @if (p.age) {
-                <p class="mt-1 text-sm text-emerald-900/70 dark:text-beige-light/70">{{ p.age }} years old</p>
-                }
-            </div>
-
-            @if (p.description) {
-            <p class="max-w-2xl text-base leading-relaxed text-emerald-900/90 dark:text-beige-light/90">
+          @if (p.description) {
+            <div class="mt-6 motion-safe:animate-fade-up motion-safe:[animation-delay:120ms]">
+              <p class="mx-auto max-w-2xl text-base leading-relaxed text-fg-muted sm:text-lg lg:mx-0"
+                [class.line-clamp-3]="descriptionIsLong() && !descriptionExpanded()">
                 {{ p.description }}
-            </p>
-            }
-
-            @if (contact(); as c) {
-            <div class="flex flex-wrap items-center justify-center gap-4 pt-2 text-sm text-emerald-900 dark:text-beige-light">
-                <a [href]="'mailto:' + c.email" class="flex items-center gap-2 hover:underline">
-                    <svg lucideMail class="h-4 w-4"></svg>
-                    {{ c.email }}
-                </a>
-                @if (c.phone) {
-                <a [href]="'tel:' + c.phone" class="flex items-center gap-2 hover:underline">
-                    <svg lucidePhone class="h-4 w-4"></svg>
-                    {{ c.phone }}
-                </a>
-                }
-                @if (c.city || c.country) {
-                <span class="flex items-center gap-2">
-                    <svg lucideMapPin class="h-4 w-4"></svg>
-                    @if (c.city && c.country) {
-                    {{ c.city }}, {{ c.country }}
-                    } @else {
-                    {{ c.city || c.country }}
-                    }
-                </span>
-                }
-                @if (c.github) {
-                <a [href]="c.github" target="_blank" rel="noopener" class="flex items-center gap-2 hover:underline">
-                    <svg lucideLink class="h-4 w-4"></svg>
-                    GitHub
-                </a>
-                }
-                @if (c.linkedin) {
-                <a [href]="c.linkedin" target="_blank" rel="noopener" class="flex items-center gap-2 hover:underline">
-                    <svg lucideLink class="h-4 w-4"></svg>
-                    LinkedIn
-                </a>
-                }
+              </p>
+              @if (descriptionIsLong()) {
+                <button type="button" (click)="descriptionExpanded.set(!descriptionExpanded())"
+                  class="mt-2 text-sm font-semibold text-accent hover:underline" [attr.aria-expanded]="descriptionExpanded()">
+                  {{ descriptionExpanded() ? 'Read less' : 'Read more' }}
+                </button>
+              }
             </div>
-            }
+          }
+
+          @if (location()) {
+            <p class="mt-5 inline-flex items-center gap-2 text-sm text-fg-muted motion-safe:animate-fade-up motion-safe:[animation-delay:160ms]">
+              <svg lucideMapPin class="h-4 w-4 text-accent"></svg>
+              {{ location() }}
+            </p>
+          }
+
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center lg:justify-start motion-safe:animate-fade-up motion-safe:[animation-delay:200ms]">
+            <app-button variant="primary" size="lg" link="/projects">
+              View projects
+              <svg lucideArrowRight class="h-4 w-4 transition-transform duration-200 motion-safe:group-hover:translate-x-0.5"></svg>
+            </app-button>
+            <app-button variant="secondary" size="lg" (click)="downloadCv()" [loading]="isDownloadingCv()" [disabled]="isDownloadingCv()">
+              @if (!isDownloadingCv()) {
+                <svg lucideDownload class="h-4 w-4"></svg>
+              }
+              Download CV
+            </app-button>
+            <app-button variant="ghost" size="lg" link="/" fragment="contact">Get in touch</app-button>
+          </div>
+
+          @if (contact(); as c) {
+            <div class="mt-8 flex justify-center gap-2 lg:justify-start motion-safe:animate-fade-up motion-safe:[animation-delay:260ms]">
+              @if (c.github) {
+                <a [href]="c.github" target="_blank" rel="noopener noreferrer" aria-label="GitHub (opens in new tab)"
+                  class="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-raised text-fg-muted shadow-elev-1 transition-[color,border-color,transform] duration-200 hover:border-accent/40 hover:text-accent motion-safe:hover:-translate-y-0.5">
+                  <app-brand-icon name="github" class="h-5 w-5" />
+                </a>
+              }
+              @if (c.linkedin) {
+                <a [href]="c.linkedin" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn (opens in new tab)"
+                  class="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-raised text-fg-muted shadow-elev-1 transition-[color,border-color,transform] duration-200 hover:border-accent/40 hover:text-accent motion-safe:hover:-translate-y-0.5">
+                  <app-brand-icon name="linkedin" class="h-5 w-5" />
+                </a>
+              }
+              <a [href]="'mailto:' + c.email" aria-label="Send an email"
+                class="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-raised text-fg-muted shadow-elev-1 transition-[color,border-color,transform] duration-200 hover:border-accent/40 hover:text-accent motion-safe:hover:-translate-y-0.5">
+                <svg lucideMail class="h-5 w-5"></svg>
+              </a>
+              @if (c.phone) {
+                <a [href]="'tel:' + c.phone" aria-label="Call"
+                  class="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-raised text-fg-muted shadow-elev-1 transition-[color,border-color,transform] duration-200 hover:border-accent/40 hover:text-accent motion-safe:hover:-translate-y-0.5">
+                  <svg lucidePhone class="h-5 w-5"></svg>
+                </a>
+              }
+            </div>
+          }
         </div>
-        } @else {
-        <div class="flex justify-center py-24 text-emerald-900 dark:text-beige-light">
-            <p>Welcome! Profile information hasn't been set up yet.</p>
+
+        <div class="order-1 flex justify-center lg:order-2 lg:justify-end">
+          <div class="relative motion-safe:animate-fade-up">
+            <div class="absolute -inset-10 -z-10 rounded-full bg-gradient-to-tr from-accent/30 via-accent/10 to-transparent blur-3xl" aria-hidden="true"></div>
+            <div class="rounded-full bg-gradient-to-br from-accent/40 to-transparent p-1.5 shadow-elev-3">
+              <div class="rounded-full bg-surface p-1.5">
+                <app-avatar [src]="p.imageLink" [name]="fullName()" [alt]="fullName()" [size]="264" [priority]="true" />
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <a href="#stats" class="mx-auto mt-12 hidden h-10 w-10 items-center justify-center rounded-full text-fg-subtle transition-colors hover:text-accent lg:flex motion-safe:animate-bounce" aria-label="Scroll to content">
+        <svg lucideArrowDown class="h-5 w-5"></svg>
+      </a>
+    } @else {
+      <div class="text-center">
+        <h1 class="text-display font-semibold text-fg">Welcome</h1>
+        <p class="mt-4 text-lg text-fg-muted">Profile information hasn't been set up yet.</p>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- Stats -->
+<section id="stats" class="scroll-mt-[var(--header-h)]" aria-label="Highlights">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    @if (statsLoading()) {
+      <div class="grid grid-cols-2 gap-4 rounded-panel border border-border bg-surface-raised/70 p-6 sm:p-8 lg:grid-cols-4" aria-busy="true">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="space-y-3 p-2">
+            <app-skeleton class="h-10 w-20" />
+            <app-skeleton class="h-3 w-24" />
+          </div>
         }
+      </div>
+    } @else if (stats().length) {
+      <div appReveal class="grid grid-cols-2 divide-border rounded-panel border border-border bg-surface-raised/70 p-6 shadow-elev-1 backdrop-blur-sm sm:p-8 lg:grid-cols-4 lg:divide-x">
+        @for (stat of stats(); track stat.label) {
+          <app-stat [value]="stat.value" [label]="stat.label" [suffix]="stat.suffix ?? ''" class="p-2 lg:px-6 first:lg:pl-2 last:lg:pr-2" />
+        }
+      </div>
+    }
+  </div>
+</section>
+
+<!-- Selected projects -->
+@if (projects() === null || featuredProjects().length) {
+  <app-section id="home-projects" eyebrow="Work" title="Selected projects" description="A few things I've built recently — from APIs to full-stack products." viewAllLink="/projects" viewAllLabel="All projects">
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      @if (projects() === null) {
+        @for (i of [1, 2, 3]; track i) {
+          <app-card-skeleton />
+        }
+      } @else {
+        @for (project of featuredProjects(); track project.id; let i = $index) {
+          <app-project-card [project]="project" appReveal [appRevealIndex]="i" />
+        }
+      }
     </div>
+  </app-section>
+}
+
+<!-- Skills snapshot -->
+@if (skills() === null || topSkills().length) {
+  <app-section id="home-skills" eyebrow="Toolbox" title="Skills I work with" description="The technologies I reach for most often." viewAllLink="/skills" viewAllLabel="All skills">
+    @if (skills() === null) {
+      <div class="flex flex-wrap gap-2.5" aria-busy="true">
+        @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+          <app-skeleton class="h-10 w-28 rounded-full" />
+        }
+      </div>
+    } @else {
+      <div class="flex flex-wrap gap-2.5">
+        @for (skill of topSkills(); track skill.id; let i = $index) {
+          <a routerLink="/skills" [queryParams]="{ q: skill.name }" appReveal [appRevealIndex]="i"
+            class="group inline-flex h-11 items-center gap-2.5 rounded-full border border-border bg-surface-raised pl-4 pr-1.5 text-sm font-medium text-fg shadow-elev-1 transition-[border-color,box-shadow,transform] duration-200 hover:border-accent/40 hover:shadow-elev-2 motion-safe:hover:-translate-y-0.5">
+            {{ skill.name }}
+            <app-badge variant="accent">{{ skill.proficiency | enumLabel }}</app-badge>
+          </a>
+        }
+      </div>
+    }
+  </app-section>
+}
+
+<!-- Experience snapshot -->
+@if (currentJob() || latestVolunteer()) {
+  <app-section id="home-experience" eyebrow="Experience" title="Where I've been working" viewAllLink="/experience/jobs" viewAllLabel="Full timeline">
+    <div class="grid gap-6 md:grid-cols-2">
+      @if (currentJob(); as job) {
+        <a [routerLink]="['/experience/jobs', job.id]" appReveal
+          class="group relative flex flex-col gap-4 overflow-hidden rounded-card border border-border bg-surface-raised p-6 shadow-elev-1 transition-[border-color,box-shadow,transform] duration-200 hover:border-accent/40 hover:shadow-elev-2 motion-safe:hover:-translate-y-0.5">
+          <div class="flex items-start justify-between gap-4">
+            <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent">
+              <svg lucideBriefcase class="h-5 w-5"></svg>
+            </span>
+            <app-badge [variant]="job.endDate ? 'neutral' : 'success'" [dot]="true">{{ job.endDate ? 'Previous role' : 'Current role' }}</app-badge>
+          </div>
+          <div>
+            <h3 class="font-brand text-xl font-semibold text-fg transition-colors group-hover:text-accent">{{ job.role }}</h3>
+            <p class="mt-0.5 text-base text-fg-muted">{{ job.companyName }}</p>
+          </div>
+          <p class="mt-auto text-sm text-fg-subtle">{{ durationOf(job.startDate, job.endDate) }} · {{ job.projectsCount }} project{{ job.projectsCount === 1 ? '' : 's' }}</p>
+        </a>
+      }
+      @if (latestVolunteer(); as v) {
+        <a [routerLink]="['/experience/volunteer', v.id]" appReveal [appRevealIndex]="1"
+          class="group relative flex flex-col gap-4 overflow-hidden rounded-card border border-border bg-surface-raised p-6 shadow-elev-1 transition-[border-color,box-shadow,transform] duration-200 hover:border-accent/40 hover:shadow-elev-2 motion-safe:hover:-translate-y-0.5">
+          <div class="flex items-start justify-between gap-4">
+            <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-info-soft text-info">
+              <svg lucideHeartHandshake class="h-5 w-5"></svg>
+            </span>
+            <app-badge [variant]="v.status === 'ONGOING' ? 'success' : 'neutral'" [dot]="true">{{ v.status | enumLabel }}</app-badge>
+          </div>
+          <div>
+            <h3 class="font-brand text-xl font-semibold text-fg transition-colors group-hover:text-accent">{{ v.role }}</h3>
+            <p class="mt-0.5 text-base text-fg-muted">{{ v.organization }}</p>
+          </div>
+          <p class="mt-auto text-sm text-fg-subtle">{{ durationOf(v.startDate, v.endDate) }} · {{ v.type | enumLabel }}</p>
+        </a>
+      }
+    </div>
+  </app-section>
+}
+
+<!-- Explore -->
+<app-section id="home-explore" eyebrow="Explore" title="Everything in one place" description="Browse the full portfolio by area.">
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    @for (tile of exploreTiles; track tile.path; let i = $index) {
+      <a [routerLink]="tile.path" appReveal [appRevealIndex]="i" [class]="tile.span ?? ''"
+        class="group relative flex min-h-40 flex-col justify-between overflow-hidden rounded-card border border-border bg-surface-raised p-5 shadow-elev-1 transition-[border-color,box-shadow,transform] duration-200 hover:border-accent/40 hover:shadow-elev-2 motion-safe:hover:-translate-y-0.5">
+        <div class="flex items-start justify-between gap-3">
+          <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-soft text-accent transition-transform duration-300 motion-safe:group-hover:scale-110">
+            <svg [lucideIcon]="tile.icon" class="h-5 w-5"></svg>
+          </span>
+          @if (tile.count() !== null) {
+            <span class="rounded-full bg-surface-muted px-2.5 py-0.5 text-xs font-semibold tabular-nums text-fg-muted">{{ tile.count() }}</span>
+          }
+        </div>
+        <div class="mt-6">
+          <h3 class="font-brand text-lg font-semibold text-fg transition-colors group-hover:text-accent">{{ tile.label }}</h3>
+          <p class="mt-1 text-sm text-fg-muted">{{ tile.description }}</p>
+        </div>
+        <svg lucideArrowRight class="absolute bottom-5 right-5 h-4 w-4 text-fg-subtle opacity-0 transition-[opacity,transform] duration-200 group-hover:opacity-100 motion-safe:group-hover:translate-x-0.5"></svg>
+      </a>
+    }
+  </div>
+</app-section>
+
+<!-- Contact band -->
+<section class="pb-4 pt-6 sm:pt-10" aria-labelledby="home-contact-heading">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div appReveal class="relative overflow-hidden rounded-panel bg-gradient-to-br from-accent to-accent-hover px-6 py-14 text-center shadow-elev-3 sm:px-12 sm:py-16">
+      <div class="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-black/10 blur-3xl" aria-hidden="true"></div>
+      <h2 id="home-contact-heading" class="relative text-title font-semibold text-accent-fg">Have a project in mind?</h2>
+      <p class="relative mx-auto mt-4 max-w-xl text-base text-accent-fg/85 sm:text-lg">
+        Let's talk about how I can help bring your ideas to life.
+      </p>
+      <div class="relative mt-8 flex justify-center">
+        <a routerLink="/" fragment="contact"
+          class="group inline-flex h-12 items-center gap-2 rounded-control bg-surface-raised px-6 text-base font-semibold text-fg shadow-elev-2 transition-[transform,box-shadow] duration-200 hover:shadow-elev-3 motion-safe:hover:-translate-y-0.5 active:scale-[0.98]">
+          Get in touch
+          <svg lucideArrowRight class="h-4 w-4 transition-transform duration-200 motion-safe:group-hover:translate-x-0.5"></svg>
+        </a>
+      </div>
+    </div>
+  </div>
 </section>

@@ -1,128 +1,104 @@
 import { DatePipe } from "@angular/common";
 import { Component, OnInit, computed, inject, signal } from "@angular/core";
-import { LucideGraduationCap, LucideListFilter, LucideSearch, LucideX } from "@lucide/angular";
+import { LucideGraduationCap, LucideMapPin } from "@lucide/angular";
 import { EducationListItem } from "../../admin/features/education/types";
 import { EducationPublicService } from "../services/education.service";
-
-const ALL = "All";
-
-const LEVEL_LABELS: Record<string, string> = {
-    HIGH_SCHOOL: "High School",
-    ASSOCIATE: "Associate",
-    BACHELOR: "Bachelor",
-    MASTER: "Master",
-    PHD: "PhD",
-    CERTIFICATE: "Certificate",
-    BOOTCAMP: "Bootcamp",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-    COMPLETED: "Completed",
-    ONGOING: "Ongoing",
-    DROPPED: "Dropped",
-};
+import { PageHeaderComponent } from "../../../shared/components/page-header.component";
+import { TimelineComponent, TimelineItemComponent } from "../../../shared/components/timeline.component";
+import { SkeletonComponent } from "../../../shared/components/skeleton.component";
+import { ErrorStateComponent } from "../../../shared/components/error-state.component";
+import { EmptyStateComponent } from "../../../shared/components/empty-state.component";
+import { SearchInputComponent } from "../../../shared/components/search-input.component";
+import { FilterBarComponent, FilterGroup, FilterSelection } from "../../../shared/components/filter-bar.component";
+import { BadgeComponent } from "../../../shared/components/badge.component";
+import { RevealDirective } from "../../../shared/directives/reveal.directive";
+import { EnumLabelPipe } from "../../../shared/pipes/enum-label.pipe";
+import { duration } from "../../../shared/utils/duration";
+import { statusVariant } from "../../../shared/utils/status-variant";
+import { countBy, syncQueryParams } from "../../../shared/utils/query-state";
 
 @Component({
     selector: "app-education-list",
-    imports: [DatePipe, LucideGraduationCap, LucideListFilter, LucideSearch, LucideX],
+    imports: [
+        DatePipe,
+        LucideGraduationCap,
+        LucideMapPin,
+        PageHeaderComponent,
+        TimelineComponent,
+        TimelineItemComponent,
+        SkeletonComponent,
+        ErrorStateComponent,
+        EmptyStateComponent,
+        SearchInputComponent,
+        FilterBarComponent,
+        BadgeComponent,
+        RevealDirective,
+        EnumLabelPipe,
+    ],
     templateUrl: "../ui/education-list.page.html",
 })
 export class EducationListPage implements OnInit {
     private readonly educationService = inject(EducationPublicService);
+    private readonly enumLabel = new EnumLabelPipe();
 
     readonly loading = signal(true);
-    readonly errorMessage = signal<string | null>(null);
+    readonly error = signal(false);
     readonly items = signal<EducationListItem[]>([]);
 
     readonly searchTerm = signal("");
-    readonly activeLevel = signal(ALL);
-    readonly activeStatus = signal(ALL);
-    readonly filtersOpen = signal(false);
+    readonly filters = signal<FilterSelection>({});
+    readonly emptyIcon = LucideGraduationCap;
+    readonly statusVariant = statusVariant;
 
-    readonly levels = computed(() => {
-        const values = new Set(this.items().map((i) => i.level));
-        return [ALL, ...Array.from(values)];
-    });
+    readonly showSearch = computed(() => this.items().length >= 6);
 
-    readonly statuses = computed(() => {
-        const values = new Set(this.items().map((i) => i.status));
-        return [ALL, ...Array.from(values)];
-    });
-
-    readonly activeFilterCount = computed(() => {
-        let count = 0;
-        if (this.activeLevel() !== ALL) count++;
-        if (this.activeStatus() !== ALL) count++;
-        return count;
-    });
+    readonly filterGroups = computed((): FilterGroup[] => [
+        { id: "level", label: "Level", options: countBy(this.items(), (i) => i.level).map((o) => ({ ...o, label: this.enumLabel.transform(o.id) })) },
+        { id: "status", label: "Status", options: countBy(this.items(), (i) => i.status).map((o) => ({ ...o, label: this.enumLabel.transform(o.id) })) },
+    ]);
 
     readonly visibleItems = computed(() => {
-        const level = this.activeLevel();
-        const status = this.activeStatus();
+        const f = this.filters();
         const term = this.searchTerm().trim().toLowerCase();
-
         return this.items()
             .filter((i) => {
-                if (level !== ALL && i.level !== level) return false;
-                if (status !== ALL && i.status !== status) return false;
-                if (term) {
-                    const haystack = [i.institution, i.degree ?? "", i.fieldOfStudy, i.description ?? ""]
-                        .join(" ")
-                        .toLowerCase();
-                    if (!haystack.includes(term)) return false;
-                }
+                if (f["level"] && i.level !== f["level"]) return false;
+                if (f["status"] && i.status !== f["status"]) return false;
+                if (term && ![i.institution, i.degree ?? "", i.fieldOfStudy, i.location ?? "", i.description ?? ""].join(" ").toLowerCase().includes(term)) return false;
                 return true;
             })
-            .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+            .sort((a, b) => b.startDate.localeCompare(a.startDate));
     });
 
+    readonly hasActiveQuery = computed(() => !!this.searchTerm() || Object.keys(this.filters()).length > 0);
+
+    constructor() {
+        syncQueryParams({ q: this.searchTerm }, this.filters, ["level", "status"]);
+    }
+
     ngOnInit(): void {
+        this.load();
+    }
+
+    load(): void {
+        this.loading.set(true);
+        this.error.set(false);
         this.educationService.list().subscribe({
-            next: (items) => {
-                this.items.set(items);
-                this.loading.set(false);
-            },
-            error: () => {
-                this.errorMessage.set("Failed to load education history.");
-                this.loading.set(false);
-            },
+            next: (items) => { this.items.set(items); this.loading.set(false); },
+            error: () => { this.error.set(true); this.loading.set(false); },
         });
     }
 
-    setLevel(level: string): void {
-        this.activeLevel.set(level);
+    durationOf(item: EducationListItem): string {
+        return duration(item.startDate, item.endDate);
     }
 
-    setStatus(status: string): void {
-        this.activeStatus.set(status);
+    title(item: EducationListItem): string {
+        return item.degree || item.fieldOfStudy || this.enumLabel.transform(item.level);
     }
 
-    openFilters(): void {
-        this.filtersOpen.set(true);
-    }
-
-    closeFilters(): void {
-        this.filtersOpen.set(false);
-    }
-
-    clearFilters(): void {
-        this.activeLevel.set(ALL);
-        this.activeStatus.set(ALL);
-    }
-
-    clearSearch(): void {
+    clearAll(): void {
         this.searchTerm.set("");
-    }
-
-    onSearchInput(event: Event): void {
-        this.searchTerm.set((event.target as HTMLInputElement).value);
-    }
-
-    levelLabel(level: string): string {
-        return LEVEL_LABELS[level] ?? level;
-    }
-
-    statusLabel(status: string): string {
-        return STATUS_LABELS[status] ?? status;
+        this.filters.set({});
     }
 }

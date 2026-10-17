@@ -1,222 +1,186 @@
 <header
-    class="sticky top-0 z-50 border-b border-black/5 bg-beige-light/90 text-emerald-900 backdrop-blur supports-backdrop-filter:bg-beige-light/70 dark:border-white/5 dark:bg-green-900/90 dark:text-beige-light dark:supports-backdrop-filter:bg-green-900/70">
-    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-8">
-        <!-- Logo -->
-        <a routerLink="/" (click)="closeMenu()"
-            class="flex shrink-0 items-center gap-2 transition-transform duration-200 ease-out hover:scale-[1.03]">
-            @if(isDarkMode()) {
-            <img src='/logo-light.svg' alt="{{ title }}" class="h-10 w-10 sm:h-12 sm:w-12" />
-            } @else {
-            <img src='/logo-dark.svg' alt="{{ title }}" class="h-10 w-10 sm:h-12 sm:w-12" />
-            }
-
-            <span class="font-brand text-xl font-semibold tracking-tight sm:text-2xl">{{ title }}</span>
+    class="sticky top-0 z-50 h-[var(--header-h)] border-b bg-surface/75 backdrop-blur-md transition-[border-color,box-shadow,background-color] duration-300 supports-[backdrop-filter]:bg-surface/65"
+    [class]="scrolled() ? 'border-border shadow-elev-1' : 'border-transparent'">
+    <div class="mx-auto flex h-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <!-- Brand -->
+        <a routerLink="/" (click)="closeMenu()" class="group flex min-w-0 shrink items-center gap-2.5 rounded-control" aria-label="Home">
+            <img [src]="isDarkMode() ? '/logo-light.svg' : '/logo-dark.svg'" alt="" width="36" height="36"
+                class="h-9 w-9 shrink-0 transition-transform duration-300 ease-out motion-safe:group-hover:rotate-[-6deg]" />
+            <span class="hidden truncate font-brand text-lg font-semibold tracking-tight text-fg sm:block">{{ brandName() }}</span>
+            <span class="font-brand text-lg font-semibold tracking-tight text-fg sm:hidden">{{ brandInitials() }}</span>
         </a>
 
-        <!-- Page navigation (desktop / large tablet) -->
-        <nav class="hidden items-center gap-1 lg:flex">
-            @for (link of navLinks; track link.path) {
-            <a [routerLink]="link.path" routerLinkActive="bg-black/10 dark:bg-white/10"
-                [routerLinkActiveOptions]="{ exact: link.path === '/' }"
-                class="rounded-md px-3 py-2 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10 lg:text-lg">
-                {{ link.label }}
-            </a>
+        <!-- Desktop nav -->
+        <nav class="hidden items-center gap-0.5 lg:flex" aria-label="Primary">
+            @for (item of nav; track item.label) {
+                @if (item.children) {
+                    <div class="relative">
+                        <button type="button" (click)="toggleDropdown(item.label)" [id]="'nav-' + item.label"
+                            class="relative flex h-10 items-center gap-1 rounded-control px-3 text-sm font-medium text-fg-muted transition-colors duration-200 hover:bg-surface-muted hover:text-fg after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-accent after:transition-transform after:duration-300 after:ease-out"
+                            [class.text-fg]="isChildActive(item) || openDropdown() === item.label"
+                            [class.after:scale-x-100]="isChildActive(item)"
+                            [attr.aria-expanded]="openDropdown() === item.label" aria-haspopup="menu" [attr.aria-controls]="'menu-' + item.label">
+                            {{ item.label }}
+                            <svg lucideChevronDown class="h-4 w-4 transition-transform duration-200" [class.rotate-180]="openDropdown() === item.label"></svg>
+                        </button>
 
-            @if (link.label === "Projects") {
-            <div class="relative">
-                <button type="button" (click)="toggleExperience()"
-                    class="flex items-center gap-1 rounded-md px-3 py-2 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10 lg:text-lg"
-                    [class.bg-black/10]="isExperienceOpen()" [class.dark:bg-white/10]="isExperienceOpen()"
-                    [attr.aria-expanded]="isExperienceOpen()">
-                    Experience
-                    <svg lucideChevronDown class="h-4 w-4 transition-transform duration-150 ease-out"
-                        [class.rotate-180]="isExperienceOpen()"></svg>
-                </button>
-
-                @if (isExperienceOpen()) {
-                <div
-                    class="absolute left-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-md bg-beige-light py-1 shadow-lg ring-1 ring-black/5 dark:bg-green-900 dark:ring-white/10">
-                    @for (sub of experienceLinks; track sub.path) {
-                    <a [routerLink]="sub.path" (click)="closeExperience()"
-                        routerLinkActive="bg-black/10 dark:bg-white/10"
-                        class="flex items-center gap-2.5 px-4 py-2.5 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
-                        <svg [lucideIcon]="sub.icon" class="h-5 w-5 shrink-0"></svg>
-                        {{ sub.label }}
+                        @if (openDropdown() === item.label) {
+                            <div #menu [id]="'menu-' + item.label" role="menu" [attr.aria-labelledby]="'nav-' + item.label"
+                                (keydown)="onMenuKeydown($event, menu)"
+                                class="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-card border border-border bg-surface-overlay p-1.5 shadow-elev-3 motion-safe:animate-fade-up">
+                                @for (sub of item.children; track sub.path) {
+                                    <a [routerLink]="sub.path" (click)="closeDropdowns()" role="menuitem"
+                                        routerLinkActive="bg-accent-soft text-accent"
+                                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors duration-150 hover:bg-surface-muted hover:text-fg">
+                                        <svg [lucideIcon]="sub.icon" class="h-4 w-4 shrink-0"></svg>
+                                        {{ sub.label }}
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                } @else {
+                    <a [routerLink]="item.path" routerLinkActive="text-fg after:scale-x-100"
+                        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+                        class="relative flex h-10 items-center rounded-control px-3 text-sm font-medium text-fg-muted transition-colors duration-200 hover:bg-surface-muted hover:text-fg after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-accent after:transition-transform after:duration-300 after:ease-out">
+                        {{ item.label }}
                     </a>
-                    }
-                </div>
                 }
-            </div>
-            }
-
-            @if (link.label === "Skills") {
-            <div class="relative">
-                <button type="button" (click)="toggleAbout()"
-                    class="flex items-center gap-1 rounded-md px-3 py-2 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10 lg:text-lg"
-                    [class.bg-black/10]="isAboutOpen()" [class.dark:bg-white/10]="isAboutOpen()"
-                    [attr.aria-expanded]="isAboutOpen()">
-                    About
-                    <svg lucideChevronDown class="h-4 w-4 transition-transform duration-150 ease-out"
-                        [class.rotate-180]="isAboutOpen()"></svg>
-                </button>
-
-                @if (isAboutOpen()) {
-                <div
-                    class="absolute left-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-md bg-beige-light py-1 shadow-lg ring-1 ring-black/5 dark:bg-green-900 dark:ring-white/10">
-                    @for (sub of aboutLinks; track sub.path) {
-                    <a [routerLink]="sub.path" (click)="closeAbout()" routerLinkActive="bg-black/10 dark:bg-white/10"
-                        class="flex items-center gap-2.5 px-4 py-2.5 text-base font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
-                        <svg [lucideIcon]="sub.icon" class="h-5 w-5 shrink-0"></svg>
-                        {{ sub.label }}
-                    </a>
-                    }
-                </div>
-                }
-            </div>
-            }
-            }
-            @if (isAdmin()) {
-            <a routerLink="/admin" routerLinkActive="bg-black/10 dark:bg-white/10"
-                class="rounded-md px-3 py-2 text-base font-medium text-emerald-800 transition-colors duration-150 ease-out hover:bg-black/5 dark:text-beige-dark dark:hover:bg-white/10 lg:text-lg">
-                Admin
-            </a>
             }
         </nav>
 
-        <!-- Auth actions + theme toggle (desktop / large tablet) -->
+        <!-- Desktop actions -->
         <div class="hidden items-center gap-2 lg:flex">
-            <button type="button" (click)="downloadCv()" [disabled]="isDownloadingCv()"
-                class="flex items-center gap-1.5 rounded-md bg-emerald-800 px-3 py-1.5 text-sm font-medium text-beige-light shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md active:translate-y-0 disabled:pointer-events-none disabled:opacity-70">
-                @if (isDownloadingCv()) {
-                <svg lucideLoaderCircle class="h-4 w-4 animate-spin"></svg>
-                } @else {
-                <svg lucideDownload class="h-4 w-4"></svg>
+            <app-button variant="ghost" size="sm" link="/" fragment="contact">
+                <svg lucideMail class="h-4 w-4"></svg>
+                Contact
+            </app-button>
+            <app-button variant="primary" size="sm" (click)="downloadCv()" [loading]="isDownloadingCv()" [disabled]="isDownloadingCv()">
+                @if (!isDownloadingCv()) {
+                    <svg lucideDownload class="h-4 w-4"></svg>
                 }
-                CV
+                Download CV
+            </app-button>
+
+            <button type="button" (click)="toggleTheme()"
+                class="flex h-10 w-10 items-center justify-center rounded-control text-fg-muted transition-colors duration-200 hover:bg-surface-muted hover:text-fg"
+                [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
+                @if (isDarkMode()) {
+                    <svg lucideSun class="h-5 w-5 motion-safe:animate-fade-up"></svg>
+                } @else {
+                    <svg lucideMoon class="h-5 w-5 motion-safe:animate-fade-up"></svg>
+                }
             </button>
 
             @if (!isAuthenticated()) {
-            <a routerLink="/login"
-                class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
-                Login
-            </a>
-            <a routerLink="/register"
-                class="rounded-md bg-emerald-800 px-3 py-1.5 text-sm font-medium text-beige-light shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md active:translate-y-0">
-                Register
-            </a>
+                <a routerLink="/login" class="rounded-control px-2 py-1 text-sm font-medium text-fg-subtle transition-colors hover:text-fg">Login</a>
             } @else {
-            <button type="button" (click)="logout()"
-                class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
-                Logout
-            </button>
+                <div class="relative">
+                    <button type="button" (click)="toggleUserMenu()" aria-haspopup="menu" [attr.aria-expanded]="isUserMenuOpen()" aria-label="Account menu"
+                        class="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-transparent transition-shadow hover:ring-accent/40">
+                        <app-avatar [src]="avatarUrl()" [name]="brandName()" [size]="32" />
+                    </button>
+                    @if (isUserMenuOpen()) {
+                        <div #userMenu role="menu" (keydown)="onMenuKeydown($event, userMenu)"
+                            class="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-card border border-border bg-surface-overlay p-1.5 shadow-elev-3 motion-safe:animate-fade-up">
+                            @if (isAdmin()) {
+                                <a routerLink="/admin" (click)="closeDropdowns()" role="menuitem"
+                                    class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg">
+                                    <svg lucideShieldCheck class="h-4 w-4"></svg> Admin
+                                </a>
+                            }
+                            <button type="button" (click)="logout()" role="menuitem"
+                                class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg">
+                                <svg lucideLogOut class="h-4 w-4"></svg> Logout
+                            </button>
+                        </div>
+                    }
+                </div>
             }
-
-            <button type="button" (click)="toggleTheme()"
-                class="rounded-md p-1.5 transition-transform duration-200 ease-out hover:scale-110 hover:bg-black/5 dark:hover:bg-white/10"
-                [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
-                @if (isDarkMode()) {
-                <svg lucideSun class="h-5 w-5"></svg>
-                } @else {
-                <svg lucideMoon class="h-5 w-5"></svg>
-                }
-            </button>
         </div>
 
-        <!-- Mobile / tablet controls -->
+        <!-- Mobile controls -->
         <div class="flex items-center gap-1 lg:hidden">
-            <button type="button" (click)="downloadCv()" [disabled]="isDownloadingCv()"
-                class="rounded-md p-1.5 transition-transform duration-200 ease-out hover:scale-110 hover:bg-black/5 disabled:pointer-events-none disabled:opacity-70 dark:hover:bg-white/10"
-                aria-label="Download CV">
+            <button type="button" (click)="downloadCv()" [disabled]="isDownloadingCv()" aria-label="Download CV"
+                class="flex h-10 w-10 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg disabled:opacity-60">
                 @if (isDownloadingCv()) {
-                <svg lucideLoaderCircle class="h-5 w-5 animate-spin"></svg>
+                    <svg lucideLoaderCircle class="h-5 w-5 animate-spin"></svg>
                 } @else {
-                <svg lucideDownload class="h-5 w-5"></svg>
+                    <svg lucideDownload class="h-5 w-5"></svg>
                 }
             </button>
-
             <button type="button" (click)="toggleTheme()"
-                class="rounded-md p-1.5 transition-transform duration-200 ease-out hover:scale-110 hover:bg-black/5 dark:hover:bg-white/10"
+                class="flex h-10 w-10 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg"
                 [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
                 @if (isDarkMode()) {
-                <svg lucideSun class="h-5 w-5"></svg>
+                    <svg lucideSun class="h-5 w-5"></svg>
                 } @else {
-                <svg lucideMoon class="h-5 w-5"></svg>
+                    <svg lucideMoon class="h-5 w-5"></svg>
                 }
             </button>
-
-            <button type="button" (click)="toggleMenu()"
-                class="relative flex h-10 w-10 items-center justify-center rounded-md transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10"
-                [attr.aria-expanded]="isMenuOpen()" aria-controls="mobile-nav" aria-label="Toggle navigation menu">
-                @if (!isMenuOpen()) {
+            <button type="button" id="mobile-nav-toggle" (click)="toggleMenu()"
+                class="flex h-10 w-10 items-center justify-center rounded-control text-fg transition-colors hover:bg-surface-muted"
+                [attr.aria-expanded]="isMenuOpen()" aria-controls="mobile-nav" aria-label="Open navigation menu">
                 <svg lucideMenu class="h-6 w-6"></svg>
-                } @else {
-                <svg lucideX class="h-6 w-6"></svg>
-                }
             </button>
         </div>
     </div>
 </header>
 
-<!--
-    Mobile / tablet navigation overlay: fullscreen modal, sibling of <header> (not a child).
-    <header> uses backdrop-blur, and backdrop-filter creates a new containing block for
-    `position: fixed` descendants — nesting this inside <header> would size `inset-0`
-    against the header's own box instead of the viewport.
--->
-<div id="mobile-nav" role="dialog" aria-modal="true" aria-label="Site navigation"
-        class="fixed inset-0 z-60 flex flex-col overflow-y-auto bg-beige-light transition-transform duration-300 ease-out dark:bg-green-900 lg:hidden"
-        [class.translate-x-full]="!isMenuOpen()" [class.translate-x-0]="isMenuOpen()">
-        <div
-            class="flex shrink-0 items-center justify-between gap-4 border-b border-black/5 px-4 py-2 sm:px-6 dark:border-white/5">
-            <a routerLink="/" (click)="closeMenu()" class="flex shrink-0 items-center gap-2">
-                @if(isDarkMode()) {
-                <img src='/logo-light.svg' alt="{{ title }}" class="h-10 w-10" />
-                } @else {
-                <img src='/logo-dark.svg' alt="{{ title }}" class="h-10 w-10" />
-                }
-                <span class="font-brand text-xl font-semibold tracking-tight">{{ title }}</span>
-            </a>
-            <button type="button" (click)="closeMenu()"
-                class="flex h-10 w-10 items-center justify-center rounded-md transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10"
-                aria-label="Close navigation menu">
-                <svg lucideX class="h-6 w-6"></svg>
-            </button>
-        </div>
+<!-- Mobile navigation sheet (sibling of <header>: backdrop-filter would otherwise trap position:fixed) -->
+<div class="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden"
+    [class]="isMenuOpen() ? 'opacity-100' : 'pointer-events-none opacity-0'" (click)="closeMenu()" aria-hidden="true"></div>
 
-        <nav class="flex flex-1 flex-col gap-1 px-4 py-6 sm:px-6">
-            @for (link of mobileLinks; track link.path) {
-            <a [routerLink]="link.path" (click)="closeMenu()" routerLinkActive="bg-black/10 dark:bg-white/10"
+<div id="mobile-nav" role="dialog" aria-modal="true" aria-label="Site navigation"
+    [attr.inert]="isMenuOpen() ? null : ''" [attr.aria-hidden]="!isMenuOpen()"
+    class="fixed inset-y-0 right-0 z-[75] flex w-[min(22rem,88vw)] flex-col overflow-y-auto rounded-l-panel border-l border-border bg-surface-overlay shadow-elev-3 transition-transform duration-300 ease-[var(--ease-out-quart)] lg:hidden"
+    [class]="isMenuOpen() ? 'translate-x-0' : 'translate-x-full'">
+    <div class="flex h-[var(--header-h)] shrink-0 items-center justify-between gap-4 border-b border-border px-4">
+        <span class="font-brand text-lg font-semibold tracking-tight text-fg">{{ brandName() }}</span>
+        <button type="button" id="mobile-nav-close" (click)="closeMenu()" aria-label="Close navigation menu"
+            class="flex h-10 w-10 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg">
+            <svg lucideX class="h-6 w-6"></svg>
+        </button>
+    </div>
+
+    <div class="flex flex-col gap-2 p-4">
+        <app-button variant="primary" [block]="true" (click)="downloadCv()" [loading]="isDownloadingCv()" [disabled]="isDownloadingCv()">
+            @if (!isDownloadingCv()) {
+                <svg lucideDownload class="h-4 w-4"></svg>
+            }
+            Download CV
+        </app-button>
+        <app-button variant="secondary" [block]="true" link="/" fragment="contact" (click)="closeMenu()">
+            <svg lucideMail class="h-4 w-4"></svg>
+            Contact
+        </app-button>
+    </div>
+
+    <nav class="flex flex-1 flex-col gap-0.5 px-3 pb-6" aria-label="Mobile">
+        @for (link of mobileNav; track link.path; let i = $index) {
+            <a [routerLink]="link.path" (click)="closeMenu()" routerLinkActive="bg-accent-soft text-accent"
                 [routerLinkActiveOptions]="{ exact: link.path === '/' }"
-                class="flex items-center gap-4 rounded-md px-3 py-3.5 text-lg font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
+                class="flex items-center gap-3.5 rounded-control px-3 py-3 text-base font-medium text-fg-muted transition-colors duration-150 hover:bg-surface-muted hover:text-fg">
                 <svg [lucideIcon]="link.icon" class="h-5 w-5 shrink-0"></svg>
                 {{ link.label }}
             </a>
-            }
-
-            @if (isAdmin()) {
-            <a routerLink="/admin" (click)="closeMenu()" routerLinkActive="bg-black/10 dark:bg-white/10"
-                class="flex items-center gap-4 rounded-md px-3 py-3.5 text-lg font-medium text-emerald-800 transition-colors duration-150 ease-out hover:bg-black/5 dark:text-beige-dark dark:hover:bg-white/10">
+        }
+        @if (isAdmin()) {
+            <a routerLink="/admin" (click)="closeMenu()" routerLinkActive="bg-accent-soft text-accent"
+                class="flex items-center gap-3.5 rounded-control px-3 py-3 text-base font-medium text-fg-muted transition-colors duration-150 hover:bg-surface-muted hover:text-fg">
                 <svg lucideShieldCheck class="h-5 w-5 shrink-0"></svg>
                 Admin
             </a>
-            }
+        }
 
-            <div class="mt-4 flex flex-col gap-2 border-t border-black/10 pt-4 dark:border-white/10">
-                @if (!isAuthenticated()) {
-                <a routerLink="/login" (click)="closeMenu()"
-                    class="rounded-md px-3 py-3 text-center text-lg font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
-                    Login
-                </a>
-                <a routerLink="/register" (click)="closeMenu()"
-                    class="rounded-md bg-emerald-800 px-3 py-3 text-center text-lg font-medium text-beige-light shadow-sm transition-all duration-150 ease-out hover:bg-emerald-700 active:translate-y-0">
-                    Register
-                </a>
-                } @else {
-                <button type="button" (click)="logout()"
-                    class="rounded-md px-3 py-3 text-center text-lg font-medium transition-colors duration-150 ease-out hover:bg-black/5 dark:hover:bg-white/10">
-                    Logout
+        <div class="mt-auto border-t border-border pt-4">
+            @if (!isAuthenticated()) {
+                <a routerLink="/login" (click)="closeMenu()" class="block rounded-control px-3 py-2 text-center text-sm font-medium text-fg-subtle transition-colors hover:text-fg">Login</a>
+            } @else {
+                <button type="button" (click)="logout()" class="flex w-full items-center justify-center gap-2 rounded-control px-3 py-2 text-sm font-medium text-fg-subtle transition-colors hover:text-fg">
+                    <svg lucideLogOut class="h-4 w-4"></svg> Logout
                 </button>
-                }
-            </div>
-        </nav>
-    </div>
+            }
+        </div>
+    </nav>
+</div>

@@ -1,120 +1,136 @@
 import { DatePipe } from "@angular/common";
 import { Component, OnInit, computed, inject, signal } from "@angular/core";
-import {
-    LucideAward,
-    LucideBadgeCheck,
-    LucideExternalLink,
-    LucideListFilter,
-    LucideSearch,
-    LucideX,
-} from "@lucide/angular";
+import { LucideAward, LucideBadgeCheck, LucideCopy, LucideExternalLink } from "@lucide/angular";
 import { Certificate } from "../../admin/features/certificates/types";
 import { CertificatesPublicService } from "../services/certificates.service";
+import { PageHeaderComponent } from "../../../shared/components/page-header.component";
+import { FilterBarComponent, FilterGroup, FilterSelection } from "../../../shared/components/filter-bar.component";
+import { SearchInputComponent } from "../../../shared/components/search-input.component";
+import { ChipComponent } from "../../../shared/components/chip.component";
+import { BadgeComponent } from "../../../shared/components/badge.component";
+import { CardSkeletonComponent } from "../../../shared/components/skeleton.component";
+import { ErrorStateComponent } from "../../../shared/components/error-state.component";
+import { EmptyStateComponent } from "../../../shared/components/empty-state.component";
+import { RevealDirective } from "../../../shared/directives/reveal.directive";
+import { ToastService } from "../../../shared/services/toast.service";
+import { countBy, syncQueryParams } from "../../../shared/utils/query-state";
+import { initials, tileStyle } from "../../../shared/utils/visual";
 
-const ALL = "All";
+const SORTS = [
+    { id: "", label: "Newest" },
+    { id: "oldest", label: "Oldest" },
+    { id: "az", label: "A – Z" },
+];
 
-function isExpired(cert: Certificate): boolean {
+export function isExpired(cert: Certificate): boolean {
     if (!cert.hasExpiry || !cert.expiryDate) return false;
     return new Date(cert.expiryDate).getTime() < Date.now();
 }
 
 @Component({
     selector: "app-certificates-list",
-    imports: [DatePipe, LucideAward, LucideBadgeCheck, LucideExternalLink, LucideListFilter, LucideSearch, LucideX],
+    imports: [
+        DatePipe,
+        LucideBadgeCheck,
+        LucideCopy,
+        LucideExternalLink,
+        PageHeaderComponent,
+        FilterBarComponent,
+        SearchInputComponent,
+        ChipComponent,
+        BadgeComponent,
+        CardSkeletonComponent,
+        ErrorStateComponent,
+        EmptyStateComponent,
+        RevealDirective,
+    ],
     templateUrl: "../ui/certificates-list.page.html",
 })
 export class CertificatesListPage implements OnInit {
     private readonly certificatesService = inject(CertificatesPublicService);
+    private readonly toast = inject(ToastService);
 
     readonly loading = signal(true);
-    readonly errorMessage = signal<string | null>(null);
+    readonly error = signal(false);
     readonly certificates = signal<Certificate[]>([]);
 
     readonly searchTerm = signal("");
-    readonly activeCategory = signal(ALL);
-    readonly activeProvider = signal(ALL);
-    readonly filtersOpen = signal(false);
+    readonly filters = signal<FilterSelection>({});
+    readonly sort = signal("");
+    readonly validOnly = signal("");
+    readonly sortOptions = SORTS;
+    readonly emptyIcon = LucideAward;
+    readonly isExpired = isExpired;
+    readonly tileStyle = tileStyle;
 
-    readonly categories = computed(() => {
-        const names = new Set(this.certificates().map((c) => c.categoryName).filter((n): n is string => !!n));
-        return [ALL, ...Array.from(names).sort()];
-    });
+    readonly showSearch = computed(() => this.certificates().length >= 6);
+    readonly hasExpired = computed(() => this.certificates().some(isExpired));
 
-    readonly providers = computed(() => {
-        const names = new Set(this.certificates().map((c) => c.provider));
-        return [ALL, ...Array.from(names).sort()];
-    });
-
-    readonly activeFilterCount = computed(() => {
-        let count = 0;
-        if (this.activeCategory() !== ALL) count++;
-        if (this.activeProvider() !== ALL) count++;
-        return count;
-    });
+    readonly filterGroups = computed((): FilterGroup[] => [
+        { id: "category", label: "Category", options: countBy(this.certificates(), (c) => c.categoryName).map((o) => ({ ...o, label: o.id })).sort((a, b) => a.label.localeCompare(b.label)) },
+        { id: "provider", label: "Provider", options: countBy(this.certificates(), (c) => c.provider).map((o) => ({ ...o, label: o.id })).sort((a, b) => a.label.localeCompare(b.label)) },
+    ]);
 
     readonly visibleCertificates = computed(() => {
-        const category = this.activeCategory();
-        const provider = this.activeProvider();
+        const f = this.filters();
         const term = this.searchTerm().trim().toLowerCase();
-
-        return this.certificates()
-            .filter((c) => {
-                if (category !== ALL && c.categoryName !== category) return false;
-                if (provider !== ALL && c.provider !== provider) return false;
-                if (term) {
-                    const haystack = [c.name, c.provider, c.description ?? "", c.categoryName ?? ""]
-                        .join(" ")
-                        .toLowerCase();
-                    if (!haystack.includes(term)) return false;
-                }
-                return true;
-            })
-            .sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
+        const validOnly = this.validOnly() === "1";
+        const list = this.certificates().filter((c) => {
+            if (f["category"] && c.categoryName !== f["category"]) return false;
+            if (f["provider"] && c.provider !== f["provider"]) return false;
+            if (validOnly && isExpired(c)) return false;
+            if (term && ![c.name, c.provider, c.description ?? "", c.categoryName ?? ""].join(" ").toLowerCase().includes(term)) return false;
+            return true;
+        });
+        switch (this.sort()) {
+            case "oldest":
+                return list.sort((a, b) => a.issueDate.localeCompare(b.issueDate));
+            case "az":
+                return list.sort((a, b) => a.name.localeCompare(b.name));
+            default:
+                return list.sort((a, b) => b.issueDate.localeCompare(a.issueDate));
+        }
     });
 
+    readonly hasActiveQuery = computed(() => !!this.searchTerm() || Object.keys(this.filters()).length > 0 || !!this.validOnly());
+
+    constructor() {
+        syncQueryParams({ q: this.searchTerm, sort: this.sort, valid: this.validOnly }, this.filters, ["category", "provider"]);
+    }
+
     ngOnInit(): void {
+        this.load();
+    }
+
+    load(): void {
+        this.loading.set(true);
+        this.error.set(false);
         this.certificatesService.list().subscribe({
-            next: (certificates) => {
-                this.certificates.set(certificates);
-                this.loading.set(false);
-            },
-            error: () => {
-                this.errorMessage.set("Failed to load certificates.");
-                this.loading.set(false);
-            },
+            next: (list) => { this.certificates.set(list); this.loading.set(false); },
+            error: () => { this.error.set(true); this.loading.set(false); },
         });
     }
 
-    setCategory(category: string): void {
-        this.activeCategory.set(category);
+    providerInitials(provider: string): string {
+        return initials(...provider.split(/\s+/)) || provider.slice(0, 2).toUpperCase();
     }
 
-    setProvider(provider: string): void {
-        this.activeProvider.set(provider);
+    toggleValidOnly(): void {
+        this.validOnly.set(this.validOnly() === "1" ? "" : "1");
     }
 
-    openFilters(): void {
-        this.filtersOpen.set(true);
+    async copy(value: string): Promise<void> {
+        try {
+            await navigator.clipboard.writeText(value);
+            this.toast.show("Credential ID copied", "success");
+        } catch {
+            this.toast.show("Couldn't copy to clipboard", "danger");
+        }
     }
 
-    closeFilters(): void {
-        this.filtersOpen.set(false);
-    }
-
-    clearFilters(): void {
-        this.activeCategory.set(ALL);
-        this.activeProvider.set(ALL);
-    }
-
-    clearSearch(): void {
+    clearAll(): void {
         this.searchTerm.set("");
-    }
-
-    onSearchInput(event: Event): void {
-        this.searchTerm.set((event.target as HTMLInputElement).value);
-    }
-
-    isExpired(cert: Certificate): boolean {
-        return isExpired(cert);
+        this.filters.set({});
+        this.validOnly.set("");
     }
 }

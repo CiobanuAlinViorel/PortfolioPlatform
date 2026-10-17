@@ -1,78 +1,295 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --color-beige-light: #FBF5DD;
-    --color-beige-dark: #E7E1B1;
     --font-brand: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* Legacy palette — still used by the admin panel only */
+    --color-beige-light: #FBF5DD;
+    --color-beige-dark: #E7E1B1;
+
+    /* Surfaces (light): warm paper -> raised card -> overlay */
+    --color-surface: #F7F3E8;
+    --color-surface-raised: #FFFDF7;
+    --color-surface-overlay: #FFFFFF;
+    --color-surface-muted: #EFE9D8;
+
+    /* Text (light): near-black warm green, fg-muted 7.1:1 on raised, fg-subtle 4.6:1 */
+    --color-fg: #1C2B24;
+    --color-fg-muted: #4F5F57;
+    --color-fg-subtle: #6F7E76;
+
+    /* Accent: emerald reserved for links, primary actions, highlights */
+    --color-accent: #047857;
+    --color-accent-hover: #065F46;
+    --color-accent-fg: #FFFFFF;
+    --color-accent-soft: #D1FAE5;
+
+    --color-border: #E3DCC8;
+    --color-ring: #047857;
+
+    --color-success: #047857;
+    --color-success-soft: #D1FAE5;
+    --color-info: #0E7490;
+    --color-info-soft: #CFFAFE;
+    --color-warning: #B45309;
+    --color-warning-soft: #FEF3C7;
+    --color-danger: #B91C1C;
+    --color-danger-soft: #FEE2E2;
+
+    /* Elevation */
+    --shadow-elev-1: 0 1px 2px rgb(28 43 36 / 0.04), 0 4px 12px rgb(28 43 36 / 0.05);
+    --shadow-elev-2: 0 8px 24px rgb(28 43 36 / 0.08);
+    --shadow-elev-3: 0 16px 48px rgb(28 43 36 / 0.12);
+
+    /* Fluid type */
+    --text-display: clamp(2.5rem, 2rem + 3vw, 4.5rem);
+    --text-display--line-height: 1.05;
+    --text-title: clamp(1.875rem, 1.5rem + 1.5vw, 2.75rem);
+    --text-title--line-height: 1.1;
+
+    /* Radii */
+    --radius-control: 0.625rem;
+    --radius-card: 1rem;
+    --radius-panel: 1.5rem;
+
+    /* Motion */
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+    --animate-fade-up: fade-up 0.6s var(--ease-out-quart) both;
+    --animate-shimmer: shimmer 1.6s linear infinite;
+    --animate-pulse-ring: pulse-ring 1.8s var(--ease-out-quart) infinite;
+
+    --header-h: 3.5rem;
+
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shimmer {
+        from { background-position: 200% 0; }
+        to { background-position: -200% 0; }
+    }
+
+    @keyframes pulse-ring {
+        0% { transform: scale(1); opacity: 0.6; }
+        100% { transform: scale(2.2); opacity: 0; }
+    }
+}
+
+@media (min-width: 640px) {
+    :root {
+        --header-h: 4rem;
+    }
+}
+
+.dark {
+    --color-surface: #0B1410;
+    --color-surface-raised: #121D17;
+    --color-surface-overlay: #182620;
+    --color-surface-muted: #1E2E26;
+
+    --color-fg: #EEF3EF;
+    --color-fg-muted: #B5C3BB;
+    --color-fg-subtle: #8A998F;
+
+    --color-accent: #34D399;
+    --color-accent-hover: #6EE7B7;
+    --color-accent-fg: #062B1F;
+    --color-accent-soft: #0F3B2C;
+
+    --color-border: #243730;
+    --color-ring: #34D399;
+
+    --color-success: #34D399;
+    --color-success-soft: #0F3B2C;
+    --color-info: #22D3EE;
+    --color-info-soft: #0B3440;
+    --color-warning: #FBBF24;
+    --color-warning-soft: #3B2A0A;
+    --color-danger: #F87171;
+    --color-danger-soft: #4A1414;
+
+    --shadow-elev-1: none;
+    --shadow-elev-2: 0 0 0 1px rgb(255 255 255 / 0.06);
+    --shadow-elev-3: 0 0 0 1px rgb(255 255 255 / 0.08), 0 24px 48px rgb(0 0 0 / 0.5);
+}
+
+html {
+    scroll-behavior: smooth;
+    color-scheme: light;
+}
+
+html.dark {
+    color-scheme: dark;
 }
 
 html,
 body {
-    @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 font-sans;
+    @apply bg-surface text-fg font-sans antialiased;
 }
 
-/* Brand color (emerald) instead of Angular Material's default indigo, in both themes */
-.mat-mdc-button.mat-primary,
-.mat-mdc-unelevated-button.mat-primary,
-.mat-mdc-raised-button.mat-primary,
-.mat-mdc-outlined-button.mat-primary,
-.mat-tonal-button.mat-primary {
-    --mat-button-filled-container-color: #065f46;
-    --mat-button-filled-label-text-color: #FBF5DD;
-    --mat-button-protected-container-color: #065f46;
-    --mat-button-protected-label-text-color: #FBF5DD;
-    --mat-button-text-label-text-color: #065f46;
-    --mat-button-outlined-label-text-color: #065f46;
-    --mat-button-outlined-outline-color: rgba(6, 95, 70, 0.4);
+body {
+    position: relative;
+    min-height: 100dvh;
 }
 
-html {
-    --mat-progress-spinner-active-indicator-color: #065f46;
+/* Page atmosphere: soft accent glow + dot grid */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(60rem 40rem at 10% -10%, color-mix(in oklab, var(--color-accent) 14%, transparent), transparent 60%),
+        radial-gradient(50rem 30rem at 100% 10%, color-mix(in oklab, var(--color-accent) 8%, transparent), transparent 60%);
 }
 
-/* mat-spinner sitting inside a solid emerald button needs a light stroke to stay visible */
-.button-spinner {
-    --mat-progress-spinner-active-indicator-color: #FBF5DD;
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(color-mix(in oklab, var(--color-fg) 35%, transparent) 0.5px, transparent 0.5px);
+    background-size: 22px 22px;
+    opacity: 0.06;
+    mask-image: linear-gradient(to bottom, black 0%, transparent 70%);
 }
 
-/* Dark mode: Material surfaces don't follow our .dark class by default, so re-theme them */
-.dark {
-    --mat-progress-spinner-active-indicator-color: #34d399;
+.dark body::after {
+    opacity: 0.1;
 }
 
-.dark .mat-mdc-button.mat-primary,
-.dark .mat-mdc-unelevated-button.mat-primary,
-.dark .mat-mdc-raised-button.mat-primary,
-.dark .mat-mdc-outlined-button.mat-primary,
-.dark .mat-tonal-button.mat-primary {
-    --mat-button-filled-container-color: #047857;
-    --mat-button-text-label-text-color: #34d399;
-    --mat-button-outlined-label-text-color: #34d399;
-    --mat-button-outlined-outline-color: rgba(52, 211, 153, 0.4);
+h1, h2 {
+    font-family: var(--font-brand);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
 }
 
-.dark .mat-mdc-card {
-    --mat-card-elevated-container-color: #0f3d2a;
-    --mat-card-subtitle-text-color: rgba(251, 245, 221, 0.7);
-    color: #FBF5DD;
+::selection {
+    background: var(--color-accent-soft);
+    color: var(--color-fg);
 }
 
-.dark .mat-mdc-form-field {
-    --mat-form-field-outlined-label-text-color: rgba(251, 245, 221, 0.7);
-    --mat-form-field-outlined-hover-label-text-color: rgba(251, 245, 221, 0.9);
-    --mat-form-field-outlined-input-text-color: #FBF5DD;
-    --mat-form-field-outlined-input-text-placeholder-color: rgba(251, 245, 221, 0.5);
-    --mat-form-field-outlined-outline-color: rgba(251, 245, 221, 0.3);
-    --mat-form-field-outlined-hover-outline-color: rgba(251, 245, 221, 0.5);
-    --mat-form-field-outlined-focus-outline-color: #34d399;
-    --mat-form-field-outlined-focus-label-text-color: #34d399;
-    --mat-form-field-error-text-color: #f87171;
-    --mat-form-field-outlined-error-outline-color: #f87171;
-    --mat-form-field-outlined-error-label-text-color: #f87171;
+a {
+    text-underline-offset: 4px;
+}
+
+img {
+    max-width: 100%;
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+}
+
+.skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -100%;
+    z-index: 100;
+    border-radius: var(--radius-control);
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+}
+
+.skip-link:focus-visible {
+    top: 1rem;
+}
+
+/* Long-form text */
+.prose-like {
+    max-width: 70ch;
+    line-height: 1.75;
+    white-space: pre-line;
+}
+
+/* Scroll reveal (driven by appReveal directive) */
+.reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.6s var(--ease-out-quart), transform 0.6s var(--ease-out-quart);
+    transition-delay: calc(var(--i, 0) * 60ms);
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* Skeleton shimmer */
+.shimmer {
+    background: linear-gradient(90deg,
+        var(--color-surface-muted) 0%,
+        color-mix(in oklab, var(--color-surface-muted) 60%, var(--color-surface-raised)) 50%,
+        var(--color-surface-muted) 100%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+}
+
+/* Hide scrollbar for horizontal chip/tab strips */
+.scrollbar-none {
+    scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+
+/* Edge fades for horizontally scrolling strips */
+.fade-x {
+    mask-image: linear-gradient(to right, transparent, black 1.25rem, black calc(100% - 1.25rem), transparent);
+}
+
+/* Body scroll lock */
+body.scroll-locked {
+    overflow: hidden;
+}
+
+/* View transitions */
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+
+    .shimmer {
+        animation: none;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+    }
 }

@@ -1,95 +1,90 @@
 import { Component, OnInit, computed, inject, signal } from "@angular/core";
-import { LucideHeart, LucideListFilter, LucideSearch, LucideX } from "@lucide/angular";
+import { LucideDynamicIcon, LucideHeart, LucideQuote } from "@lucide/angular";
 import { HobbyListItem } from "../../admin/features/hobbies/types";
 import { HobbiesPublicService } from "../services/hobbies.service";
+import { PageHeaderComponent } from "../../../shared/components/page-header.component";
+import { SearchInputComponent } from "../../../shared/components/search-input.component";
+import { ChipComponent } from "../../../shared/components/chip.component";
+import { BadgeComponent } from "../../../shared/components/badge.component";
+import { CardSkeletonComponent } from "../../../shared/components/skeleton.component";
+import { ErrorStateComponent } from "../../../shared/components/error-state.component";
+import { EmptyStateComponent } from "../../../shared/components/empty-state.component";
+import { RevealDirective } from "../../../shared/directives/reveal.directive";
+import { EnumLabelPipe } from "../../../shared/pipes/enum-label.pipe";
+import { BadgeVariant } from "../../../shared/utils/status-variant";
+import { countBy, syncQueryParams } from "../../../shared/utils/query-state";
+import { hobbyIcon, tileStyle } from "../../../shared/utils/visual";
 
-const ALL = "All";
-
-function titleCase(value: string): string {
-    return value
-        .toLowerCase()
-        .split("_")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-}
+const ACTIVITY_VARIANT: Record<string, BadgeVariant> = { OCCASIONAL: "neutral", REGULAR: "info", FREQUENT: "success", DAILY: "accent" };
 
 @Component({
     selector: "app-hobbies-list",
-    imports: [LucideHeart, LucideListFilter, LucideSearch, LucideX],
+    imports: [
+        LucideDynamicIcon,
+        LucideQuote,
+        PageHeaderComponent,
+        SearchInputComponent,
+        ChipComponent,
+        BadgeComponent,
+        CardSkeletonComponent,
+        ErrorStateComponent,
+        EmptyStateComponent,
+        RevealDirective,
+        EnumLabelPipe,
+    ],
     templateUrl: "../ui/hobbies-list.page.html",
 })
 export class HobbiesListPage implements OnInit {
     private readonly hobbiesService = inject(HobbiesPublicService);
 
     readonly loading = signal(true);
-    readonly errorMessage = signal<string | null>(null);
+    readonly error = signal(false);
     readonly hobbies = signal<HobbyListItem[]>([]);
 
     readonly searchTerm = signal("");
-    readonly activeCategory = signal(ALL);
-    readonly filtersOpen = signal(false);
+    readonly category = signal("");
+    readonly emptyIcon = LucideHeart;
+    readonly hobbyIcon = hobbyIcon;
+    readonly tileStyle = tileStyle;
 
-    readonly categories = computed(() => {
-        const values = new Set(this.hobbies().map((h) => h.category));
-        return [ALL, ...Array.from(values)];
-    });
-
-    readonly activeFilterCount = computed(() => (this.activeCategory() !== ALL ? 1 : 0));
+    readonly showSearch = computed(() => this.hobbies().length >= 6);
+    readonly categories = computed(() => countBy(this.hobbies(), (h) => h.category));
 
     readonly visibleHobbies = computed(() => {
-        const category = this.activeCategory();
+        const category = this.category();
         const term = this.searchTerm().trim().toLowerCase();
-
         return this.hobbies().filter((h) => {
-            if (category !== ALL && h.category !== category) return false;
-            if (term) {
-                const haystack = [h.name, h.description ?? "", h.whyInterested ?? "", h.favoriteAspect ?? ""]
-                    .join(" ")
-                    .toLowerCase();
-                if (!haystack.includes(term)) return false;
-            }
+            if (category && h.category !== category) return false;
+            if (term && ![h.name, h.description ?? "", h.favoriteAspect ?? "", h.category].join(" ").toLowerCase().includes(term)) return false;
             return true;
         });
     });
 
+    readonly hasActiveQuery = computed(() => !!this.searchTerm() || !!this.category());
+
+    constructor() {
+        syncQueryParams({ q: this.searchTerm, category: this.category });
+    }
+
     ngOnInit(): void {
+        this.load();
+    }
+
+    load(): void {
+        this.loading.set(true);
+        this.error.set(false);
         this.hobbiesService.list().subscribe({
-            next: (hobbies) => {
-                this.hobbies.set(hobbies);
-                this.loading.set(false);
-            },
-            error: () => {
-                this.errorMessage.set("Failed to load hobbies.");
-                this.loading.set(false);
-            },
+            next: (hobbies) => { this.hobbies.set(hobbies); this.loading.set(false); },
+            error: () => { this.error.set(true); this.loading.set(false); },
         });
     }
 
-    setCategory(category: string): void {
-        this.activeCategory.set(category);
+    activityVariant(level: string | undefined): BadgeVariant {
+        return (level && ACTIVITY_VARIANT[level]) || "neutral";
     }
 
-    openFilters(): void {
-        this.filtersOpen.set(true);
-    }
-
-    closeFilters(): void {
-        this.filtersOpen.set(false);
-    }
-
-    clearFilters(): void {
-        this.activeCategory.set(ALL);
-    }
-
-    clearSearch(): void {
+    clearAll(): void {
         this.searchTerm.set("");
-    }
-
-    onSearchInput(event: Event): void {
-        this.searchTerm.set((event.target as HTMLInputElement).value);
-    }
-
-    label(value: string): string {
-        return value === ALL ? ALL : titleCase(value);
+        this.category.set("");
     }
 }

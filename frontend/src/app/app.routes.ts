@@ -1,28 +1,6 @@
 import { Routes } from '@angular/router';
-import { RegisterPage } from '../features/auth/register/components/register.page';
-import { LoginPage } from '../features/auth/login/components/login.page';
-import { HomePage } from '../features/home/components/home.component';
-import { ProjectsListPage } from '../features/projects/components/projects-list.page';
-import { ProjectDetailPage } from '../features/projects/components/project-detail.page';
-import { SkillsListPage } from '../features/skills/components/skills-list.page';
-import { CertificatesListPage } from '../features/certificates/components/certificates-list.page';
-import { EducationListPage } from '../features/education/components/education-list.page';
-import { HobbiesListPage } from '../features/hobbies/components/hobbies-list.page';
-import { JobsListPage } from '../features/experience/jobs/components/jobs-list.page';
-import { JobDetailPage } from '../features/experience/jobs/components/job-detail.page';
-import { VolunteerListPage } from '../features/experience/volunteer/components/volunteer-list.page';
-import { VolunteerDetailPage } from '../features/experience/volunteer/components/volunteer-detail.page';
-import { AdminPageComponent } from '../features/admin/components/admin.page';
-import { GeneralPage } from '../features/admin/features/general/components/general.page';
-import { EducationPage } from '../features/admin/features/education/components/education.page';
-import { JobExperiencesPage } from '../features/admin/features/job-experiences/components/job-experiences.page';
-import { ProjectsPage } from '../features/admin/features/projects/components/projects.page';
-import { SkillsPage } from '../features/admin/features/skills/components/skills.page';
-import { CertificatesPage } from '../features/admin/features/certificates/components/certificates.page';
-import { HobbiesPage } from '../features/admin/features/hobbies/components/hobbies.page';
-import { VolunteerExperiencesPage } from '../features/admin/features/volunteer-experiences/components/volunteer-experiences.page';
-import { adminGuard } from './admin.guard';
 import { SeoData } from '../shared/services/seo.service';
+import { adminGuard } from './admin.guard';
 
 const ADMIN_SEO_BASE: Pick<SeoData, 'noindex'> = { noindex: true };
 const AUTH_SEO_BASE: Pick<SeoData, 'noindex'> = { noindex: true };
@@ -30,7 +8,7 @@ const AUTH_SEO_BASE: Pick<SeoData, 'noindex'> = { noindex: true };
 export const routes: Routes = [
     {
         path: '',
-        component: HomePage,
+        loadComponent: () => import('../features/home/components/home.component').then(m => m.HomePage),
         data: {
             seo: {
                 title: 'Alin-Viorel Ciobanu — Portfolio',
@@ -41,7 +19,7 @@ export const routes: Routes = [
     },
     {
         path: 'projects',
-        component: ProjectsListPage,
+        loadComponent: () => import('../features/projects/components/projects-list.page').then(m => m.ProjectsListPage),
         data: {
             seo: {
                 title: 'Projects',
@@ -51,7 +29,7 @@ export const routes: Routes = [
     },
     {
         path: 'projects/:id',
-        component: ProjectDetailPage,
+        loadComponent: () => import('../features/projects/components/project-detail.page').then(m => m.ProjectDetailPage),
         data: {
             seo: {
                 title: 'Project Details',
@@ -61,7 +39,7 @@ export const routes: Routes = [
     },
     {
         path: 'skills',
-        component: SkillsListPage,
+        loadComponent: () => import('../features/skills/components/skills-list.page').then(m => m.SkillsListPage),
         data: {
             seo: {
                 title: 'Skills',
@@ -71,7 +49,7 @@ export const routes: Routes = [
     },
     {
         path: 'certificates',
-        component: CertificatesListPage,
+        loadComponent: () => import('../features/certificates/components/certificates-list.page').then(m => m.CertificatesListPage),
         data: {
             seo: {
                 title: 'Certificates',
@@ -81,7 +59,7 @@ export const routes: Routes = [
     },
     {
         path: 'education',
-        component: EducationListPage,
+        loadComponent: () => import('../features/education/components/education-list.page').then(m => m.EducationListPage),
         data: {
             seo: {
                 title: 'Education',
@@ -91,7 +69,7 @@ export const routes: Routes = [
     },
     {
         path: 'hobbies',
-        component: HobbiesListPage,
+        loadComponent: () => import('../features/hobbies/components/hobbies-list.page').then(m => m.HobbiesListPage),
         data: {
             seo: {
                 title: 'Hobbies',
@@ -101,7 +79,7 @@ export const routes: Routes = [
     },
     {
         path: 'experience/jobs',
-        component: JobsListPage,
+        loadComponent: () => import('../features/experience/jobs/components/jobs-list.page').then(m => m.JobsListPage),
         data: {
             seo: {
                 title: 'Work Experience',
@@ -111,7 +89,7 @@ export const routes: Routes = [
     },
     {
         path: 'experience/jobs/:id',
-        component: JobDetailPage,
+        loadComponent: () => import('../features/experience/jobs/components/job-detail.page').then(m => m.JobDetailPage),
         data: {
             seo: {
                 title: 'Work Experience Details',
@@ -121,7 +99,7 @@ export const routes: Routes = [
     },
     {
         path: 'experience/volunteer',
-        component: VolunteerListPage,
+        loadComponent: () => import('../features/experience/volunteer/components/volunteer-list.page').then(m => m.VolunteerListPage),
         data: {
             seo: {
                 title: 'Volunteer Experience',
@@ -131,7 +109,7 @@ export const routes: Routes = [
     },
     {
         path: 'experience/volunteer/:id',
-        component: VolunteerDetailPage,
+        loadComponent: () => import('../features/experience/volunteer/components/volunteer-detail.page').then(m => m.VolunteerDetailPage),
         data: {
             seo: {
                 title: 'Volunteer Experience Details',
@@ -141,16 +119,16 @@ export const routes: Routes = [
     },
     {
         path: 'register',
-        component: RegisterPage,
+        loadComponent: () => import('../features/auth/register/components/register.page').then(m => m.RegisterPage),
         data: {
-            seo: { title: 'Create Account', description: 'Create an account on Alin-Viorel Ciobanu’s portfolio site.', ...AUTH_SEO_BASE } satisfies SeoData,
+            seo: { title: 'Create Account', description: 'Create an account on Alin-Viorel Ciobanu\'s portfolio site.', ...AUTH_SEO_BASE } satisfies SeoData,
         },
     },
     {
         path: 'login',
-        component: LoginPage,
+        loadComponent: () => import('../features/auth/login/components/login.page').then(m => m.LoginPage),
         data: {
-            seo: { title: 'Sign In', description: 'Sign in to your account on Alin-Viorel Ciobanu’s portfolio site.', ...AUTH_SEO_BASE } satisfies SeoData,
+            seo: { title: 'Sign In', description: 'Sign in to your account on Alin-Viorel Ciobanu\'s portfolio site.', ...AUTH_SEO_BASE } satisfies SeoData,
         },
     },
     {
@@ -159,49 +137,54 @@ export const routes: Routes = [
         children: [
             {
                 path: '',
-                component: AdminPageComponent,
+                loadComponent: () => import('../features/admin/components/admin.page').then(m => m.AdminPageComponent),
                 data: { seo: { title: 'Admin Dashboard', description: 'Admin dashboard for managing the portfolio site.', ...ADMIN_SEO_BASE } satisfies SeoData },
             },
             {
                 path: 'general',
-                component: GeneralPage,
+                loadComponent: () => import('../features/admin/features/general/components/general.page').then(m => m.GeneralPage),
                 data: { seo: { title: 'Admin — General', description: 'Manage general profile and contact information.', ...ADMIN_SEO_BASE } satisfies SeoData },
             },
             {
                 path: 'education',
-                component: EducationPage,
+                loadComponent: () => import('../features/admin/features/education/components/education.page').then(m => m.EducationPage),
                 data: { seo: { title: 'Admin — Education', description: 'Manage education entries.', ...ADMIN_SEO_BASE } satisfies SeoData },
             },
             {
                 path: 'job-experiences',
-                component: JobExperiencesPage,
+                loadComponent: () => import('../features/admin/features/job-experiences/components/job-experiences.page').then(m => m.JobExperiencesPage),
                 data: { seo: { title: 'Admin — Work Experience', description: 'Manage work experience entries.', ...ADMIN_SEO_BASE } satisfies SeoData },
             },
             {
                 path: 'projects',
-                component: ProjectsPage,
+                loadComponent: () => import('../features/admin/features/projects/components/projects.page').then(m => m.ProjectsPage),
                 data: { seo: { title: 'Admin — Projects', description: 'Manage project entries.', ...ADMIN_SEO_BASE } satisfies SeoData },
             },
             {
                 path: 'skills',
-                component: SkillsPage,
+                loadComponent: () => import('../features/admin/features/skills/components/skills.page').then(m => m.SkillsPage),
                 data: { seo: { title: 'Admin — Skills', description: 'Manage skill entries.', ...ADMIN_SEO_BASE } satisfies SeoData },
             },
             {
                 path: 'certificates',
-                component: CertificatesPage,
+                loadComponent: () => import('../features/admin/features/certificates/components/certificates.page').then(m => m.CertificatesPage),
                 data: { seo: { title: 'Admin — Certificates', description: 'Manage certificate entries.', ...ADMIN_SEO_BASE } satisfies SeoData },
             },
             {
                 path: 'hobbies',
-                component: HobbiesPage,
+                loadComponent: () => import('../features/admin/features/hobbies/components/hobbies.page').then(m => m.HobbiesPage),
                 data: { seo: { title: 'Admin — Hobbies', description: 'Manage hobby entries.', ...ADMIN_SEO_BASE } satisfies SeoData },
             },
             {
                 path: 'volunteer-experiences',
-                component: VolunteerExperiencesPage,
+                loadComponent: () => import('../features/admin/features/volunteer-experiences/components/volunteer-experiences.page').then(m => m.VolunteerExperiencesPage),
                 data: { seo: { title: 'Admin — Volunteer Experience', description: 'Manage volunteer experience entries.', ...ADMIN_SEO_BASE } satisfies SeoData },
             },
         ]
+    },
+    {
+        path: '**',
+        loadComponent: () => import('../features/not-found/components/not-found.page').then(m => m.NotFoundPage),
+        data: { seo: { title: 'Page not found', description: 'The page you are looking for does not exist.', noindex: true } satisfies SeoData }
     }
 ];
