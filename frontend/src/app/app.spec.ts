@@ -12,7 +12,7 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('renders the shell with skip link, header and footer', async () => {
+  it('renders the public shell with skip link, header and footer', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
@@ -27,5 +27,16 @@ describe('App', () => {
     expect(el.querySelector('app-header header')).toBeTruthy();
     expect(el.querySelector('app-footer footer #contact')).toBeTruthy();
     expect(el.querySelector('app-header')?.textContent).toContain('Ada Lovelace');
+  });
+
+  it('renders the admin shell without the public header and footer', () => {
+    const fixture = TestBed.createComponent(App);
+    vi.spyOn(fixture.componentInstance, 'isAdminRoute').mockReturnValue(true);
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('app-sidebar')).toBeTruthy();
+    expect(el.querySelector('app-header')).toBeNull();
+    expect(el.querySelector('app-footer')).toBeNull();
   });
 });
