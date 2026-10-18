@@ -26,7 +26,13 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = AuthController.class)
+@WebMvcTest(
+        controllers = AuthController.class,
+        properties = {
+                "app.auth.refresh-cookie.secure=true",
+                "app.auth.refresh-cookie.same-site=None"
+        }
+)
 @Import(SecurityConfig.class)
 
 class AuthControllerTest {
@@ -136,7 +142,9 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.token").value("access-jwt-token"))
                 .andExpect(jsonPath("$.refreshToken").doesNotExist())
                 .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refresh_token=refresh-value")))
-                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")));
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")));
     }
 
     @Test
@@ -207,7 +215,9 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Logged out successfully"))
                 .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refresh_token=")))
-                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")));
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")));
 
         verify(authService).logout("my-refresh-token");
     }

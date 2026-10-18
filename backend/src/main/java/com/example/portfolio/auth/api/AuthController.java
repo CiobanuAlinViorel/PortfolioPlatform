@@ -10,6 +10,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -29,6 +30,12 @@ public class AuthController {
     private static final Duration REFRESH_COOKIE_MAX_AGE = Duration.ofDays(7);
 
     private final AuthService authService;
+
+    @Value("${app.auth.refresh-cookie.secure:false}")
+    private boolean refreshCookieSecure;
+
+    @Value("${app.auth.refresh-cookie.same-site:Lax}")
+    private String refreshCookieSameSite;
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest req) {
@@ -79,20 +86,20 @@ public class AuthController {
     private ResponseCookie buildRefreshCookie(String value) {
         return ResponseCookie.from(REFRESH_COOKIE, value)
                 .httpOnly(true)
-                .secure(false)
+                .secure(refreshCookieSecure)
                 .path("/api/auth")
                 .maxAge(REFRESH_COOKIE_MAX_AGE)
-                .sameSite("Strict")
+                .sameSite(refreshCookieSameSite)
                 .build();
     }
 
     private ResponseCookie clearRefreshCookie() {
         return ResponseCookie.from(REFRESH_COOKIE, "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(refreshCookieSecure)
                 .path("/api/auth")
                 .maxAge(0)
-                .sameSite("Strict")
+                .sameSite(refreshCookieSameSite)
                 .build();
     }
 
