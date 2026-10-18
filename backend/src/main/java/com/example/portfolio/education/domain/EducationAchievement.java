@@ -8,40 +8,41 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "education_achievement")
-@EqualsAndHashCode(callSuper = true,onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class EducationAchievement extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "education_id", nullable = false)
     private Education education;
 
     @OneToOne
-    @JoinColumn(name="achievement_id", nullable = false)
+    @JoinColumn(name = "achievement_id", nullable = false)
     private Achievement achievement;
 
     @ManyToOne
     @JoinColumn(name = "course_id")
 
-    private Course course ;
+    private Course course;
 
-    @Column(name="topic", nullable = false)
+    @Column(name = "topic", nullable = false)
     private String topic;
 
-    @Column(name="grade", nullable = false)
+    @Column(name = "grade", nullable = false)
     private BigDecimal grade;
 
-    @Column(name="max_grade", nullable = false)
+    @Column(name = "max_grade", nullable = false)
     private BigDecimal maxGrade;
 
     @Column(name = "credits", nullable = false)
     private Integer credits;
 
-    @Column(name="teacher_or_supervisor", nullable = false)
+    @Column(name = "teacher_or_supervisor", nullable = false)
     private String teacherOrSupervisor;
 
     @Column(name = "institution_name", nullable = false)
@@ -50,8 +51,7 @@ public class EducationAchievement extends BaseEntity {
     @Column(name = "semester", nullable = false)
     private Integer semester;
 
-    @Column(name="academic_year", nullable = false)
+    @Column(name = "academic_year", nullable = false)
     private Integer academicYear;
-
 
 }
